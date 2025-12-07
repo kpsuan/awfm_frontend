@@ -9,7 +9,7 @@
 @media (max-width: 768px) {
   .two-column-layout {
     flex-direction: column;
-    height: auto;
+    /*  height: auto; */
     min-height: calc(100vh - 66px);
     overflow: visible;
   }

@@ -1,13 +1,96 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import './MentalHealthCheck.css';
 import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton, SecondaryButton } from '../../common/Button';
 import image1 from '../../../styles/image1.png';
 import logo from '../../../styles/logo.png';
+import thanksImg from '../../../styles/thanks.png';
 
+// Breathing Exercise Component
+const BreathingExercise = ({ duration = 24 }) => {
+  const [phase, setPhase] = useState('inhale'); // 'inhale', 'hold', 'exhale'
+  const [timeLeft, setTimeLeft] = useState(duration);
+  const [cycleTime, setCycleTime] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
-// Illustration for mental health check - tired person resting
-const mentalHealthIllustration = "https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=400&h=300&fit=crop";
+  // Each breath cycle: 4s inhale, 4s hold, 4s exhale = 12s total
+  const INHALE_DURATION = 4;
+  const HOLD_DURATION = 4;
+  const EXHALE_DURATION = 4;
+  const CYCLE_DURATION = INHALE_DURATION + HOLD_DURATION + EXHALE_DURATION;
+
+  useEffect(() => {
+    if (isComplete) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setIsComplete(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+
+      setCycleTime(prev => {
+        const newTime = (prev + 1) % CYCLE_DURATION;
+
+        // Determine phase based on cycle time
+        if (newTime < INHALE_DURATION) {
+          setPhase('inhale');
+        } else if (newTime < INHALE_DURATION + HOLD_DURATION) {
+          setPhase('hold');
+        } else {
+          setPhase('exhale');
+        }
+
+        return newTime;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isComplete]);
+
+  const getPhaseText = () => {
+    if (isComplete) return 'Great job!';
+    switch (phase) {
+      case 'inhale': return 'Breathe In';
+      case 'hold': return 'Hold';
+      case 'exhale': return 'Breathe Out';
+      default: return 'Breathe';
+    }
+  };
+
+  const getScale = () => {
+    if (isComplete) return 1;
+    switch (phase) {
+      case 'inhale': return 1.15;
+      case 'hold': return 1.15;
+      case 'exhale': return 1;
+      default: return 1;
+    }
+  };
+
+  return (
+    <div className="breathing-exercise">
+      <div
+        className={`breathing-exercise__circle breathing-exercise__circle--${phase} ${isComplete ? 'breathing-exercise__circle--complete' : ''}`}
+        style={{ transform: `scale(${getScale()})` }}
+      >
+        <div className="breathing-exercise__inner">
+          <span className="breathing-exercise__phase">{getPhaseText()}</span>
+          {!isComplete && (
+            <span className="breathing-exercise__timer">{timeLeft}s</span>
+          )}
+        </div>
+      </div>
+      {!isComplete && (
+        <p className="breathing-exercise__instruction">
+          Follow the circle and breathe slowly
+        </p>
+      )}
+    </div>
+  );
+};
 
 const MentalHealthCheck = ({ 
   question,
@@ -30,14 +113,14 @@ const MentalHealthCheck = ({
       case 'almost-there':
         return {
           sectionLabel: 'Advance Care Planning',
-          reflectionLabel: 'Q10A Reflection 2',
+          reflectionLabel: 'Q10A Checkpoint 2',
           heading: 'Almost There...',
           description: 'We know this may feel like a lot. Breathe and give yourself space to process. You can continue whenever you\'re ready.'
         };
       case 'take-break':
         return {
           sectionLabel: 'Advance Care Planning',
-          reflectionLabel: 'Q10A Reflection 3',
+          reflectionLabel: 'Q10A Checkpoint 3',
           heading: 'Take a Break',
           description: 'It\'s okay to pause. These are important decisions. Come back when you feel ready to continue.'
         };
@@ -45,7 +128,7 @@ const MentalHealthCheck = ({
       default:
         return {
           sectionLabel: 'Advance Care Planning',
-          reflectionLabel: 'Q10A Reflection 1',
+          reflectionLabel: 'Q10A Checkpoint 1',
           heading: 'You\'re Doing Great!',
           description: 'We know this may feel like a lot. Breathe and give yourself space to process. You can continue whenever you\'re ready.'
         };
@@ -106,33 +189,13 @@ const MentalHealthCheck = ({
             {/* Description */}
             <p className="mental-health-check__description">{content.description}</p>
 
-            {/* Illustration */}
+            {/* Breathing Exercise or Thank You Image */}
             <div className="mental-health-check__illustration">
-              <svg width="228" height="200" viewBox="0 0 228 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Tired person illustration - simplified SVG */}
-                <ellipse cx="114" cy="180" rx="80" ry="15" fill="url(#breatheGradient)" fillOpacity="0.3"/>
-                {/* Person body */}
-                <path d="M50 140 C50 140, 80 160, 140 160 C200 160, 180 140, 180 140" stroke="#333" strokeWidth="3" fill="none"/>
-                {/* Head */}
-                <circle cx="70" cy="120" r="25" fill="#FFE4D4" stroke="#333" strokeWidth="2"/>
-                {/* Eyes closed */}
-                <path d="M60 118 Q65 115, 70 118" stroke="#333" strokeWidth="2" fill="none"/>
-                <path d="M75 118 Q80 115, 85 118" stroke="#333" strokeWidth="2" fill="none"/>
-                {/* Smile */}
-                <path d="M65 130 Q70 135, 75 130" stroke="#333" strokeWidth="2" fill="none"/>
-                {/* Low battery */}
-                <rect x="85" y="70" width="30" height="18" rx="3" stroke="#666" strokeWidth="2" fill="white"/>
-                <rect x="115" y="75" width="4" height="8" rx="1" fill="#666"/>
-                <rect x="88" y="73" width="8" height="12" rx="1" fill="#EF4444"/>
-                {/* Blanket/pillow */}
-                <path d="M90 130 C100 120, 160 125, 180 140 L180 170 C160 165, 100 160, 90 150 Z" fill="#22D3EE" fillOpacity="0.8"/>
-                <defs>
-                  <linearGradient id="breatheGradient" x1="34" y1="180" x2="194" y2="180">
-                    <stop offset="0%" stopColor="#5C40FB"/>
-                    <stop offset="100%" stopColor="#F23B8B"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+              {variant === 'take-break' ? (
+                <img src={thanksImg} alt="Thank you" className="mental-health-check__thanks-img" />
+              ) : (
+                <BreathingExercise duration={24} />
+              )}
             </div>
           </div>
 

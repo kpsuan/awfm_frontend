@@ -68,6 +68,7 @@
 .mental-health-check__content {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   height: 100%;
   padding: 32px;
   overflow-y: auto;
@@ -119,19 +120,26 @@
 
 /* Right content area */
 .mental-health-check__right-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  flex: 1;
 }
 
-/* Section labels */
+/* Section labels - hidden on desktop (shown on left panel) */
 .mental-health-check__labels {
   display: flex;
   flex-direction: column;
   gap: 4px;
   margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .mental-health-check__labels {
+    display: none;
+  }
 }
 
 .mental-health-check__section-label,
@@ -156,6 +164,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  flex-shrink: 0;
 }
 
 /* Description */
@@ -168,9 +177,10 @@
   letter-spacing: 0;
   margin: 0 0 24px 0;
   max-width: 320px;
+  flex-shrink: 0;
 }
 
-/* Illustration */
+/* Illustration / Breathing Exercise */
 .mental-health-check__illustration {
   flex: 1;
   display: flex;
@@ -183,6 +193,104 @@
 .mental-health-check__illustration svg {
   max-width: 100%;
   height: auto;
+}
+
+/* Breathing Exercise */
+.breathing-exercise {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.breathing-exercise__circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5C40FB 0%, #F23B8B 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 1s ease-in-out;
+  box-shadow: 0 8px 32px rgba(92, 64, 251, 0.3);
+}
+
+.breathing-exercise__circle--inhale {
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.breathing-exercise__circle--hold {
+  box-shadow: 0 8px 48px rgba(92, 64, 251, 0.5);
+}
+
+.breathing-exercise__circle--exhale {
+  animation: pulseGlowOut 4s ease-in-out infinite;
+}
+
+.breathing-exercise__circle--complete {
+  background: linear-gradient(135deg, #22C55E 0%, #10B981 100%);
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3);
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 8px 32px rgba(92, 64, 251, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 48px rgba(92, 64, 251, 0.5);
+  }
+}
+
+@keyframes pulseGlowOut {
+  0%, 100% {
+    box-shadow: 0 8px 48px rgba(92, 64, 251, 0.5);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(92, 64, 251, 0.3);
+  }
+}
+
+.breathing-exercise__inner {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.breathing-exercise__phase {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+}
+
+.breathing-exercise__timer {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.breathing-exercise__instruction {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: #8a8e99;
+  margin: 0;
+  text-align: center;
+}
+
+/* Thank You Image */
+.mental-health-check__thanks-img {
+  max-width: 100%;
+  max-height: 220px;
+  object-fit: contain;
 }
 
 /* Actions */
@@ -203,73 +311,281 @@
   margin-right: 8px;
 }
 
+/* Responsive - Desktop */
+@media (min-width: 1024px) {
+  .mental-health-check__heading {
+    font-size: 32px;
+    line-height: 38px;
+    margin-bottom: 20px;
+  }
+
+  .mental-health-check__description {
+    font-size: 18px;
+    line-height: 26px;
+    max-width: 380px;
+    margin-bottom: 32px;
+  }
+
+  .mental-health-check__illustration {
+    min-height: 240px;
+    margin-bottom: 32px;
+  }
+
+  .breathing-exercise__circle {
+    width: 180px;
+    height: 180px;
+  }
+
+  .breathing-exercise__inner {
+    width: 156px;
+    height: 156px;
+  }
+
+  .breathing-exercise__phase {
+    font-size: 20px;
+  }
+
+  .breathing-exercise__timer {
+    font-size: 16px;
+  }
+
+  .breathing-exercise__instruction {
+    font-size: 16px;
+  }
+
+  .mental-health-check__thanks-img {
+    max-height: 280px;
+  }
+
+  .mental-health-check__actions {
+    gap: 16px;
+  }
+}
+
 /* Responsive - Tablet and Mobile */
 @media (max-width: 1023px) {
   .mental-health-check__mobile-header {
     display: block;
     margin-bottom: 16px;
   }
-  
+
   .mental-health-check__content {
     padding: 0;
     overflow-y: auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
   }
-  
-  .mental-health-check__mobile-image {
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-    margin-top: 0;
-    border-radius: 0;
-  }
-  
+
+  /* Hide the header image and mobile info on tablet/mobile */
+  .mental-health-check__mobile-image,
   .mental-health-check__mobile-info {
-    padding: 0 16px;
+    display: none;
   }
-  
+
   .mental-health-check__right-content {
-    padding: 0 16px;
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  
+
+  .mental-health-check__illustration {
+    margin-bottom: 0;
+  }
+
   .mental-health-check__actions {
-    padding: 0 16px 16px 16px;
+    padding: 24px;
+    flex-shrink: 0;
+  }
+}
+
+/* Responsive - Tablet Only */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .mental-health-check__right-content {
+    padding: 32px 40px;
+    flex: 1;
+  }
+
+  .mental-health-check__labels {
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+
+  .mental-health-check__section-label,
+  .mental-health-check__reflection-label {
+    font-size: 17px;
+    line-height: 24px;
+  }
+
+  .mental-health-check__heading {
+    font-size: 28px;
+    line-height: 34px;
+    margin-bottom: 18px;
+  }
+
+  .mental-health-check__description {
+    font-size: 17px;
+    line-height: 24px;
+    max-width: 420px;
+    margin-bottom: 32px;
+  }
+
+  .mental-health-check__illustration {
+    min-height: 200px;
+    flex: 1;
+  }
+
+  .breathing-exercise__circle {
+    width: 170px;
+    height: 170px;
+  }
+
+  .breathing-exercise__inner {
+    width: 148px;
+    height: 148px;
+  }
+
+  .breathing-exercise__phase {
+    font-size: 19px;
+  }
+
+  .breathing-exercise__timer {
+    font-size: 15px;
+  }
+
+  .breathing-exercise__instruction {
+    font-size: 15px;
+  }
+
+  .mental-health-check__thanks-img {
+    max-height: 260px;
+  }
+
+  .mental-health-check__actions {
+    padding: 32px 40px;
+    gap: 14px;
   }
 }
 
 /* Responsive - Mobile */
 @media (max-width: 768px) {
-  .mental-health-check__content {
-    padding: 0;
+  .mental-health-check__right-content {
+    padding: 20px;
   }
-  
+
   .mental-health-check__mobile-title {
     font-size: 20px;
     line-height: 28px;
   }
-  
-  .mental-health-check__mobile-image {
-    aspect-ratio: 4 / 3;
-    border-radius: 0;
+
+  .mental-health-check__labels {
+    margin-bottom: 12px;
   }
-  
-  .mental-health-check__mobile-info {
-    padding: 16px;
-  }
-  
-  .mental-health-check__right-content {
-    padding: 0 16px;
-  }
-  
+
   .mental-health-check__heading {
     font-size: 22px;
+    line-height: 28px;
+    margin-bottom: 12px;
   }
-  
+
   .mental-health-check__description {
     font-size: 14px;
     line-height: 20px;
+    margin-bottom: 20px;
+    max-width: 300px;
   }
-  
+
+  .mental-health-check__illustration {
+    min-height: 140px;
+    flex: 1;
+  }
+
   .mental-health-check__actions {
-    padding: 0 16px 16px 16px;
+    padding: 20px;
+    gap: 12px;
+  }
+
+  /* Smaller breathing circle on mobile */
+  .breathing-exercise__circle {
+    width: 140px;
+    height: 140px;
+  }
+
+  .breathing-exercise__inner {
+    width: 120px;
+    height: 120px;
+  }
+
+  .breathing-exercise__phase {
+    font-size: 16px;
+  }
+
+  .mental-health-check__thanks-img {
+    max-height: 180px;
+  }
+}
+
+/* Small phones (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .mental-health-check__right-content {
+    padding: 16px;
+  }
+
+  .mental-health-check__labels {
+    margin-bottom: 10px;
+  }
+
+  .mental-health-check__section-label,
+  .mental-health-check__reflection-label {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .mental-health-check__heading {
+    font-size: 20px;
+    line-height: 26px;
+    margin-bottom: 10px;
+  }
+
+  .mental-health-check__description {
+    font-size: 13px;
+    line-height: 18px;
+    margin-bottom: 16px;
+    max-width: 260px;
+  }
+
+  .mental-health-check__illustration {
+    min-height: 120px;
+    flex: 1;
+  }
+
+  .breathing-exercise__circle {
+    width: 120px;
+    height: 120px;
+  }
+
+  .breathing-exercise__inner {
+    width: 100px;
+    height: 100px;
+  }
+
+  .breathing-exercise__phase {
+    font-size: 14px;
+  }
+
+  .breathing-exercise__timer {
+    font-size: 12px;
+  }
+
+  .mental-health-check__thanks-img {
+    max-height: 150px;
+  }
+
+  .mental-health-check__actions {
+    padding: 16px;
+    gap: 10px;
   }
 }
