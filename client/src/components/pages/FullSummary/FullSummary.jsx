@@ -1,6 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './FullSummary.css';
 import { PrimaryButton, SecondaryButton } from '../../common/Button';
+
+// PDF Icon
+const PdfIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V16C4 16.5304 4.21071 17.0391 4.58579 17.4142C4.96086 17.7893 5.46957 18 6 18H14C14.5304 18 15.0391 17.7893 15.4142 17.4142C15.7893 17.0391 16 16.5304 16 16V6L12 2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 2V6H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M7 10H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M7 13H13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
 
 // Arrow Up/Down Icon
 const ArrowIcon = ({ direction = 'up' }) => (
@@ -168,7 +178,7 @@ const TeamCard = ({ title, subtitle, team, showOutline = false }) => (
     {subtitle && <p className="full-summary__team-subtitle">{subtitle}</p>}
     <div className="full-summary__team-avatars">
       {team.map((member, index) => (
-        <img 
+        <img
           key={member.id}
           src={member.avatar}
           alt={member.name}
@@ -188,7 +198,7 @@ const CombinedTeamCard = ({ team, affirmationTeam }) => (
     </h4>
     <div className="full-summary__team-avatars">
       {team.map((member, index) => (
-        <img 
+        <img
           key={member.id}
           src={member.avatar}
           alt={member.name}
@@ -196,7 +206,7 @@ const CombinedTeamCard = ({ team, affirmationTeam }) => (
         />
       ))}
     </div>
-    
+
     {/* Affirmation section */}
     <h4 className="full-summary__team-title full-summary__team-title--blue full-summary__team-title--affirmation">
       Who has affirmed their commitment
@@ -206,7 +216,7 @@ const CombinedTeamCard = ({ team, affirmationTeam }) => (
     </p>
     <div className="full-summary__team-avatars">
       {affirmationTeam.map((member, index) => (
-        <img 
+        <img
           key={member.id}
           src={member.avatar}
           alt={member.name}
@@ -217,15 +227,38 @@ const CombinedTeamCard = ({ team, affirmationTeam }) => (
   </div>
 );
 
-const FullSummary = ({ 
+const FullSummary = ({
   userName = "Norman",
   reflections = [],
   team = [],
   onContinue,
-  onBack,
-  onChangeAnswer
+  onBack
 }) => {
   const [expandedCards, setExpandedCards] = useState({});
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef(null);
+
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('full-summary--visible');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all animatable elements
+    const animatableElements = document.querySelectorAll('.full-summary__animate');
+    animatableElements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   const toggleCard = (reflectionId, choiceId) => {
     const key = `${reflectionId}-${choiceId}`;
@@ -233,6 +266,21 @@ const FullSummary = ({
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  // Export to PDF using browser print
+  const handleExportPdf = async () => {
+    setIsExporting(true);
+
+    // Add print-specific class for styling
+    document.body.classList.add('printing-pdf');
+
+    // Use browser's print functionality
+    setTimeout(() => {
+      window.print();
+      document.body.classList.remove('printing-pdf');
+      setIsExporting(false);
+    }, 100);
   };
 
   // Default reflections data
@@ -310,20 +358,30 @@ const FullSummary = ({
   const displayTeam = team.length > 0 ? team : defaultTeam;
 
   return (
-    <div className="full-summary">
+    <div className="full-summary" ref={contentRef}>
       {/* Header */}
-      <header className="full-summary__header">
+      <header className="full-summary__header full-summary__animate">
         <span className="full-summary__header-label">Advance Care Planning</span>
         <h2 className="full-summary__header-title">Full Summary of {userName}'s Decisions for Q10A</h2>
         <div className="full-summary__header-divider" />
+        {/* Export to PDF Button */}
+        <button
+          className="full-summary__export-btn"
+          onClick={handleExportPdf}
+          disabled={isExporting}
+          aria-label="Export to PDF"
+        >
+          <PdfIcon />
+          <span>{isExporting ? 'Exporting...' : 'Export to PDF'}</span>
+        </button>
       </header>
 
       {/* Main Content */}
       <div className="full-summary__content">
         {displayReflections.map((reflection, reflectionIndex) => (
-          <div key={reflection.id} className="full-summary__reflection">
+          <div key={reflection.id} className="full-summary__reflection full-summary__animate">
             {reflectionIndex > 0 && <div className="full-summary__reflection-divider" />}
-            
+
             <div className="full-summary__reflection-header">
               <span className="full-summary__reflection-label">{reflection.label}</span>
               <h3 className="full-summary__reflection-question">{reflection.question}</h3>
@@ -337,7 +395,7 @@ const FullSummary = ({
                   const isQ2 = reflection.question && reflection.question.toLowerCase().includes('challenges');
                   const isQ3 = reflection.question && reflection.question.toLowerCase().includes('change your mind');
                   return (
-                    <div key={choice.id} className="full-summary__choice-row">
+                    <div key={choice.id} className="full-summary__choice-row full-summary__animate">
                       {/* Choice Card */}
                       <div className="full-summary__choice-col">
                         <ChoiceDetailCard
@@ -379,9 +437,9 @@ const FullSummary = ({
           Continue to Team Visibility
           <span className="full-summary__btn-arrow">→</span>
         </PrimaryButton>
-        <SecondaryButton onClick={onChangeAnswer || onBack} fullWidth>
-          Change Your Answer
+        <SecondaryButton onClick={onBack} fullWidth>
           <span className="full-summary__btn-back-arrow">←</span>
+          Back to Summary
         </SecondaryButton>
       </div>
     </div>

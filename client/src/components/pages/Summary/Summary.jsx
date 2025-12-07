@@ -92,8 +92,8 @@ const Summary = ({
 
   // Default team members if none provided
   const defaultTeam = [
-    { id: 1, name: "Dr. Sarah", avatar: "https://i.pravatar.cc/82?img=1", affirmed: true },
-    { id: 2, name: "John", avatar: "https://i.pravatar.cc/82?img=2", affirmed: true },
+    { id: 1, name: "Dr. Sarah", avatar: "https://i.pravatar.cc/82?img=1", affirmed: true, affirmedDate: "Dec 5, 2025" },
+    { id: 2, name: "John", avatar: "https://i.pravatar.cc/82?img=2", affirmed: true, affirmedDate: "Dec 3, 2025" },
     { id: 3, name: "Mary", avatar: "https://i.pravatar.cc/82?img=3", affirmed: false },
     { id: 4, name: "James", avatar: "https://i.pravatar.cc/82?img=4", affirmed: false },
     { id: 5, name: "Lisa", avatar: "https://i.pravatar.cc/82?img=5", affirmed: false }
@@ -121,7 +121,6 @@ const Summary = ({
         team={displayTeam}
         onContinue={onViewTeamRecordings}
         onBack={() => setShowFullSummary(false)}
-        onChangeAnswer={onChangeAnswer}
       />
     );
   }
@@ -178,12 +177,21 @@ const Summary = ({
               </p>
               <div className="summary__avatars">
                 {displayTeam.map((member) => (
-                  <img 
-                    key={member.id}
-                    src={member.avatar}
-                    alt={member.name}
-                    className={`summary__avatar ${member.affirmed ? 'summary__avatar--affirmed' : ''}`}
-                  />
+                  <div key={member.id} className="summary__avatar-wrapper">
+                    <img
+                      src={member.avatar}
+                      alt={member.name}
+                      className={`summary__avatar ${member.affirmed ? 'summary__avatar--affirmed' : ''}`}
+                    />
+                    <div className="summary__avatar-tooltip">
+                      <span className="summary__avatar-tooltip-name">{member.name}</span>
+                      {member.affirmed ? (
+                        <span className="summary__avatar-tooltip-date">Affirmed {member.affirmedDate}</span>
+                      ) : (
+                        <span className="summary__avatar-tooltip-pending">Not yet affirmed</span>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

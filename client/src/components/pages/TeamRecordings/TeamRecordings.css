@@ -346,33 +346,58 @@
   justify-content: center;
   padding: 16px 48px;
   border-radius: 999px;
-  border: none;
+  border: 2px solid transparent;
+  background: linear-gradient(white, white) padding-box, linear-gradient(270deg, #405CFB 0%, #F23B8B 100%) border-box;
   cursor: pointer;
   font-family: var(--font-label);
   font-size: 16px;
   font-weight: 800;
   line-height: 1.4;
-  color: #fff;
-  background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
-  box-shadow: 0 4px 12px rgba(11, 19, 36, 0.24);
-  text-shadow: 0 4px 12px rgba(11, 19, 36, 0.24);
   margin-bottom: 24px;
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
+.team-recordings__affirm-btn .btn-text-default,
+.team-recordings__affirm-btn .btn-text-hover {
+  background: linear-gradient(180deg, #B432A3 25%, #AE59CF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 .team-recordings__affirm-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(11, 19, 36, 0.3);
+  box-shadow: 0 4px 16px rgba(64, 92, 251, 0.25);
 }
 
 .team-recordings__affirm-btn.affirmed {
-  background: linear-gradient(180deg, #28a745 25%, #218838 100%);
+  background: linear-gradient(180deg, #B432A3 25%, #AE59CF 100%);
+  border: none;
+}
+
+.team-recordings__affirm-btn.affirmed .btn-text-default,
+.team-recordings__affirm-btn.affirmed .btn-text-hover {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: white;
+  background-clip: unset;
+  color: white;
 }
 
 .team-recordings__affirm-btn.affirmed:hover {
-  background: linear-gradient(180deg, #d9534f 25%, #c9302c 100%);
+  background: linear-gradient(180deg, #9a2a8a 25%, #9648b8 100%);
+  box-shadow: 0 4px 16px rgba(180, 50, 163, 0.35);
+}
+
+.team-recordings__affirm-btn.affirmed:hover .btn-text-default,
+.team-recordings__affirm-btn.affirmed:hover .btn-text-hover {
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: white;
+  background-clip: unset;
+  color: white;
 }
 
 .team-recordings__affirm-btn .btn-text-default,
