@@ -329,6 +329,18 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.summary__recording-thumbnail:hover {
+  transform: scale(1.05);
+}
+
+.summary__recording-thumbnail:focus {
+  outline: 2px solid #5C40FB;
+  outline-offset: 4px;
+  border-radius: 50%;
 }
 
 .summary__recording-image {
@@ -379,6 +391,69 @@
 .summary__team-visibility-link:hover {
   color: #5C40FB;
   text-decoration: underline;
+}
+
+/* User recording thumbnail */
+.summary__recording-thumbnail--user {
+  cursor: pointer;
+}
+
+.summary__recording-image--user {
+  border: 2px dashed #B432A3;
+  opacity: 0.8;
+}
+
+.summary__recording-image--circular {
+  border-radius: 50%;
+}
+
+.summary__recording-add {
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Recording Modal Styles */
+.summary__recording-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.summary__recording-modal-icon {
+  margin-bottom: 16px;
+}
+
+.summary__recording-modal-title {
+  font-family: 'Mulish', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e1e1e;
+  margin: 0 0 12px 0;
+  line-height: 28px;
+}
+
+.summary__recording-modal-description {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6B7280;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.summary__recording-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
 
 /* Actions */

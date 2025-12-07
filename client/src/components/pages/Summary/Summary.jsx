@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Summary.css';
 import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton, SecondaryButton } from '../../common/Button';
+import { Modal } from '../../common/Modal';
 import logo from '../../../styles/logo.png';
 import FullSummary from '../FullSummary';
 
@@ -35,6 +36,7 @@ const PlayIcon = () => (
 const Summary = ({
   question,
   userName = "Norman",
+  userAvatar = "https://i.pravatar.cc/82?img=8",
   checkpoints = [],
   reflections = [],
   team = [],
@@ -44,9 +46,19 @@ const Summary = ({
   onBack,
   onBackHome,
   onChangeAnswer,
-  onViewTeamRecordings
+  onViewTeamRecordings,
+  onNavigateToTeamVisibility,
+  isFirstVisit = false
 }) => {
   const [showFullSummary, setShowFullSummary] = useState(false);
+  const [showRecordingModal, setShowRecordingModal] = useState(false);
+
+  // Show modal on first visit
+  useEffect(() => {
+    if (isFirstVisit) {
+      setShowRecordingModal(true);
+    }
+  }, [isFirstVisit]);
 
   const { title, subtitle, sectionLabel } = question || {
     title: "How important is staying alive even if you have substantial physical limitations?",
@@ -107,7 +119,7 @@ const Summary = ({
         userName={userName}
         reflections={reflections}
         team={displayTeam}
-        onContinue={onContinue}
+        onContinue={onViewTeamRecordings}
         onBack={() => setShowFullSummary(false)}
         onChangeAnswer={onChangeAnswer}
       />
@@ -222,12 +234,40 @@ const Summary = ({
             </p>
 
             <div className="summary__team-visibility-preview">
-              {recordingsWithVideo.slice(0, 3).map((member) => (
-                <div key={member.id} className="summary__recording-thumbnail">
+              {/* Current user's recording slot */}
+              <div
+                className="summary__recording-thumbnail summary__recording-thumbnail--user"
+                onClick={onNavigateToTeamVisibility}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === 'Enter' && onNavigateToTeamVisibility?.()}
+              >
+                <img
+                  src={userAvatar}
+                  alt={`${userName}'s recording`}
+                  className="summary__recording-image summary__recording-image--user summary__recording-image--circular"
+                />
+                <div className="summary__recording-add">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="10" fill="rgba(255, 255, 255, 0.9)" />
+                    <path d="M10 6V14M6 10H14" stroke="#B432A3" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <span className="summary__recording-name">You</span>
+              </div>
+              {recordingsWithVideo.slice(0, 2).map((member) => (
+                <div
+                  key={member.id}
+                  className="summary__recording-thumbnail"
+                  onClick={onViewTeamRecordings}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && onViewTeamRecordings?.()}
+                >
                   <img
-                    src={member.thumbnail || member.avatar}
+                    src={member.avatar}
                     alt={`${member.name}'s recording`}
-                    className="summary__recording-image"
+                    className="summary__recording-image summary__recording-image--circular"
                   />
                   <div className="summary__recording-play">
                     <PlayIcon />
@@ -260,6 +300,52 @@ const Summary = ({
             </SecondaryButton>
           </div>
         </div>
+
+        {/* First Visit Recording Modal */}
+        <Modal
+          isOpen={showRecordingModal}
+          onClose={() => setShowRecordingModal(false)}
+          showCloseButton={false}
+          size="small"
+        >
+          <div className="summary__recording-modal">
+            <div className="summary__recording-modal-icon">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="24" fill="url(#modalIconGradient)" fillOpacity="0.1"/>
+                <path d="M24 16V32M16 24H32" stroke="url(#modalIconGradient)" strokeWidth="3" strokeLinecap="round"/>
+                <defs>
+                  <linearGradient id="modalIconGradient" x1="16" y1="24" x2="32" y2="24" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#5C40FB"/>
+                    <stop offset="1" stopColor="#F23B8B"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <h3 className="summary__recording-modal-title">Let's Record Your Answer</h3>
+            <p className="summary__recording-modal-description">
+              Share your thoughts with your care team by recording a personal message about your decisions.
+            </p>
+            <div className="summary__recording-modal-actions">
+              <PrimaryButton
+                onClick={() => {
+                  setShowRecordingModal(false);
+                  if (onNavigateToTeamVisibility) {
+                    onNavigateToTeamVisibility();
+                  }
+                }}
+                fullWidth
+              >
+                Continue
+              </PrimaryButton>
+              <SecondaryButton
+                onClick={() => setShowRecordingModal(false)}
+                fullWidth
+              >
+                Skip for Now
+              </SecondaryButton>
+            </div>
+          </div>
+        </Modal>
       </ContentPanel>
     </TwoColumnLayout>
   );

@@ -82,6 +82,7 @@ const QuestionnaireFlow = () => {
   const [q2Choices, setQ2Choices] = useState(savedProgress?.q2Choices || []);
   const [q3Choices, setQ3Choices] = useState(savedProgress?.q3Choices || []);
   const [selectedMemberForFullSummary, setSelectedMemberForFullSummary] = useState(null);
+  const [hasVisitedSummary, setHasVisitedSummary] = useState(savedProgress?.hasVisitedSummary || false);
 
   // Track the highest completed checkpoint for resume functionality
   const [completedCheckpoints, setCompletedCheckpoints] = useState(savedProgress?.completedCheckpoints || {
@@ -96,9 +97,10 @@ const QuestionnaireFlow = () => {
       q1Choices,
       q2Choices,
       q3Choices,
-      completedCheckpoints
+      completedCheckpoints,
+      hasVisitedSummary
     });
-  }, [q1Choices, q2Choices, q3Choices, completedCheckpoints]);
+  }, [q1Choices, q2Choices, q3Choices, completedCheckpoints, hasVisitedSummary]);
 
   // Calculate progress percentage for the "How it Works" section
   const getProgressPercentage = () => {
@@ -629,6 +631,7 @@ const QuestionnaireFlow = () => {
       <Summary
         question={mainScreenQuestion}
         userName="Norman"
+        userAvatar="https://i.pravatar.cc/82?img=8"
         checkpoints={checkpointsData}
         reflections={reflectionsData}
         team={teamWithAffirmation}
@@ -638,6 +641,11 @@ const QuestionnaireFlow = () => {
         onBackHome={() => setCurrentPhase(FLOW_PHASES.MAIN)}
         onChangeAnswer={() => setCurrentPhase(FLOW_PHASES.Q1_SELECTION)}
         onViewTeamRecordings={() => setCurrentPhase(FLOW_PHASES.TEAM_RECORDINGS)}
+        isFirstVisit={!hasVisitedSummary}
+        onNavigateToTeamVisibility={() => {
+          setHasVisitedSummary(true);
+          setCurrentPhase(FLOW_PHASES.TEAM_VISIBILITY);
+        }}
       />
     );
   }
