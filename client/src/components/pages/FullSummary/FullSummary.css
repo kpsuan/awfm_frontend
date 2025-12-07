@@ -283,6 +283,177 @@
   transform: rotate(180deg);
 }
 
+/* ==================== FLIP CARD STYLES (Q1 Alternative Layout) ==================== */
+.full-summary__flip-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-summary__flip-card {
+  perspective: 1000px;
+  width: 100%;
+  height: 350px;
+  cursor: pointer;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.full-summary__flip-card--flipped {
+  transform: rotateY(180deg);
+}
+
+.full-summary__flip-card-front,
+.full-summary__flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.full-summary__flip-card-front {
+  background: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.full-summary__flip-card-back {
+  background: linear-gradient(135deg, #F5F2FF 0%, #FFF5FB 100%);
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  border: 1px solid #B432A3;
+}
+
+.full-summary__flip-card-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.full-summary__flip-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.full-summary__flip-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+.full-summary__flip-card-title {
+  font-family: 'Mulish', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0;
+  background: linear-gradient(90deg, #5C40FB 0%, #F23B8B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.full-summary__flip-card-hint {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8A8E99;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.full-summary__flip-card-hint::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A8E99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 1l4 4-4 4'/%3E%3Cpath d='M3 11V9a4 4 0 0 1 4-4h14'/%3E%3Cpath d='M7 23l-4-4 4-4'/%3E%3Cpath d='M21 13v2a4 4 0 0 1-4 4H3'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.full-summary__flip-card-back-content {
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.full-summary__flip-card-back-title {
+  font-family: 'Mulish', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #B432A3;
+  margin: 0;
+  text-align: center;
+}
+
+.full-summary__flip-card-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #5C40FB 0%, #F23B8B 100%);
+}
+
+.full-summary__flip-card-description {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  text-align: center;
+}
+
+.full-summary__flip-card-expanded {
+  background: #F5F2FF;
+  border: 1px solid #B432A3;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.full-summary__flip-card-toggle {
+  align-self: center;
+  margin-top: 8px;
+}
+
+/* Responsive for flip card */
+@media (max-width: 768px) {
+  .full-summary__flip-card {
+    height: 300px;
+  }
+
+  .full-summary__flip-card-image {
+    height: 160px;
+  }
+
+  .full-summary__flip-card-title {
+    font-size: 16px;
+  }
+
+  .full-summary__flip-card-description {
+    font-size: 13px;
+  }
+}
+
+/* ==================== END FLIP CARD STYLES ==================== */
+
 /* Choices Container - holds rows of choice + team card */
 .full-summary__choices-container {
   display: flex;

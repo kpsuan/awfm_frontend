@@ -465,3 +465,375 @@
     line-height: 20px;
   }
 }
+
+/* ==================== FLIP CHOICE CARD STYLES ==================== */
+.flip-choice-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 500px;
+  min-width: 320px;
+  flex-shrink: 0;
+}
+
+.flip-choice-card--selected .flip-choice-card__front {
+  border-color: #B432A3;
+  background: #f5f2ff;
+}
+
+.flip-choice-card__flipper {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.flip-choice-card__front,
+.flip-choice-card__back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 24px;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0px 4px 16px 0px rgba(81, 9, 71, 0.12);
+}
+
+.flip-choice-card__front {
+  background: white;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.flip-choice-card__back {
+  background: linear-gradient(135deg, #F5F2FF 0%, #FFF5FB 100%);
+  border: 1px solid #B432A3;
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.flip-choice-card__flipper--flipped .flip-choice-card__front {
+  transform: rotateY(-180deg);
+}
+
+.flip-choice-card__flipper--flipped .flip-choice-card__back {
+  transform: rotateY(0deg);
+}
+
+/* Selection area */
+.flip-choice-card__select-area {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.flip-choice-card__checkbox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(7, 17, 46, 0.15);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.flip-choice-card__checkbox:hover {
+  border-color: #B432A3;
+}
+
+.flip-choice-card__checkbox-fill {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Front content */
+.flip-choice-card__image {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+}
+
+.flip-choice-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flip-choice-card__front-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  gap: 12px;
+}
+
+.flip-choice-card__title {
+  font-family: 'Mulish', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #191c24;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.flip-choice-card__title--selected {
+  background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.flip-choice-card__hint {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #8A8E99;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.flip-choice-card__hint svg {
+  width: 16px;
+  height: 16px;
+  stroke: #8A8E99;
+}
+
+.flip-choice-card__hint--back {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+/* Back content */
+.flip-choice-card__back-content {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
+
+.flip-choice-card__back-title {
+  font-family: 'Mulish', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #B432A3;
+  margin: 0;
+}
+
+.flip-choice-card__divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #5C40FB 0%, #F23B8B 100%);
+}
+
+.flip-choice-card__description {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+}
+
+/* Expand button */
+.flip-choice-card__expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.flip-choice-card__expand:hover {
+  opacity: 0.8;
+}
+
+/* Expanded content */
+.flip-choice-card__expanded {
+  background: #F5F2FF;
+  border: 1px solid #B432A3;
+  border-radius: 16px;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.flip-choice-card__expanded-image {
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-top: -20px;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  max-height: 200px;
+}
+
+.flip-choice-card__expanded-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flip-choice-card__expanded-title {
+  font-family: 'Mulish', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #191c24;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.flip-choice-card__expanded-title--selected {
+  background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.flip-choice-card__expanded-description {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: #5a5e6b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.flip-choice-card__expanded-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(180, 50, 163, 0.4) 0%, rgba(174, 89, 207, 0.1) 100%);
+  margin: 8px 0;
+}
+
+/* Responsive - Large Desktop */
+@media (min-width: 1400px) {
+  .flip-choice-card {
+    max-width: 600px;
+    min-width: 500px;
+  }
+
+  .flip-choice-card__flipper {
+    height: 420px;
+  }
+
+  .flip-choice-card__image {
+    height: 260px;
+  }
+}
+
+/* Responsive - Desktop */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .flip-choice-card {
+    max-width: 520px;
+    min-width: 420px;
+  }
+
+  .flip-choice-card__flipper {
+    height: 400px;
+  }
+
+  .flip-choice-card__image {
+    height: 240px;
+  }
+}
+
+/* Responsive - Tablet */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .flip-choice-card {
+    max-width: 450px;
+    min-width: 380px;
+  }
+
+  .flip-choice-card__flipper {
+    height: 380px;
+  }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+  .flip-choice-card {
+    max-width: calc(100vw - 48px);
+    min-width: 280px;
+    width: calc(100vw - 48px);
+  }
+
+  .flip-choice-card__flipper {
+    height: 340px;
+  }
+
+  .flip-choice-card__image {
+    height: 180px;
+  }
+
+  .flip-choice-card__title {
+    font-size: 16px;
+  }
+
+  .flip-choice-card__description {
+    font-size: 16px;
+  }
+
+  .flip-choice-card__front,
+  .flip-choice-card__back {
+    border-radius: 20px;
+  }
+
+  .flip-choice-card__expanded {
+    padding: 16px;
+  }
+
+  .flip-choice-card__expanded-image {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    margin-top: -16px;
+  }
+
+  .flip-choice-card__expanded-title {
+    font-size: 16px;
+  }
+
+  .flip-choice-card__expanded-description {
+    font-size: 14px;
+  }
+}
+
+/* ==================== END FLIP CHOICE CARD STYLES ==================== */

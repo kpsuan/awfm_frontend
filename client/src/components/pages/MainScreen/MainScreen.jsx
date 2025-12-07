@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MainScreen.css';
 import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton } from '../../common/Button';
@@ -12,6 +12,13 @@ import logo from '../../../styles/logo.png';
 const PlusIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Swipe icon for onboarding tooltip
+const SwipeIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 16L3 12M3 12L7 8M3 12H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -33,6 +40,24 @@ const MainScreen = ({
 }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user has seen onboarding before
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('awfm_main_screen_onboarding');
+    if (!hasSeenOnboarding) {
+      // Show onboarding after a short delay
+      const timer = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const dismissOnboarding = () => {
+    setShowOnboarding(false);
+    localStorage.setItem('awfm_main_screen_onboarding', 'true');
+  };
 
   const { title, subtitle, sectionLabel } = question || {
     title: "How important is staying alive even if you have substantial physical limitations?",
@@ -266,11 +291,33 @@ const MainScreen = ({
           </div>
           
           <div className="main-screen__carousel-indicator">
-            <CarouselIndicator 
-              total={slides.length} 
-              active={activeSlide} 
-              onClick={handleSlideChange} 
+            <CarouselIndicator
+              total={slides.length}
+              active={activeSlide}
+              onClick={handleSlideChange}
             />
+            {/* Onboarding tooltip */}
+            {showOnboarding && (
+              <div className="main-screen__onboarding-tooltip">
+                <div className="main-screen__onboarding-content">
+                  <div className="main-screen__onboarding-icon">
+                    <SwipeIcon />
+                  </div>
+                  <div className="main-screen__onboarding-text">
+                    <p className="main-screen__onboarding-title">Swipe or tap to explore</p>
+                    <p className="main-screen__onboarding-desc">Navigate between sections using the dots below</p>
+                  </div>
+                  <button
+                    className="main-screen__onboarding-dismiss"
+                    onClick={dismissOnboarding}
+                    aria-label="Dismiss"
+                  >
+                    Got it
+                  </button>
+                </div>
+                <div className="main-screen__onboarding-arrow" />
+              </div>
+            )}
           </div>
           
           <div className="main-screen__action">

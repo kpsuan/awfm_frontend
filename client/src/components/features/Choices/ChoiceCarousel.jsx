@@ -1,8 +1,8 @@
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import './Choices.css';
-import { ChoiceCard } from '../../common/Card';
+import { ChoiceCard, FlipChoiceCard } from '../../common/Card';
 
-const ChoiceCarousel = forwardRef(({ 
+const ChoiceCarousel = forwardRef(({
   choices = [],
   selectedChoices = [],
   onSelect,
@@ -14,6 +14,9 @@ const ChoiceCarousel = forwardRef(({
 }, ref) => {
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [cardVersion, setCardVersion] = useState('v1'); // 'v1' = ChoiceCard, 'v2' = FlipChoiceCard
+
+  const CardComponent = cardVersion === 'v1' ? ChoiceCard : FlipChoiceCard;
 
   // Expose scrollToIndex to parent
   useImperativeHandle(ref, () => ({
@@ -34,7 +37,7 @@ const ChoiceCarousel = forwardRef(({
 
   useEffect(() => {
     if (layout !== 'horizontal') return;
-    
+
     const carousel = carouselRef.current;
     if (!carousel) return;
 
@@ -54,42 +57,66 @@ const ChoiceCarousel = forwardRef(({
     return () => carousel.removeEventListener('scroll', handleScroll);
   }, [choices.length, layout, activeIndex, onIndexChange]);
 
+  // Version toggle component
+  const VersionToggle = () => (
+    <div className="choice-version-toggle">
+      <button
+        className={`choice-version-toggle__btn ${cardVersion === 'v1' ? 'choice-version-toggle__btn--active' : ''}`}
+        onClick={() => setCardVersion('v1')}
+      >
+        V1
+      </button>
+      <button
+        className={`choice-version-toggle__btn ${cardVersion === 'v2' ? 'choice-version-toggle__btn--active' : ''}`}
+        onClick={() => setCardVersion('v2')}
+      >
+        V2
+      </button>
+    </div>
+  );
+
   if (layout === 'vertical') {
     return (
-      <div className="choice-list">
+      <div className="choice-carousel-container">
+        <VersionToggle />
+        <div className="choice-list">
+          {choices.map((choice) => (
+            <CardComponent
+              key={choice.id}
+              choice={choice}
+              isSelected={selectedChoices.includes(choice.id)}
+              isExpanded={expandedCardId === choice.id}
+              onSelect={onSelect}
+              onExpand={onExpandChange}
+              isQ2={isQ2}
+              isQ3={isQ3}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="choice-carousel-container">
+      <VersionToggle />
+      <div
+        ref={carouselRef}
+        className="choice-list choice-list--horizontal hide-scrollbar"
+      >
         {choices.map((choice) => (
-          <ChoiceCard
+          <CardComponent
             key={choice.id}
             choice={choice}
             isSelected={selectedChoices.includes(choice.id)}
             isExpanded={expandedCardId === choice.id}
             onSelect={onSelect}
             onExpand={onExpandChange}
-              isQ2={isQ2}
-              isQ3={isQ3}
+            isQ2={isQ2}
+            isQ3={isQ3}
           />
         ))}
       </div>
-    );
-  }
-
-  return (
-    <div 
-      ref={carouselRef} 
-      className="choice-list choice-list--horizontal hide-scrollbar"
-    >
-      {choices.map((choice) => (
-        <ChoiceCard
-          key={choice.id}
-          choice={choice}
-          isSelected={selectedChoices.includes(choice.id)}
-          isExpanded={expandedCardId === choice.id}
-          onSelect={onSelect}
-          onExpand={onExpandChange}
-            isQ2={isQ2}
-            isQ3={isQ3}
-        />
-      ))}
     </div>
   );
 });

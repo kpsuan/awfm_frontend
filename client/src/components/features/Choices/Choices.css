@@ -1,3 +1,44 @@
+/* Container with version toggle */
+.choice-carousel-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Version Toggle */
+.choice-version-toggle {
+  display: flex;
+  gap: 4px;
+  align-self: flex-end;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.choice-version-toggle__btn {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8A8E99;
+  background: transparent;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.choice-version-toggle__btn:hover {
+  color: #5C40FB;
+}
+
+.choice-version-toggle__btn--active {
+  background: white;
+  color: #B432A3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .choice-carousel-wrapper {
   width: 100%;
   display: flex;
