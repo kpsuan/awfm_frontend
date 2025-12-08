@@ -41,6 +41,11 @@ const MainScreen = ({
   const [activeSlide, setActiveSlide] = useState(0);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Minimum swipe distance to trigger slide change
+  const minSwipeDistance = 50;
 
   // Check if user has seen onboarding before
   useEffect(() => {
@@ -122,6 +127,33 @@ const MainScreen = ({
 
   const handleSlideChange = (index) => {
     setActiveSlide(index);
+  };
+
+  // Touch handlers for swipe
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && activeSlide < slides.length - 1) {
+      setActiveSlide(activeSlide + 1);
+      dismissOnboarding();
+    }
+    if (isRightSwipe && activeSlide > 0) {
+      setActiveSlide(activeSlide - 1);
+      dismissOnboarding();
+    }
   };
 
   const renderSlideContent = (slide) => {
@@ -286,7 +318,12 @@ const MainScreen = ({
             <h1 className="main-screen__tablet-question-title">{title}</h1>
           </div>
           
-          <div className="main-screen__info-section">
+          <div
+            className="main-screen__info-section"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             {renderSlideContent(slides[activeSlide])}
           </div>
           

@@ -166,11 +166,30 @@
 .main-screen__info-section {
   flex: 1;
   min-height: 150px;
-  overflow-x: auto;
+  overflow-x: hidden;
+  touch-action: pan-y pinch-zoom;
+  cursor: grab;
+  user-select: none;
+}
+
+.main-screen__info-section:active {
+  cursor: grabbing;
 }
 
 .main-screen__slide-content {
   padding: 0;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0.7;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .main-screen__slide-title {
