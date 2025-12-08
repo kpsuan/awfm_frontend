@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './MainScreen.css';
 import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton } from '../../common/Button';
@@ -41,8 +41,10 @@ const MainScreen = ({
   const [activeSlide, setActiveSlide] = useState(0);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Use refs for touch coordinates to avoid stale closure issues
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
 
   // Minimum swipe distance to trigger slide change
   const minSwipeDistance = 50;
@@ -131,29 +133,33 @@ const MainScreen = ({
 
   // Touch handlers for swipe
   const onTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
   };
 
   const onTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    touchEndRef.current = e.targetTouches[0].clientX;
   };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
+    if (!touchStartRef.current || !touchEndRef.current) return;
 
-    const distance = touchStart - touchEnd;
+    const distance = touchStartRef.current - touchEndRef.current;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
 
-    if (isLeftSwipe && activeSlide < slides.length - 1) {
-      setActiveSlide(activeSlide + 1);
+    if (isLeftSwipe) {
+      setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
       dismissOnboarding();
     }
-    if (isRightSwipe && activeSlide > 0) {
-      setActiveSlide(activeSlide - 1);
+    if (isRightSwipe) {
+      setActiveSlide(prev => Math.max(prev - 1, 0));
       dismissOnboarding();
     }
+
+    // Reset refs
+    touchStartRef.current = null;
+    touchEndRef.current = null;
   };
 
   const renderSlideContent = (slide) => {
