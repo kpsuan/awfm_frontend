@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs-18_x", "npm-9_x"]
+
+[phases.install]
+cmds = ["cd client && npm ci"]
+
+[phases.build]
+cmds = ["cd client && npm run build && npm install -g serve"]
+
+[start]
+cmd = "serve client/build -s -l 3000"
