@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context';
-import { Button } from '../components/common/Button';
 import GoogleSignInButton from '../components/common/GoogleSignInButton';
+import AuthHeroCarousel from '../components/common/AuthHeroCarousel';
 import ConsentTermsModal from '../components/common/Modal/ConsentTermsModal';
 import ConsentAIModal from '../components/common/Modal/ConsentAIModal';
 import '../styles/auth.css';
-import './LegalPages.css';
+import logo from '../styles/logo.png';
+
+// Password validation check icon
+const CheckIcon = ({ valid }) => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path 
+      d="M13.3334 4L6.00008 11.3333L2.66675 8" 
+      stroke={valid ? "#38a169" : "rgba(70, 95, 241, 0.4)"} 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -23,8 +36,31 @@ const Register = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
 
-  const { register: registerUser, loginWithGoogle } = useAuth();
+  const { register: registerUser, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  // Password validation
+  const passwordValidation = useMemo(() => {
+    return {
+      length: password.length >= 8,
+      noNameOrEmail: !password.toLowerCase().includes(email.split('@')[0].toLowerCase()) || !email,
+      hasNumberOrSymbol: /[0-9!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+  }, [password, email]);
+
+  const passwordStrength = useMemo(() => {
+    const validCount = Object.values(passwordValidation).filter(Boolean).length;
+    if (validCount === 3) return 'Strong';
+    if (validCount === 2) return 'Medium';
+    return 'Weak';
+  }, [passwordValidation]);
 
   // Clear field error when user starts typing
   const handleFieldChange = (field, value, setter) => {
@@ -110,7 +146,7 @@ const Register = () => {
 
     try {
       await loginWithGoogle(googleData.access_token, googleData.id_token);
-      navigate('/questionnaire/Q10A');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Google sign-in failed. Please try again.');
     } finally {
@@ -123,117 +159,138 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Start your care planning journey</p>
+    <div className="auth-page">
+      {/* Left Hero Panel - Animated Carousel */}
+      <AuthHeroCarousel />
 
-        {error && (
-          <div className="auth-error">
-            {error}
+      {/* Right Form Panel */}
+      <div className="auth-form-panel">
+        <div className="auth-form-container">
+          {/* Logo */}
+          <div className="auth-logo">
+            <img src={logo} alt="AWFM Logo" />
           </div>
-        )}
 
-        <GoogleSignInButton
-          onSuccess={handleGoogleSuccess}
-          onError={handleGoogleError}
-          disabled={loading}
-          text="Sign up with Google"
-        />
+          {/* Tabs */}
+          <div className="auth-tabs">
+            <span className="auth-tab active">Sign Up</span>
+            <Link to="/login" className="auth-tab">Sign In</Link>
+          </div>
 
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
+          {error && (
+            <div className="auth-error">
+              {error}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="displayName">Display Name</label>
-            <input
-              id="displayName"
-              type="text"
-              value={displayName}
-              onChange={(e) => handleFieldChange('display_name', e.target.value, setDisplayName)}
-              required
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="displayName">Full Name</label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => handleFieldChange('display_name', e.target.value, setDisplayName)}
+                required
+                disabled={loading}
+                placeholder="Enter your full name"
+                className={fieldErrors.display_name ? 'input-error' : ''}
+              />
+              {fieldErrors.display_name && (
+                <span className="field-error">{fieldErrors.display_name}</span>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
+                required
+                disabled={loading}
+                placeholder="Enter your email"
+                className={fieldErrors.email ? 'input-error' : ''}
+              />
+              {fieldErrors.email && (
+                <span className="field-error">{fieldErrors.email}</span>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => handleFieldChange('password', e.target.value, setPassword)}
+                required
+                disabled={loading}
+                placeholder="Enter Password"
+                className={fieldErrors.password ? 'input-error' : ''}
+              />
+              {fieldErrors.password && (
+                <span className="field-error">{fieldErrors.password}</span>
+              )}
+
+              {/* Password constraints */}
+              <div className="password-constraints">
+                <div className={`constraint ${passwordStrength !== 'Weak' ? 'valid' : 'invalid'}`}>
+                  <span className="constraint-icon"><CheckIcon valid={passwordStrength !== 'Weak'} /></span>
+                  <span>Password Strength: {passwordStrength}</span>
+                </div>
+                <div className={`constraint ${passwordValidation.length ? 'valid' : 'invalid'}`}>
+                  <span className="constraint-icon"><CheckIcon valid={passwordValidation.length} /></span>
+                  <span>At least 8 characters</span>
+                </div>
+                <div className={`constraint ${passwordValidation.hasNumberOrSymbol ? 'valid' : 'invalid'}`}>
+                  <span className="constraint-icon"><CheckIcon valid={passwordValidation.hasNumberOrSymbol} /></span>
+                  <span>Contains a number or symbol</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-group-checkbox">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={isHcw}
+                  onChange={(e) => setIsHcw(e.target.checked)}
+                  disabled={loading}
+                />
+                <span className="checkbox-custom"></span>
+                <span className="checkbox-text">I am a healthcare worker</span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="auth-button-primary"
               disabled={loading}
-              placeholder="Your Name"
-              className={fieldErrors.display_name ? 'input-error' : ''}
-            />
-            {fieldErrors.display_name && (
-              <span className="field-error">{fieldErrors.display_name}</span>
-            )}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <div className="auth-divider">
+            <span>OR</span>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
-              required
-              disabled={loading}
-              placeholder="your@email.com"
-              className={fieldErrors.email ? 'input-error' : ''}
-            />
-            {fieldErrors.email && (
-              <span className="field-error">{fieldErrors.email}</span>
-            )}
-          </div>
+          <GoogleSignInButton
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleError}
+            disabled={loading}
+            text="Sign Up with Google"
+          />
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => handleFieldChange('password', e.target.value, setPassword)}
-              required
-              disabled={loading}
-              placeholder="At least 8 characters"
-              minLength={8}
-              className={fieldErrors.password ? 'input-error' : ''}
-            />
-            {fieldErrors.password && (
-              <span className="field-error">{fieldErrors.password}</span>
-            )}
-          </div>
-
-          <div className="form-group-checkbox">
-            <input
-              id="isHcw"
-              type="checkbox"
-              checked={isHcw}
-              onChange={(e) => setIsHcw(e.target.checked)}
-              disabled={loading}
-            />
-            <label htmlFor="isHcw">I am a healthcare worker</label>
-          </div>
-
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-          >
-            Create Account
-          </Button>
-
-          <p className="auth-consent-notice">
-            By creating an account, you agree to our{' '}
+          <p className="auth-terms-notice">
+            By signing up to create an account I accept Company's{' '}
             <button type="button" onClick={() => setShowTermsModal(true)}>
-              Terms of Service & Privacy Policy
-            </button>{' '}
-            and acknowledge our{' '}
-            <button type="button" onClick={() => setShowAIModal(true)}>
-              AI Assistance Disclosure
+              Terms of use & Privacy Policy.
             </button>
           </p>
-        </form>
-
-        <p className="auth-link">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
+        </div>
       </div>
 
       {/* Consent Modals */}

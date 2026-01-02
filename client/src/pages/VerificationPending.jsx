@@ -3,6 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context';
 import { authService } from '../services/auth';
 import '../styles/auth.css';
+import logo from '../styles/logo.png';
+
+// Hero background image
+const heroImage = "https://images.unsplash.com/photo-1609220136736-443140cffec6?w=800&auto=format&fit=crop";
 
 const VerificationPending = () => {
   const { user } = useAuth();
@@ -124,64 +128,102 @@ const VerificationPending = () => {
   }, [code]);
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Verify Your Email</h1>
-
-        <p className="verification-subtitle">
-          We sent a 6-digit code to
-        </p>
-        <p className="verification-email">{user?.email || 'your email'}</p>
-
-        {error && <div className="auth-error">{error}</div>}
-
-        <div className="code-inputs" onPaste={handlePaste}>
-          {code.map((digit, index) => (
-            <input
-              key={index}
-              ref={(el) => (inputRefs.current[index] = el)}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              className="code-input"
-              disabled={loading}
-              autoFocus={index === 0}
-            />
-          ))}
+    <div className="auth-page">
+      {/* Left Hero Panel */}
+      <div className="auth-hero">
+        <div className="auth-hero-bg">
+          <img src={heroImage} alt="" />
         </div>
+        
+        <div className="auth-hero-content">
+          <h1 className="auth-hero-title">
+            Welcome to<br />
+            A Whole Family Matter
+          </h1>
+          <p className="auth-hero-subtitle">
+            Your Gateway to Effortless Management.
+          </p>
+        </div>
+        
+        <div className="auth-hero-feature">
+          <h2 className="auth-hero-feature-title">Seamless Collaboration</h2>
+          <p className="auth-hero-feature-text">
+            Effortlessly work together with your team in real-time.
+          </p>
+        </div>
+        
+        <div className="auth-hero-dots">
+          <span className="auth-hero-dot active"></span>
+          <span className="auth-hero-dot"></span>
+          <span className="auth-hero-dot"></span>
+        </div>
+      </div>
 
-        <p className="code-timer">
-          Code expires in: <strong>{formatTime(timeLeft)}</strong>
-        </p>
+      {/* Right Form Panel */}
+      <div className="auth-form-panel">
+        <div className="auth-form-container">
+          {/* Logo */}
+          <div className="auth-logo">
+            <img src={logo} alt="AWFM Logo" />
+          </div>
 
-        <button
-          onClick={handleVerify}
-          className="auth-button"
-          disabled={loading || code.some(d => d === '')}
-        >
-          {loading ? 'Verifying...' : 'Verify Email'}
-        </button>
+          <h1 className="auth-title">Verify Your Email</h1>
 
-        <p className="resend-text">
-          {canResend ? (
-            <button
-              onClick={handleResend}
-              className="resend-button"
-              disabled={resending}
-            >
-              {resending ? 'Sending...' : 'Resend Code'}
-            </button>
-          ) : (
-            "Didn't receive the code? You can request a new one when the timer expires."
-          )}
-        </p>
+          <p className="verification-subtitle">
+            We sent a 6-digit code to
+          </p>
+          <p className="verification-email">{user?.email || 'your email'}</p>
 
-        <p className="auth-link">
-          <Link to="/register">← Back to signup</Link>
-        </p>
+          {error && <div className="auth-error">{error}</div>}
+
+          <div className="code-inputs" onPaste={handlePaste}>
+            {code.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => (inputRefs.current[index] = el)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="code-input"
+                disabled={loading}
+                autoFocus={index === 0}
+              />
+            ))}
+          </div>
+
+          <p className="code-timer">
+            Code expires in: <strong>{formatTime(timeLeft)}</strong>
+          </p>
+
+          <button
+            onClick={handleVerify}
+            className="auth-button-primary"
+            disabled={loading || code.some(d => d === '')}
+          >
+            {loading ? 'Verifying...' : 'Verify Email'}
+          </button>
+
+          <p className="resend-text">
+            {canResend ? (
+              <button
+                onClick={handleResend}
+                className="resend-button"
+                disabled={resending}
+              >
+                {resending ? 'Sending...' : 'Resend Code'}
+              </button>
+            ) : (
+              "Didn't receive the code? You can request a new one when the timer expires."
+            )}
+          </p>
+
+          <p className="auth-link">
+            <Link to="/register">← Back to signup</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

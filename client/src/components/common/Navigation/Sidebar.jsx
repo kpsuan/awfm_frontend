@@ -1,26 +1,35 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context';
 import './Sidebar.css';
+import logo from '../../../styles/logo.png';
 
-const Sidebar = ({ isOpen, onClose }) => {
+const Sidebar = ({ isOpen, onClose, isMobileOrFocus }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
-    onClose();
+    if (onClose) onClose();
     navigate('/login');
   };
 
   const handleSignIn = () => {
-    onClose();
+    if (onClose) onClose();
     navigate('/login');
   };
 
   const handleNavigation = (path) => {
     navigate(path);
-    onClose();
+    if (onClose) onClose();
+  };
+
+  const isActive = (path) => {
+    if (path === '/dashboard' || path === '/') {
+      return location.pathname === '/' || location.pathname === '/dashboard';
+    }
+    return location.pathname.startsWith(path);
   };
 
   // Default user icon SVG
@@ -31,10 +40,15 @@ const Sidebar = ({ isOpen, onClose }) => {
     </svg>
   );
 
+  // Determine sidebar class based on mode
+  const sidebarClass = isMobileOrFocus
+    ? `sidebar sidebar--mobile ${isOpen ? 'sidebar--open' : ''}`
+    : 'sidebar sidebar--desktop';
+
   return (
     <>
-      {/* Backdrop */}
-      {isOpen && (
+      {/* Backdrop - only for mobile/focus mode */}
+      {isMobileOrFocus && isOpen && (
         <div
           className="sidebar__backdrop"
           onClick={onClose}
@@ -43,15 +57,22 @@ const Sidebar = ({ isOpen, onClose }) => {
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`}>
+      <aside className={sidebarClass}>
+        {/* Header with logo */}
         <div className="sidebar__header">
-          <button
-            className="sidebar__close-btn"
-            onClick={onClose}
-            aria-label="Close sidebar"
-          >
-            <span className="material-icons">close</span>
-          </button>
+          <div className="sidebar__logo-section" onClick={() => handleNavigation('/dashboard')}>
+            <img src={logo} alt="AWFM Logo" className="sidebar__logo" />
+            <span className="sidebar__brand">AWFM</span>
+          </div>
+          {isMobileOrFocus && (
+            <button
+              className="sidebar__close-btn"
+              onClick={onClose}
+              aria-label="Close sidebar"
+            >
+              <span className="material-icons">close</span>
+            </button>
+          )}
         </div>
 
         {/* User Profile Section */}
@@ -77,15 +98,23 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Navigation Menu */}
         <nav className="sidebar__nav">
           <button
-            className="sidebar__nav-item"
-            onClick={() => handleNavigation('/account-settings')}
+            className={`sidebar__nav-item ${isActive('/dashboard') ? 'sidebar__nav-item--active' : ''}`}
+            onClick={() => handleNavigation('/dashboard')}
           >
-            <span className="material-icons">settings</span>
-            <span>Account Settings</span>
+            <span className="material-icons">dashboard</span>
+            <span>Dashboard</span>
           </button>
 
           <button
-            className="sidebar__nav-item"
+            className={`sidebar__nav-item ${isActive('/questionnaire') ? 'sidebar__nav-item--active' : ''}`}
+            onClick={() => handleNavigation('/questionnaire')}
+          >
+            <span className="material-icons">assignment</span>
+            <span>Questionnaire</span>
+          </button>
+
+          <button
+            className={`sidebar__nav-item ${isActive('/care-team') ? 'sidebar__nav-item--active' : ''}`}
             onClick={() => handleNavigation('/care-team')}
           >
             <span className="material-icons">group</span>
@@ -93,7 +122,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           </button>
 
           <button
-            className="sidebar__nav-item"
+            className={`sidebar__nav-item ${isActive('/progress') ? 'sidebar__nav-item--active' : ''}`}
             onClick={() => handleNavigation('/progress')}
           >
             <span className="material-icons">analytics</span>
@@ -101,6 +130,14 @@ const Sidebar = ({ isOpen, onClose }) => {
           </button>
 
           <div className="sidebar__divider" />
+
+          <button
+            className={`sidebar__nav-item ${isActive('/account-settings') ? 'sidebar__nav-item--active' : ''}`}
+            onClick={() => handleNavigation('/account-settings')}
+          >
+            <span className="material-icons">settings</span>
+            <span>Account Settings</span>
+          </button>
 
           {user ? (
             <button
