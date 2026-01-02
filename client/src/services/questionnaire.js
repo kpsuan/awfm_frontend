@@ -1,149 +1,227 @@
 import api from './api';
-import { mockData, useMockData } from './mockData';
+import { mockData, useMockData, mainScreenQuestion, questionData, q1ChoicesData, q2ChoicesData, q3ChoicesData } from './mockData';
+import { transformQuestionData, transformPPRPatterns } from './dataTransform';
 
 // Helper to simulate API response structure
 const mockResponse = (data) => Promise.resolve({ data });
 
+// Cache for transformed question data (per question)
+const questionDataCache = {};
+
 // Main question service - fetches the opening screen prompt
 export const mainQuestionService = {
-  get: () => {
+  get: async (questionId = 'Q10A') => {
     if (useMockData) {
-      return mockResponse(mockData.mainQuestion || { text: 'Welcome to the questionnaire' });
+      return mockResponse(mainScreenQuestion);
     }
-    return api.get('/main-question/');
+    // Fetch question data and return main screen question
+    const response = await api.get(`/v1/content/questions/${questionId}/`);
+    const transformed = transformQuestionData(response);
+    questionDataCache[questionId] = transformed;
+    return { data: transformed.mainScreenQuestion };
   }
 };
 
 // Questions/Checkpoints service - fetches checkpoint metadata (q1, q2, q3)
 export const questionsService = {
-  getAll: (params = {}) => {
+  getAll: async (params = {}) => {
     if (useMockData) {
       let questions = [...mockData.questions];
       if (params.section) questions = questions.filter(q => q.section === parseInt(params.section));
       if (params.type) questions = questions.filter(q => q.type === params.type);
       return mockResponse(questions);
     }
-    return api.get('/questions/', { params });
+    // Fetch from Django and transform
+    const response = await api.get('/v1/content/questions/');
+    return { data: response };
   },
-  getById: (id) => {
+  getById: async (id) => {
     if (useMockData) {
       const question = mockData.questions.find(q => q.id === id);
       return mockResponse(question);
     }
-    return api.get(`/questions/${id}/`);
+    const response = await api.get(`/v1/content/questions/${id}/`);
+    return { data: response };
   },
-  getBySection: (sectionId) => {
+  getBySection: async (sectionId) => {
     if (useMockData) {
       const questions = mockData.questions.filter(q => q.section === parseInt(sectionId));
       return mockResponse(questions);
     }
-    return api.get(`/questions/section/${sectionId}/`);
+    const response = await api.get(`/v1/content/questions/`);
+    return { data: response };
+  },
+  // Get question metadata for specific checkpoint
+  getQuestionData: async (questionId, checkpointKey) => {
+    if (useMockData) {
+      return mockResponse(questionData[checkpointKey]);
+    }
+    // Use cached data or fetch
+    if (!questionDataCache[questionId]) {
+      const response = await api.get(`/v1/content/questions/${questionId}/`);
+      questionDataCache[questionId] = transformQuestionData(response);
+    }
+    return { data: questionDataCache[questionId].questionData[checkpointKey] };
   }
 };
 
 // Choices service - fetches choices for each checkpoint (q1, q2, q3)
 export const choicesService = {
-  getByCheckpoint: (checkpointId) => {
+  getByCheckpoint: async (questionId, checkpointId) => {
     if (useMockData) {
       const checkpoint = mockData.checkpoints?.find(cp => cp.id === checkpointId);
       return mockResponse(checkpoint?.choices || []);
     }
-    return api.get(`/choices/${checkpointId}/`);
-  },
-  getQ1: () => {
-    if (useMockData) {
-      return mockResponse(mockData.checkpoints?.find(cp => cp.id === 'q1')?.choices || []);
+    // Use cached data or fetch
+    if (!questionDataCache[questionId]) {
+      const response = await api.get(`/v1/content/questions/${questionId}/`);
+      questionDataCache[questionId] = transformQuestionData(response);
     }
-    return api.get('/choices/q1/');
+    return { data: questionDataCache[questionId].choicesData[checkpointId] || [] };
   },
-  getQ2: () => {
+  getQ1: async (questionId = 'Q10A') => {
     if (useMockData) {
-      return mockResponse(mockData.checkpoints?.find(cp => cp.id === 'q2')?.choices || []);
+      return mockResponse(q1ChoicesData);
     }
-    return api.get('/choices/q2/');
+    // Use cached data or fetch
+    if (!questionDataCache[questionId]) {
+      const response = await api.get(`/v1/content/questions/${questionId}/`);
+      questionDataCache[questionId] = transformQuestionData(response);
+    }
+    return { data: questionDataCache[questionId].choicesData.q1 || [] };
   },
-  getQ3: () => {
+  getQ2: async (questionId = 'Q10A') => {
     if (useMockData) {
-      return mockResponse(mockData.checkpoints?.find(cp => cp.id === 'q3')?.choices || []);
+      return mockResponse(q2ChoicesData);
     }
-    return api.get('/choices/q3/');
+    // Use cached data or fetch
+    if (!questionDataCache[questionId]) {
+      const response = await api.get(`/v1/content/questions/${questionId}/`);
+      questionDataCache[questionId] = transformQuestionData(response);
+    }
+    return { data: questionDataCache[questionId].choicesData.q2 || [] };
+  },
+  getQ3: async (questionId = 'Q10A') => {
+    if (useMockData) {
+      return mockResponse(q3ChoicesData);
+    }
+    // Use cached data or fetch
+    if (!questionDataCache[questionId]) {
+      const response = await api.get(`/v1/content/questions/${questionId}/`);
+      questionDataCache[questionId] = transformQuestionData(response);
+    }
+    return { data: questionDataCache[questionId].choicesData.q3 || [] };
   }
 };
 
 // Checkpoints service - alias for questions in Django backend context
 export const checkpointsService = {
-  getAll: (params = {}) => {
+  getAll: async (params = {}) => {
     if (useMockData) {
       return mockResponse(mockData.checkpoints);
     }
-    return api.get('/questions/', { params });
+    const response = await api.get('/checkpoints/', { params });
+    return { data: response };
   },
-  getById: (id) => {
+  getById: async (id) => {
     if (useMockData) {
       const checkpoint = mockData.checkpoints.find(cp => cp.id === id);
       return mockResponse(checkpoint);
     }
-    return api.get(`/questions/${id}/`);
+    const response = await api.get(`/checkpoints/${id}/`);
+    return { data: response };
+  }
+};
+
+// PPR service - fetches Personal Pattern Recognition data
+export const pprService = {
+  getByQuestion: async (questionId) => {
+    if (useMockData) {
+      return mockResponse([]);
+    }
+    const response = await api.get(`/v1/content/questions/${questionId}/ppr-patterns/`);
+    return { data: transformPPRPatterns(response) };
   }
 };
 
 // Responses service - manages user answer submissions
 export const responsesService = {
-  getAll: (params = {}) => {
+  getAll: async (params = {}) => {
     if (useMockData) {
       return mockResponse([]);
     }
-    return api.get('/responses/', { params });
+    const response = await api.get('/v1/user/responses/', { params });
+    return { data: response };
   },
-  save: (data) => {
+  getByQuestion: async (questionId) => {
+    if (useMockData) {
+      return mockResponse([]);
+    }
+    const response = await api.get(`/v1/user/responses/by-question/${questionId}/`);
+    return { data: response };
+  },
+  save: async (data) => {
     if (useMockData) {
       return mockResponse({ success: true, data });
     }
-    return api.post('/responses/', data);
+    // Save single response
+    const response = await api.post('/v1/user/responses/', data);
+    return { data: response };
   },
-  getSummary: (userId) => {
+  bulkSave: async (responses) => {
+    if (useMockData) {
+      return mockResponse({ created: responses.length, responses });
+    }
+    // Bulk save multiple responses (for localStorage sync)
+    const response = await api.post('/v1/user/responses/bulk_save/', { responses });
+    return { data: response };
+  },
+  getSummary: async () => {
     if (useMockData) {
       return mockResponse({ responses: [], summary: {} });
     }
-    // Note: This endpoint may need to be added to Django backend
-    return api.get(`/responses/summary/${userId}/`);
+    const response = await api.get('/v1/user/responses/summary/');
+    return { data: response };
   }
 };
 
 // Team service - fetches team member data
 export const teamService = {
-  getAll: () => {
+  getAll: async () => {
     if (useMockData) {
       return mockResponse(mockData.team);
     }
-    return api.get('/team/');
+    // TODO: Implement team endpoint in Django backend
+    return mockResponse(mockData.team);
   }
 };
 
 // Users service - kept for backward compatibility
 export const usersService = {
-  getTeam: () => {
+  getTeam: async () => {
     if (useMockData) {
       return mockResponse(mockData.team);
     }
-    return api.get('/team/');
+    // TODO: Implement team endpoint in Django backend
+    return mockResponse(mockData.team);
   },
-  getSections: () => {
+  getSections: async () => {
     if (useMockData) {
       return mockResponse(mockData.sections);
     }
-    // Note: Sections endpoint may need to be added to Django backend
-    // For now, returning from questions data or mock
-    return api.get('/sections/');
+    // TODO: Implement sections endpoint in Django backend
+    return mockResponse(mockData.sections);
   }
 };
 
 // Health check service
 export const healthService = {
-  check: () => {
+  check: async () => {
     if (useMockData) {
       return mockResponse({ status: 'ok' });
     }
-    return api.get('/health/');
+    // Django doesn't have health endpoint by default, just check API root
+    const response = await api.get('/v1/content/questions/');
+    return { data: { status: 'ok' } };
   }
 };

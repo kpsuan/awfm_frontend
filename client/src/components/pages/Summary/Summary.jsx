@@ -39,6 +39,7 @@ const Summary = ({
   userAvatar = "https://i.pravatar.cc/82?img=8",
   checkpoints = [],
   reflections = [],
+  pprText,
   team = [],
   teamRecordings = [],
   progress = { current: 4, total: 4 },
@@ -70,12 +71,12 @@ const Summary = ({
   const defaultCheckpoints = [
     {
       id: 1,
-      title: "Checkpoint 1: How important is staying alive even if you have substantial physical limitations?",
+      title: "Layer 1: How important is staying alive even if you have substantial physical limitations?",
       choices: ["Life extension is very important regardless of function"]
     },
     {
       id: 2,
-      title: "Checkpoint 2: What concerns, issues, and challenges might you be facing?",
+      title: "Layer 2: What concerns, issues, and challenges might you be facing?",
       choices: [
         "Worried about becoming a burden to loved ones",
         "Worried doctors might undervalue my life with disability"
@@ -83,7 +84,7 @@ const Summary = ({
     },
     {
       id: 3,
-      title: "Checkpoint 3: What Would Change Your Mind",
+      title: "Layer 3: What Would Change Your Mind",
       choices: ["Meeting people with disabilities living meaningful lives"]
     }
   ];
@@ -200,26 +201,25 @@ const Summary = ({
           {/* What Your Choices Reveal Section */}
           <div className="summary__reveal">
             <h3 className="summary__reveal-title">What Your Choices Reveal About You</h3>
-            
+
             <div className="summary__reveal-image">
-              <img 
-                src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=800&q=80" 
-                alt="Two people embracing warmly" 
+              <img
+                src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=800&q=80"
+                alt="Two people embracing warmly"
                 className="summary__reveal-photo"
               />
             </div>
 
             <div className="summary__reveal-analysis">
-              <p className="summary__reveal-paragraph">
-                Your choices reveal a pattern of informed conditional thinking. You're not taking an absolute position
-                —you want nuance based on actual situations. But you're aware providers might undervalue your life,
-                which adds uncertainty to trusting their guidance.
-              </p>
-              <p className="summary__reveal-paragraph">
-                Your desire for comprehensive education suggests you're trying to protect your autonomy through
-                knowledge—if you understand interventions deeply, you can evaluate whether you're receiving
-                biased counsel. This is a protective stance: conditional flexibility backed by informed skepticism.
-              </p>
+              {pprText ? (
+                <p className="summary__reveal-paragraph">
+                  {pprText}
+                </p>
+              ) : (
+                <p className="summary__reveal-paragraph">
+                  Your unique combination of choices shows thoughtful consideration across all three layers. Take time to reflect on how your position, challenges, and potential mind-changers connect to form your overall perspective.
+                </p>
+              )}
             </div>
 
             <button

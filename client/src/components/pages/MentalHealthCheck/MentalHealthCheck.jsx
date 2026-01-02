@@ -113,14 +113,14 @@ const MentalHealthCheck = ({
       case 'almost-there':
         return {
           sectionLabel: 'Advance Care Planning',
-          reflectionLabel: 'Q10A Checkpoint 2',
+          reflectionLabel: 'Q10A Layer 2',
           heading: 'Almost There...',
           description: 'We know this may feel like a lot. Breathe and give yourself space to process. You can continue whenever you\'re ready.'
         };
       case 'take-break':
         return {
           sectionLabel: 'Advance Care Planning',
-          reflectionLabel: 'Q10A Checkpoint 3',
+          reflectionLabel: 'Q10A Layer 3',
           heading: 'Take a Break',
           description: 'It\'s okay to pause. These are important decisions. Come back when you feel ready to continue.'
         };
@@ -128,7 +128,7 @@ const MentalHealthCheck = ({
       default:
         return {
           sectionLabel: 'Advance Care Planning',
-          reflectionLabel: 'Q10A Checkpoint 1',
+          reflectionLabel: 'Q10A Layer 1',
           heading: 'You\'re Doing Great!',
           description: 'We know this may feel like a lot. Breathe and give yourself space to process. You can continue whenever you\'re ready.'
         };

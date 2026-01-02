@@ -16,7 +16,9 @@ const CheckpointSelection = ({
   onContinue,
   onBack,
   multiSelect = true,
-  layout = 'horizontal' // 'horizontal' for carousel, 'vertical' for scroll list
+  layout = 'horizontal', // 'horizontal' for carousel, 'vertical' for scroll list
+  isQ2 = false,
+  isQ3 = false
 }) => {
   const [selectedChoices, setSelectedChoices] = useState(initialSelection);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
@@ -136,17 +138,17 @@ const CheckpointSelection = ({
           </div>
 
           <div className={`checkpoint-selection__choices ${layout === 'vertical' ? 'checkpoint-selection__choices--vertical' : ''}`}>
-              <ChoiceCarousel 
+              <ChoiceCarousel
                 ref={carouselRef}
-                choices={choices} 
-                selectedChoices={selectedChoices} 
+                choices={choices}
+                selectedChoices={selectedChoices}
                 onSelect={handleSelect}
                 onIndexChange={setActiveCardIndex}
                 expandedCardId={expandedCardId}
                 onExpandChange={handleExpandChange}
                 layout={layout}
-                isQ2={question?.checkpointLabel === 'Your Challenges'}
-                isQ3={question?.checkpointLabel === 'What Would Change Your Mind'}
+                isQ2={isQ2}
+                isQ3={isQ3}
               />
           </div>
           

@@ -1,87 +1,358 @@
+/* ===========================================
+   AWFM Button Component
+   Based on Figma Design System
+   =========================================== */
+
+/* Base Button Styles */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  font-family: var(--font-body);
+  font-family: 'Mulish', sans-serif;
   font-weight: 800;
   border-radius: 999px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
   white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  outline: none;
 }
 
-.btn:disabled {
-  opacity: 0.5;
+.btn:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.btn:disabled,
+.btn.btn-loading {
+  opacity: 0.6;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
-/* Sizes */
+/* ===========================================
+   Button Sizes
+   =========================================== */
+
 .btn-sm {
-  padding: 8px 16px;
+  height: 32px;
+  padding: 0 20px;
   font-size: 14px;
+  line-height: 32px;
 }
 
 .btn-md {
-  padding: 12px 32px;
+  height: 40px;
+  padding: 0 32px;
   font-size: 16px;
-  line-height: 24px;
-  height: auto;
+  line-height: 40px;
 }
 
 .btn-lg {
-  padding: 16px 48px;
+  height: 48px;
+  padding: 0 48px;
   font-size: 18px;
+  line-height: 48px;
 }
 
 .btn-full {
   width: 100%;
 }
 
-/* Primary Button */
+/* ===========================================
+   Primary Button
+   =========================================== */
+
 .btn-primary {
   background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
-  color: var(--color-white);
+  color: #fff;
   border: none;
-  box-shadow: 
+  box-shadow:
     0px 2px 1px 0px rgba(11, 19, 36, 0.1),
-    0px 4px 12px 0px rgba(11, 19, 36, 0.32),
-    inset 0px 4px 3px 0px rgba(255, 255, 255, 0.6);
-  text-shadow: 0px 4px 12px rgba(11, 19, 36, 0.24);
+    0px 4px 6px 0px rgba(11, 19, 36, 0.2);
+  text-shadow: 0px 2px 4px rgba(11, 19, 36, 0.2);
+}
+
+/* Inner stroke/highlight effect */
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 999px;
+  box-shadow: inset 0px 2px 2px 0px rgba(255, 255, 255, 0.5);
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.95;
   transform: translateY(-1px);
+  box-shadow:
+    0px 4px 2px 0px rgba(11, 19, 36, 0.1),
+    0px 6px 10px 0px rgba(11, 19, 36, 0.25);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow:
+    0px 1px 1px 0px rgba(11, 19, 36, 0.1),
+    0px 2px 4px 0px rgba(11, 19, 36, 0.18);
 }
 
-/* Secondary Button */
+/* ===========================================
+   Secondary Button (Outline with gradient text)
+   =========================================== */
+
 .btn-secondary {
-  background: var(--color-white);
-  color: var(--color-black);
-  border: 4px solid rgba(7, 17, 46, 0.06);
-  box-shadow: 
-    0px 1px 1px -3px rgba(11, 19, 36, 0.1),
-    0px 6px 12px -3px rgba(11, 19, 36, 0.12);
+  background: #fff;
+  border: 2px solid #b432a3;
+  color: #b432a3;
+  box-shadow:
+    0px 1px 1px 0px rgba(11, 19, 36, 0.08),
+    0px 3px 6px 0px rgba(11, 19, 36, 0.1);
+}
+
+/* Gradient text effect for secondary */
+.btn-secondary .btn-text {
+  background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: rgba(7, 17, 46, 0.1);
-  background: var(--color-gray-50);
+  background: #fdf2fb;
+  border-color: #ae59cf;
+  transform: translateY(-1px);
 }
 
-/* Ghost Button */
+.btn-secondary:active:not(:disabled) {
+  transform: translateY(0);
+  background: #f9e6f6;
+}
+
+/* ===========================================
+   Outline Button (Simple outline)
+   =========================================== */
+
+.btn-outline {
+  background: #fff;
+  border: 2px solid #405cfb;
+  color: #405cfb;
+  box-shadow:
+    0px 1px 1px 0px rgba(11, 19, 36, 0.08),
+    0px 3px 6px 0px rgba(11, 19, 36, 0.1);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #f0f3ff;
+  transform: translateY(-1px);
+}
+
+.btn-outline:active:not(:disabled) {
+  transform: translateY(0);
+  background: #e5eaff;
+}
+
+/* ===========================================
+   Not Selected / Muted Button
+   =========================================== */
+
+.btn-not-selected {
+  background: #8a8e99;
+  color: #fff;
+  border: none;
+  box-shadow:
+    0px 2px 1px 0px rgba(11, 19, 36, 0.1),
+    0px 4px 6px 0px rgba(11, 19, 36, 0.2);
+  text-shadow: 0px 2px 4px rgba(11, 19, 36, 0.2);
+}
+
+.btn-not-selected::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.btn-not-selected::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 999px;
+  box-shadow: inset 0px 2px 2px 0px rgba(255, 255, 255, 0.3);
+}
+
+.btn-not-selected:hover:not(:disabled) {
+  background: #7a7e89;
+  transform: translateY(-1px);
+}
+
+.btn-not-selected:active:not(:disabled) {
+  transform: translateY(0);
+  background: #6a6e79;
+}
+
+/* ===========================================
+   Ghost Button (Transparent)
+   =========================================== */
+
 .btn-ghost {
   background: transparent;
-  color: var(--color-white);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #667eea;
+  border: none;
 }
 
 .btn-ghost:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.btn-ghost:active:not(:disabled) {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+/* Ghost variant on dark backgrounds */
+.btn-ghost-light {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-ghost-light:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ===========================================
+   Danger Button
+   =========================================== */
+
+.btn-danger {
+  background: linear-gradient(180deg, #e53e3e 25%, #c53030 100%);
+  color: #fff;
+  border: none;
+  box-shadow:
+    0px 2px 1px 0px rgba(11, 19, 36, 0.1),
+    0px 4px 6px 0px rgba(197, 48, 48, 0.2);
+  text-shadow: 0px 2px 4px rgba(11, 19, 36, 0.2);
+}
+
+.btn-danger::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+.btn-danger::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 999px;
+  box-shadow: inset 0px 2px 2px 0px rgba(255, 255, 255, 0.4);
+}
+
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0px 4px 2px 0px rgba(11, 19, 36, 0.1),
+    0px 6px 10px 0px rgba(197, 48, 48, 0.25);
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* ===========================================
+   Button Icons
+   =========================================== */
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-icon--left {
+  margin-right: -2px;
+}
+
+.btn-icon--right {
+  margin-left: -2px;
+}
+
+/* ===========================================
+   Loading Spinner
+   =========================================== */
+
+.btn-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: btn-spin 1s linear infinite;
+}
+
+.btn-spinner svg {
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes btn-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===========================================
+   Mobile Responsive
+   =========================================== */
+
+@media (max-width: 480px) {
+  .btn-sm {
+    height: 30px;
+    padding: 0 16px;
+    font-size: 13px;
+  }
+
+  .btn-md {
+    height: 38px;
+    padding: 0 24px;
+    font-size: 15px;
+  }
+
+  .btn-lg {
+    height: 44px;
+    padding: 0 36px;
+    font-size: 16px;
+  }
+
+  .btn-icon svg {
+    width: 16px;
+    height: 16px;
+  }
 }

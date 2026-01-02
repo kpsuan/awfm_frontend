@@ -243,4 +243,6 @@ export const mockData = {
 };
 
 // Check if we should use mock data (no API URL configured)
+console.log('🔍 DEBUG: REACT_APP_API_URL =', process.env.REACT_APP_API_URL);
+console.log('🔍 DEBUG: useMockData will be =', !process.env.REACT_APP_API_URL);
 export const useMockData = !process.env.REACT_APP_API_URL;

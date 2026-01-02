@@ -1,0 +1,380 @@
+.legal-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+  padding: 40px 20px;
+}
+
+.legal-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.legal-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.legal-updated {
+  font-size: 14px;
+  color: #718096;
+  text-align: center;
+  margin: 0 0 32px 0;
+}
+
+.legal-content {
+  color: #4a5568;
+  line-height: 1.7;
+}
+
+.legal-content section {
+  margin-bottom: 32px;
+}
+
+.legal-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 12px 0;
+}
+
+.legal-content p {
+  margin: 0 0 12px 0;
+}
+
+.legal-content ul {
+  margin: 0 0 12px 0;
+  padding-left: 24px;
+}
+
+.legal-content li {
+  margin-bottom: 8px;
+}
+
+.legal-content a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.legal-content a:hover {
+  text-decoration: underline;
+}
+
+.legal-contact {
+  background: #f7fafc;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: monospace;
+}
+
+.legal-footer {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.legal-link {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.legal-link:hover {
+  text-decoration: underline;
+}
+
+.legal-separator {
+  color: #cbd5e0;
+  margin: 0 16px;
+}
+
+/* AI Disclosure Banner */
+.ai-disclosure {
+  background: linear-gradient(135deg, #ebf4ff 0%, #e9d8fd 100%);
+  border: 1px solid #c3dafe;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ai-disclosure-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: #667eea;
+}
+
+.ai-disclosure-content {
+  flex: 1;
+}
+
+.ai-disclosure-title {
+  font-weight: 600;
+  color: #4c51bf;
+  margin: 0 0 4px 0;
+  font-size: 14px;
+}
+
+.ai-disclosure-text {
+  font-size: 13px;
+  color: #5a67d8;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Consent Checkbox Styles */
+.consent-group {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.consent-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.consent-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.consent-label {
+  font-size: 14px;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.consent-label a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.consent-label a:hover {
+  text-decoration: underline;
+}
+
+.consent-required {
+  color: #e53e3e;
+  margin-left: 4px;
+}
+
+/* Consent Items - Clickable buttons that open modals */
+.consent-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.consent-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.consent-item:hover:not(:disabled) {
+  border-color: #cbd5e0;
+  background: #edf2f7;
+}
+
+.consent-item:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.consent-item--agreed {
+  background: #ebf8ff;
+  border-color: #667eea;
+}
+
+.consent-item--agreed:hover:not(:disabled) {
+  background: #e0f0ff;
+  border-color: #5a67d8;
+}
+
+.consent-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.consent-item__icon svg {
+  width: 24px;
+  height: 24px;
+  color: #718096;
+}
+
+.consent-item--agreed .consent-item__icon svg {
+  color: #667eea;
+}
+
+.consent-item__text {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+  line-height: 1.4;
+}
+
+.consent-item__status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: #e2e8f0;
+  color: #718096;
+  flex-shrink: 0;
+}
+
+.consent-item--agreed .consent-item__status {
+  background: #667eea;
+  color: white;
+}
+
+/* Mobile Responsive Styles for Legal Components */
+@media (max-width: 480px) {
+  /* AI Disclosure Banner - Compact */
+  .ai-disclosure {
+    padding: 12px 14px;
+    margin: 14px 0;
+    gap: 10px;
+  }
+
+  .ai-disclosure-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .ai-disclosure-title {
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .ai-disclosure-text {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  /* Consent Checkboxes - Compact */
+  .consent-group {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .consent-checkbox {
+    gap: 10px;
+  }
+
+  .consent-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 1px;
+  }
+
+  .consent-label {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* Legal Pages */
+  .legal-container {
+    padding: 20px 12px;
+  }
+
+  .legal-card {
+    padding: 24px 20px;
+    border-radius: 10px;
+  }
+
+  .legal-title {
+    font-size: 24px;
+  }
+
+  .legal-updated {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+
+  .legal-content {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .legal-content h2 {
+    font-size: 17px;
+  }
+
+  .legal-content section {
+    margin-bottom: 24px;
+  }
+
+  .legal-footer {
+    margin-top: 32px;
+    padding-top: 20px;
+  }
+
+  .legal-separator {
+    margin: 0 10px;
+  }
+
+  /* Consent Items - Mobile */
+  .consent-items {
+    gap: 10px;
+  }
+
+  .consent-item {
+    padding: 12px 14px;
+    gap: 10px;
+    border-radius: 8px;
+  }
+
+  .consent-item__icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .consent-item__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .consent-item__text {
+    font-size: 13px;
+  }
+
+  .consent-item__status {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+}

@@ -72,8 +72,8 @@ const ChoiceReview = ({
                   isExpanded={expandedCardId === choice.id}
                   onExpand={handleExpandChange}
                   variant="review"
-                  isQ2={question?.checkpointLabel === 'Your Challenges'}
-                  isQ3={question?.checkpointLabel === 'What Would Change Your Mind'}
+                  isQ2={question?.checkpointLabel === 'YOUR CHALLENGES'}
+                  isQ3={question?.checkpointLabel === 'YOUR MIND-CHANGER'}
                 />
               ))}
           </div>

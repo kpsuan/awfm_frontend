@@ -34,6 +34,7 @@ const MainScreen = ({
   onBack,
   onViewTeamRecordings,
   onAddTeamMember,
+  user = null,
   userName = "Norman",
   userAvatar = "https://i.pravatar.cc/82?img=12",
   sentInvites = []
@@ -99,17 +100,17 @@ const MainScreen = ({
       layers: "3 Layers",
       content: [
         {
-          checkpoint: "Checkpoint 1: Your Position",
+          checkpoint: "Layer 1: Your Position",
           description: "Where you stand what's your initial choice",
           completed: completedCheckpoints.q1
         },
         {
-          checkpoint: "Checkpoint 2: Your Challenges",
+          checkpoint: "Layer 2: Your Challenges",
           description: "What challenges might change your position",
           completed: completedCheckpoints.q2
         },
         {
-          checkpoint: "Checkpoint 3: What Would Change Your Mind",
+          checkpoint: "Layer 3: What Would Change Your Mind",
           description: "What would make you change your mind",
           completed: completedCheckpoints.q3
         }
@@ -202,17 +203,6 @@ const MainScreen = ({
     }
     
     if (slide.id === 2) {
-      // Default team members for demo
-      const defaultTeamMembers = [
-        { id: 1, name: "Dr. Sarah", avatar: "https://i.pravatar.cc/82?img=1", hasRecording: true },
-        { id: 2, name: "John", avatar: "https://i.pravatar.cc/82?img=2", hasRecording: true },
-        { id: 3, name: "Mary", avatar: "https://i.pravatar.cc/82?img=3", hasRecording: false },
-        { id: 4, name: "James", avatar: "https://i.pravatar.cc/82?img=4", hasRecording: false },
-        { id: 5, name: "Lisa", avatar: "https://i.pravatar.cc/82?img=5", hasRecording: false }
-      ];
-
-      const displayTeam = team.length > 0 ? team : defaultTeamMembers;
-
       const handleAvatarClick = (member) => {
         if (onViewTeamRecordings) {
           onViewTeamRecordings(member.id);
@@ -226,21 +216,23 @@ const MainScreen = ({
             <p key={idx} className="main-screen__slide-text">{item.text}</p>
           ))}
           <div className="main-screen__team-avatars">
-            {/* Current User (You) */}
-            <div
-              className="main-screen__team-avatar-wrapper main-screen__team-avatar-wrapper--current-user"
-              onClick={() => handleAvatarClick({ id: 'current-user', name: userName })}
-              title="You"
-            >
-              <img
-                src={userAvatar}
-                alt={userName}
-                className="main-screen__team-avatar-img"
-              />
-              <span className="main-screen__team-avatar-name">You</span>
-            </div>
+            {/* Current User (You) - only show if logged in */}
+            {user && (
+              <div
+                className="main-screen__team-avatar-wrapper main-screen__team-avatar-wrapper--current-user"
+                onClick={() => handleAvatarClick({ id: 'current-user', name: user.display_name || user.email })}
+                title="You"
+              >
+                <img
+                  src={user.profile_photo_url || userAvatar}
+                  alt={user.display_name || user.email}
+                  className="main-screen__team-avatar-img"
+                />
+                <span className="main-screen__team-avatar-name">You</span>
+              </div>
+            )}
             {/* Other Team Members */}
-            {displayTeam.map((member) => (
+            {team.map((member) => (
               <div
                 key={member.id}
                 className={`main-screen__team-avatar-wrapper ${member.hasRecording ? 'main-screen__team-avatar-wrapper--has-recording' : ''}`}

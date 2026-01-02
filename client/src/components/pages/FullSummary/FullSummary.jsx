@@ -287,7 +287,7 @@ const FullSummary = ({
   const defaultReflections = [
     {
       id: 1,
-      label: "Checkpoint 1:",
+      label: "Layer 1:",
       question: "How important is staying alive even if you have substantial physical limitations?",
       choices: [
         {

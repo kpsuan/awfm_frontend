@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuestionnaire } from '../context';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useQuestionnaire, useAuth } from '../context';
+import { useMainQuestion, useQ1Choices, useQ2Choices, useQ3Choices, useQuestionData, usePPRPatterns } from '../hooks';
+import { teamWithAffirmation } from '../services/mockData'; // TODO: Create team endpoint
 import MainScreen from '../components/pages/MainScreen';
 import QuestionIntro from '../components/pages/QuestionIntro';
 import CheckpointSelection from '../components/pages/CheckpointSelection';
@@ -13,14 +15,7 @@ import RecordVideo from '../components/pages/RecordVideo';
 import RecordingComplete from '../components/pages/RecordingComplete';
 import TeamRecordings from '../components/pages/TeamRecordings';
 import FullSummary from '../components/pages/FullSummary';
-import {
-  mainScreenQuestion,
-  questionData,
-  q1ChoicesData,
-  q2ChoicesData,
-  q3ChoicesData,
-  teamWithAffirmation
-} from '../services/mockData';
+import { AuthModal, ExitConfirmModal } from '../components/common/Modal';
 
 // Flow for each question: Question -> Review -> Mental Health Check
 // After all 3 questions: Summary -> Team Visibility -> Complete
@@ -82,7 +77,28 @@ const clearProgress = () => {
 
 const QuestionnaireFlow = () => {
   const navigate = useNavigate();
+  const { questionId = 'Q10A' } = useParams(); // Get questionId from URL, default to Q10A
   const { state, saveResponse } = useQuestionnaire();
+  const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+
+  // Fetch data from Django backend using React Query - now dynamic based on questionId
+  const { data: mainScreenQuestion, isLoading: loadingMain, error: errorMain } = useMainQuestion(questionId);
+  const { data: q1ChoicesData, isLoading: loadingQ1, error: errorQ1 } = useQ1Choices(questionId);
+  const { data: q2ChoicesData, isLoading: loadingQ2, error: errorQ2 } = useQ2Choices(questionId);
+  const { data: q3ChoicesData, isLoading: loadingQ3, error: errorQ3 } = useQ3Choices(questionId);
+  const { data: q1QuestionData, isLoading: loadingQ1Meta } = useQuestionData(questionId, 'q1');
+  const { data: q2QuestionData, isLoading: loadingQ2Meta } = useQuestionData(questionId, 'q2');
+  const { data: q3QuestionData, isLoading: loadingQ3Meta } = useQuestionData(questionId, 'q3');
+  const { data: pprPatterns, isLoading: loadingPPR } = usePPRPatterns(questionId);
+
+  // Combine question metadata
+  const questionData = {
+    q1: q1QuestionData,
+    q2: q2QuestionData,
+    q3: q3QuestionData
+  };
 
   // Load saved progress on initial mount
   const savedProgress = loadSavedProgress();
@@ -188,6 +204,24 @@ const QuestionnaireFlow = () => {
 
   // Handle continue from main screen - either resume or start fresh
   const handleMainScreenContinue = () => {
+    // Check if user is authenticated
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    if (isQuestionnaireComplete()) {
+      setCurrentPhase(FLOW_PHASES.SUMMARY);
+    } else if (hasStarted()) {
+      setCurrentPhase(getResumePhase());
+    } else {
+      setCurrentPhase(FLOW_PHASES.Q1_SELECTION);
+    }
+  };
+
+  // Handle successful authentication from modal
+  const handleAuthSuccess = () => {
+    // After successful auth, continue with the flow
     if (isQuestionnaireComplete()) {
       setCurrentPhase(FLOW_PHASES.SUMMARY);
     } else if (hasStarted()) {
@@ -221,53 +255,120 @@ const QuestionnaireFlow = () => {
       [FLOW_PHASES.SUMMARY]: FLOW_PHASES.Q3_SELECTION,
       [FLOW_PHASES.TEAM_VISIBILITY]: FLOW_PHASES.SUMMARY,
     };
-    if (phaseTransitions[currentPhase]) {
-      setCurrentPhase(phaseTransitions[currentPhase]);
+
+    const nextPhase = phaseTransitions[currentPhase];
+
+    // If going back to MAIN, show exit confirmation
+    if (nextPhase === FLOW_PHASES.MAIN) {
+      setShowExitModal(true);
+    } else if (nextPhase) {
+      setCurrentPhase(nextPhase);
     }
+  };
+
+  // Handle exit confirmation
+  const handleExitConfirm = () => {
+    setShowExitModal(false);
+    setCurrentPhase(FLOW_PHASES.MAIN);
+  };
+
+  const handleExitCancel = () => {
+    setShowExitModal(false);
   };
 
   const progress = getProgress();
 
-  // Loading/Error states
-  if (state.loading) return <div className="loading-container"><div className="loading-spinner" /><p>Loading...</p></div>;
-  if (state.error) return <div className="error-container"><p>Error: {state.error}</p><button onClick={() => window.location.reload()}>Retry</button></div>;
+  // Loading/Error states - React Query
+  const isLoading = loadingMain || loadingQ1 || loadingQ2 || loadingQ3 || loadingQ1Meta || loadingQ2Meta || loadingQ3Meta;
+  const error = errorMain || errorQ1 || errorQ2 || errorQ3;
+
+  if (isLoading) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div className="loading-spinner" />
+        <p>Loading questions from Django backend...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container" style={{ padding: '2rem', textAlign: 'center' }}>
+        <h2>Error loading data</h2>
+        <p style={{ color: 'red' }}>{error.message}</p>
+        <p>Make sure Django backend is running at http://localhost:8000</p>
+        <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1rem' }}>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Don't render if data hasn't loaded yet
+  if (!mainScreenQuestion || !q1ChoicesData || !q2ChoicesData || !q3ChoicesData || !questionData.q1 || !questionData.q2 || !questionData.q3) {
+    return (
+      <div className="loading-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <p>Preparing questionnaire...</p>
+      </div>
+    );
+  }
 
   // Main Screen
   if (currentPhase === FLOW_PHASES.MAIN) {
     return (
-      <MainScreen
-        question={mainScreenQuestion}
-        team={state.team}
-        progress={progress}
-        progressPercentage={getProgressPercentage()}
-        hasStarted={hasStarted()}
-        isComplete={isQuestionnaireComplete()}
-        completedCheckpoints={completedCheckpoints}
-        onContinue={handleMainScreenContinue}
-        onBack={handleBack}
-        onViewTeamRecordings={(memberId) => {
-          // If memberId is provided, we could scroll to that member's recording
-          // For now, just navigate to the team recordings page
-          setCurrentPhase(FLOW_PHASES.TEAM_RECORDINGS);
-        }}
-      />
+      <>
+        <MainScreen
+          question={mainScreenQuestion}
+          team={state.team}
+          user={user}
+          progress={progress}
+          progressPercentage={getProgressPercentage()}
+          hasStarted={hasStarted()}
+          isComplete={isQuestionnaireComplete()}
+          completedCheckpoints={completedCheckpoints}
+          onContinue={handleMainScreenContinue}
+          onBack={handleBack}
+          onViewTeamRecordings={(memberId) => {
+            // If memberId is provided, we could scroll to that member's recording
+            // For now, just navigate to the team recordings page
+            setCurrentPhase(FLOW_PHASES.TEAM_RECORDINGS);
+          }}
+        />
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+        />
+        <ExitConfirmModal
+          isOpen={showExitModal}
+          onConfirm={handleExitConfirm}
+          onCancel={handleExitCancel}
+        />
+      </>
     );
   }
 
   // Q1 - Single Selection
   if (currentPhase === FLOW_PHASES.Q1_SELECTION) {
     return (
-      <CheckpointSelection
-        question={questionData.q1}
-        choices={q1ChoicesData}
-        team={state.team}
-        progress={progress}
-        initialSelection={q1Choices}
-        onSelect={setQ1Choices}
-        onContinue={handleContinue}
-        onBack={handleBack}
-        multiSelect={false}
-      />
+      <>
+        <CheckpointSelection
+          question={questionData.q1}
+          choices={q1ChoicesData}
+          team={state.team}
+          progress={progress}
+          initialSelection={q1Choices}
+          onSelect={setQ1Choices}
+          onContinue={handleContinue}
+          onBack={handleBack}
+          multiSelect={false}
+        />
+        <ExitConfirmModal
+          isOpen={showExitModal}
+          onConfirm={handleExitConfirm}
+          onCancel={handleExitCancel}
+        />
+      </>
     );
   }
 
@@ -315,6 +416,7 @@ const QuestionnaireFlow = () => {
         onBack={handleBack}
         multiSelect={true}
         layout="vertical"
+        isQ2={true}
       />
     );
   }
@@ -361,6 +463,7 @@ const QuestionnaireFlow = () => {
         onBack={handleBack}
         multiSelect={true}
         layout="vertical"
+        isQ3={true}
       />
     );
   }
@@ -399,7 +502,7 @@ const QuestionnaireFlow = () => {
     const checkpointsData = [
       {
         id: 1,
-        title: `Checkpoint 1: ${questionData.q1.title}`,
+        title: `Layer 1: ${questionData.q1.title}`,
         choices: q1Choices.map(id => {
           const choice = q1ChoicesData.find(c => c.id === id);
           return choice?.title || choice?.description || '';
@@ -407,7 +510,7 @@ const QuestionnaireFlow = () => {
       },
       {
         id: 2,
-        title: `Checkpoint 2: ${questionData.q2.title}`,
+        title: `Layer 2: ${questionData.q2.title}`,
         choices: q2Choices.map(id => {
           const choice = q2ChoicesData.find(c => c.id === id);
           return choice?.title || choice?.description || '';
@@ -415,7 +518,7 @@ const QuestionnaireFlow = () => {
       },
       {
         id: 3,
-        title: `Checkpoint 3: ${questionData.q3.title}`,
+        title: `Layer 3: ${questionData.q3.title}`,
         choices: q3Choices.map(id => {
           const choice = q3ChoicesData.find(c => c.id === id);
           return choice?.title || choice?.description || '';
@@ -478,6 +581,26 @@ const QuestionnaireFlow = () => {
       }
     ];
 
+    // Match PPR pattern based on user selections
+    const matchedPPR = pprPatterns?.find(pattern => {
+      // Extract option numbers from choice IDs (format: "q1_1" -> option 1)
+      const q1OptionNum = q1Choices[0] ? parseInt(q1Choices[0].split('_')[1]) : null;
+      const q2OptionNums = q2Choices.map(id => parseInt(id.split('_')[1]));
+      const q3OptionNum = q3Choices[0] ? parseInt(q3Choices[0].split('_')[1]) : null;
+
+      // Match CP1 option
+      const cp1Match = pattern.cp1Option === q1OptionNum;
+
+      // Match CP2 options (must match all selected options)
+      const cp2Match = pattern.cp2Options?.length === q2OptionNums.length &&
+        pattern.cp2Options.every(opt => q2OptionNums.includes(opt));
+
+      // Match CP3 option
+      const cp3Match = pattern.cp3Option === q3OptionNum;
+
+      return cp1Match && cp2Match && cp3Match;
+    });
+
     return (
       <Summary
         question={mainScreenQuestion}
@@ -485,6 +608,7 @@ const QuestionnaireFlow = () => {
         userAvatar="https://i.pravatar.cc/82?img=8"
         checkpoints={checkpointsData}
         reflections={reflectionsData}
+        pprText={matchedPPR?.text}
         team={teamWithAffirmation}
         progress={progress}
         onContinue={handleContinue}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../../common/Button';
 import './Choices.css';
 
 const ChoiceConfirmation = ({ 
@@ -33,12 +34,12 @@ const ChoiceConfirmation = ({
       </div>
 
       <div className="choice-confirmation__actions">
-        <button className="choice-confirmation__btn choice-confirmation__btn--cancel" onClick={onCancel}>
+        <Button variant="secondary" onClick={onCancel}>
           No, go back
-        </button>
-        <button className="choice-confirmation__btn choice-confirmation__btn--confirm" onClick={onConfirm}>
+        </Button>
+        <Button variant="primary" onClick={onConfirm}>
           Yes, confirm
-        </button>
+        </Button>
       </div>
     </div>
   );

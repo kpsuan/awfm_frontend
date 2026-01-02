@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Button } from '../../common/Button';
 import './RecordVideo.css';
 
 // Delete/Trash Icon
@@ -92,9 +93,9 @@ const InstructionsModal = ({ isOpen, onClose }) => {
             </ul>
           </div>
           
-          <button className="record-video__modal-btn" onClick={onClose}>
+          <Button variant="primary" fullWidth onClick={onClose}>
             I'm Ready to Record
-          </button>
+          </Button>
         </div>
       </div>
     </div>

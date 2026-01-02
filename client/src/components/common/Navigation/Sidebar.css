@@ -1,0 +1,234 @@
+/* Backdrop */
+.sidebar__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 85vw;
+  background: white;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar--open {
+  transform: translateX(0);
+}
+
+/* Header */
+.sidebar__header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.sidebar__close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray-600);
+  transition: color 0.2s;
+}
+
+.sidebar__close-btn:hover {
+  color: var(--color-gray-900);
+}
+
+.sidebar__close-btn .material-icons {
+  font-size: 24px;
+}
+
+/* User Section */
+.sidebar__user-section {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--color-gray-100);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.sidebar__user-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.sidebar__user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar__user-icon {
+  width: 48px;
+  height: 48px;
+  color: white;
+}
+
+.sidebar__user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar__user-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.sidebar__user-email {
+  font-size: 14px;
+  color: var(--color-gray-600);
+  margin: 0;
+  word-break: break-word;
+}
+
+.sidebar__hcw-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  margin-top: 8px;
+}
+
+/* Navigation */
+.sidebar__nav {
+  flex: 1;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+
+.sidebar__nav-item:hover {
+  background: var(--color-gray-50);
+  color: var(--color-gray-900);
+}
+
+.sidebar__nav-item .material-icons {
+  font-size: 24px;
+  color: var(--color-gray-500);
+}
+
+.sidebar__nav-item:hover .material-icons {
+  color: #667eea;
+}
+
+.sidebar__nav-item--danger {
+  color: #c53030;
+}
+
+.sidebar__nav-item--danger .material-icons {
+  color: #c53030;
+}
+
+.sidebar__nav-item--danger:hover {
+  background: #fed7d7;
+  color: #9b2c2c;
+}
+
+.sidebar__nav-item--danger:hover .material-icons {
+  color: #9b2c2c;
+}
+
+.sidebar__divider {
+  height: 1px;
+  background: var(--color-gray-100);
+  margin: 8px 16px;
+}
+
+/* Footer */
+.sidebar__footer {
+  padding: 20px;
+  border-top: 1px solid var(--color-gray-100);
+  text-align: center;
+}
+
+.sidebar__app-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-gray-600);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 4px 0;
+}
+
+.sidebar__version {
+  font-size: 11px;
+  color: var(--color-gray-400);
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 320px;
+  }
+}
