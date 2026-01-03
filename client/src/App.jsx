@@ -13,6 +13,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import RestoreAccount from './pages/RestoreAccount';
 import AccountSettings from './pages/AccountSettings';
+import ProfilePage from './pages/ProfilePage';
 import Dashboard from './pages/Dashboard';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -96,6 +97,7 @@ function AppContent() {
         <Route path="/terms" element={<TermsOfService />} />
 
         {/* Account routes */}
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/account-settings" element={<AccountSettings />} />
 
         {/* Dashboard */}

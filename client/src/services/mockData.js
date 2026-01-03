@@ -13,19 +13,22 @@ export const questionData = {
     title: "What concerns, issues, and challenges might you be facing?",
     subtitle: "Checkpoint 1",
     checkpointLabel: "Your Position",
-    instruction: "Select the option that best represents what matters most to you."
+    instruction: "Select the option that best represents what matters most to you.",
+    image: null // Will fallback to static image; set to Cloudinary URL when available in DB
   },
   q2: {
     title: "What challenges might change your position?",
     subtitle: "Checkpoint 2",
     checkpointLabel: "Your Challenges",
-    instruction: "Select all that apply to your situation."
+    instruction: "Select all that apply to your situation.",
+    image: null // Will fallback to static image; set to Cloudinary URL when available in DB
   },
   q3: {
     title: "What would make you change your mind?",
     subtitle: "Checkpoint 3",
     checkpointLabel: "What Would Change Your Mind",
-    instruction: "Select all circumstances that might change your decision."
+    instruction: "Select all circumstances that might change your decision.",
+    image: null // Will fallback to static image; set to Cloudinary URL when available in DB
   }
 };
 

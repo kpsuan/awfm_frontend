@@ -33,7 +33,7 @@
 }
 
 .full-summary__header-label {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 24px;
   font-weight: 400;
   color: #8a8e99;
@@ -42,7 +42,7 @@
 }
 
 .full-summary__header-title {
-  font-family: 'Besley', serif;
+  font-family: var(--font-heading);
   font-size: 36px;
   font-weight: 400;
   line-height: 52.5px;
@@ -72,7 +72,7 @@
   color: white;
   border: none;
   border-radius: 12px;
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -131,7 +131,7 @@
 }
 
 .full-summary__reflection-label {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8a8e99;
@@ -139,7 +139,7 @@
 }
 
 .full-summary__reflection-question {
-  font-family: 'Besley', serif;
+  font-family: var(--font-heading);
   font-size: 24px;
   font-weight: 400;
   color: #1e1e1e;
@@ -148,7 +148,7 @@
 }
 
 .full-summary__reflection-subtitle {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8a8e99;
@@ -172,7 +172,7 @@
 }
 
 .full-summary__choice-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   line-height: 22px;
@@ -203,7 +203,7 @@
 }
 
 .full-summary__choice-description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 20px;
   font-weight: 400;
   color: #8a8e99;
@@ -229,7 +229,7 @@
 }
 
 .full-summary__section-title {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 700;
   line-height: 22px;
@@ -240,7 +240,7 @@
 }
 
 .full-summary__section-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8a8e99;
@@ -265,7 +265,7 @@
 }
 
 .full-summary__toggle-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 400;
   line-height: 15px;
@@ -356,7 +356,7 @@
 }
 
 .full-summary__flip-card-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   line-height: 1.4;
@@ -368,7 +368,7 @@
 }
 
 .full-summary__flip-card-hint {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 500;
   color: #8A8E99;
@@ -397,7 +397,7 @@
 }
 
 .full-summary__flip-card-back-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   color: #B432A3;
@@ -412,7 +412,7 @@
 }
 
 .full-summary__flip-card-description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   color: #333;
@@ -503,7 +503,7 @@
 }
 
 .full-summary__team-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   line-height: 22px;
@@ -537,7 +537,7 @@
 }
 
 .full-summary__team-subtitle {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8a8e99;

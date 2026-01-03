@@ -8,7 +8,7 @@ import api from '../services/api';
 import './AccountSettings.css';
 
 const AccountSettings = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: user?.first_name || '',
@@ -34,8 +34,29 @@ const AccountSettings = () => {
   };
 
   const handleSave = async () => {
-    // TODO: Implement API call to update user profile
-    console.log('Saving profile:', formData);
+    try {
+      // Map frontend field names to backend field names
+      const profileData = {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        display_name: formData.displayName,
+        bio: formData.bio,
+        pronouns: formData.pronouns,
+        phone_number: formData.phoneNumber,
+        birth_date: formData.birthDate || null,
+        location: formData.location,
+      };
+
+      await api.patch('/v1/auth/profile/', profileData);
+
+      // Refresh user data in context so UI updates
+      await refreshUser();
+
+      toast.success('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast.error(error.message || 'Failed to update profile');
+    }
   };
 
   const handleChangePassword = () => {

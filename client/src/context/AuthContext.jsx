@@ -112,8 +112,19 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const refreshUser = async () => {
+    try {
+      const userData = await authService.getProfile();
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, tokens, loading, login, register, logout, loginWithGoogle }}>
+    <AuthContext.Provider value={{ user, tokens, loading, login, register, logout, loginWithGoogle, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

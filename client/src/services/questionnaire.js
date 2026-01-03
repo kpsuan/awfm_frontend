@@ -6,7 +6,17 @@ import { transformQuestionData, transformPPRPatterns } from './dataTransform';
 const mockResponse = (data) => Promise.resolve({ data });
 
 // Cache for transformed question data (per question)
-const questionDataCache = {};
+let questionDataCache = {};
+
+// Clear the cache (useful when data is updated in Django Admin)
+export const clearQuestionCache = (questionId = null) => {
+  if (questionId) {
+    delete questionDataCache[questionId];
+  } else {
+    questionDataCache = {};
+  }
+  console.log('Question cache cleared:', questionId || 'all');
+};
 
 // Main question service - fetches the opening screen prompt
 export const mainQuestionService = {

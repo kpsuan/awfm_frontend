@@ -34,6 +34,7 @@ const MainScreen = ({
   onBack,
   onViewTeamRecordings,
   onAddTeamMember,
+  onGoToLayer, // callback to navigate to specific layer (1, 2, or 3)
   user = null,
   userName = "Norman",
   userAvatar = "https://i.pravatar.cc/82?img=12",
@@ -102,17 +103,20 @@ const MainScreen = ({
         {
           checkpoint: "Layer 1: Your Position",
           description: "Where you stand what's your initial choice",
-          completed: completedCheckpoints.q1
+          completed: completedCheckpoints.q1,
+          layerNumber: 1
         },
         {
           checkpoint: "Layer 2: Your Challenges",
           description: "What challenges might change your position",
-          completed: completedCheckpoints.q2
+          completed: completedCheckpoints.q2,
+          layerNumber: 2
         },
         {
           checkpoint: "Layer 3: What Would Change Your Mind",
           description: "What would make you change your mind",
-          completed: completedCheckpoints.q3
+          completed: completedCheckpoints.q3,
+          layerNumber: 3
         }
       ]
     },
@@ -192,6 +196,15 @@ const MainScreen = ({
                   </p>
                   {item.completed && (
                     <span className="main-screen__checkpoint-check">✓</span>
+                  )}
+                  {onGoToLayer && (
+                    <button
+                      className="main-screen__go-to-layer-btn"
+                      onClick={() => onGoToLayer(item.layerNumber)}
+                      title={`Go to Layer ${item.layerNumber}`}
+                    >
+                      Go →
+                    </button>
                   )}
                 </div>
                 <p className="main-screen__checkpoint-desc">{item.description}</p>

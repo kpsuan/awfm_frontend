@@ -1,11 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context';
 import Button from '../components/common/Button/Button';
 import { ContentHeader } from '../components/common/Navigation';
 import { questionsService, responsesService } from '../services/questionnaire';
 import { teamsService } from '../services/teams';
 import './Dashboard.css';
+
+// Carousel images for welcome header
+const CAROUSEL_IMAGES = [
+  {
+    url: 'https://images.unsplash.com/photo-1758686254041-88d7b6ecee8f?q=80&w=400&h=300&auto=format&fit=crop',
+    alt: 'Healthcare planning',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?q=80&w=400&h=300&auto=format&fit=crop',
+    alt: 'Medical consultation',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=400&h=300&auto=format&fit=crop',
+    alt: 'Family care',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?q=80&w=400&h=300&auto=format&fit=crop',
+    alt: 'Healthcare support',
+  },
+];
 
 // Mock recordings - would come from API
 const RECORDINGS = [
@@ -77,6 +97,22 @@ function Dashboard() {
   const [careTeams, setCareTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Carousel state
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // Carousel auto-advance
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCarouselIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Carousel navigation
+  const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+  const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length);
+  const goToSlide = (index) => setCarouselIndex(index);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -274,27 +310,76 @@ function Dashboard() {
           {/* Welcome Header */}
           <div className="welcome-header">
             <div className="welcome-content">
-              <h1 className="welcome-title">Welcome back, {user.name}</h1>
+              <span className="welcome-label">Your Journey</span>
+              <h1 className="welcome-title">
+                Welcome back,  
+                <span> </span>
+                <span className="welcome-name">
+                    {user.name}
+                  <svg className="welcome-underline" viewBox="0 0 200 12" preserveAspectRatio="none">
+                    <path d="M2 8 Q 50 2, 100 8 T 198 8" stroke="url(#underlineGradient)" strokeWidth="4" fill="none" strokeLinecap="round"/>
+                    <defs>
+                      <linearGradient id="underlineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f59e0b" />
+                        <stop offset="100%" stopColor="#fbbf24" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                </span>
+              </h1>
               <p className="welcome-subtitle">Continue planning your advance care directives</p>
             </div>
-            <div className="welcome-progress">
-              <div className="progress-circle">
-                <svg viewBox="0 0 36 36" className="progress-ring">
-                  <path
-                    className="progress-ring-bg"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  <path
-                    className="progress-ring-fill"
-                    strokeDasharray={`${user.overallProgress}, 100`}
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <span className="progress-circle-text">{user.overallProgress}%</span>
+            <div className="welcome-visual">
+              <div className="welcome-carousel">
+                
+                <div className="carousel-images">
+                  {CAROUSEL_IMAGES.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`carousel-slide ${index === carouselIndex ? 'carousel-slide--active' : ''}`}
+                    >
+                      <img src={image.url} alt={image.alt} />
+                    </div>
+                  ))}
+                </div>
+               
+                <div className="carousel-dots">
+                  {CAROUSEL_IMAGES.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`carousel-dot ${index === carouselIndex ? 'carousel-dot--active' : ''}`}
+                      onClick={() => goToSlide(index)}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="progress-details">
-                <span className="progress-label">Overall Progress</span>
-                <span className="progress-count">{user.questionsCompleted}/{user.totalQuestions} questions</span>
+              <div className="welcome-stats">
+                <div className="welcome-stat welcome-stat--progress">
+                  <div className="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 6v6l4 2"/>
+                    </svg>
+                  </div>
+                  <div className="stat-content">
+                    <span className="stat-value">{user.overallProgress}%</span>
+                    <span className="stat-label">Complete</span>
+                  </div>
+                </div>
+                <div className="welcome-stat welcome-stat--questions">
+                  <div className="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                      <rect x="9" y="3" width="6" height="4" rx="1"/>
+                      <path d="M9 12h6M9 16h6"/>
+                    </svg>
+                  </div>
+                  <div className="stat-content">
+                    <span className="stat-value">{user.questionsCompleted}/{user.totalQuestions}</span>
+                    <span className="stat-label">Questions</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -346,7 +431,11 @@ function Dashboard() {
             ) : (
             <div className="questions-grid">
               {displayQuestions.map((question) => (
-                <div key={question.id} className="question-card" onClick={() => handleQuestionClick(question.id)}>
+                <Link
+                  key={question.id}
+                  to={`/questionnaire/${question.id}`}
+                  className="question-card"
+                >
                   <div className="question-card-image">
                     {question.thumbnailUrl || question.imageUrl ? (
                       <img
@@ -387,7 +476,7 @@ function Dashboard() {
                       {getButtonText(question)}
                     </Button>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
             )}

@@ -1,12 +1,13 @@
 import React from 'react';
 import './Card.css';
 
-const ChoiceCard = ({ 
+const ChoiceCard = ({
   choice,
   isSelected = false,
   isExpanded = false, // fully controlled by parent
   onSelect,
   onExpand, // callback for expand/collapse
+  onOpenModal, // callback to open modal popup (tablet+)
   variant = 'default', // 'default', 'review'
   isQ2 = false,
   isQ3 = false
@@ -16,15 +17,32 @@ const ChoiceCard = ({
   const isReviewMode = variant === 'review';
 
   const handleCardClick = () => {
-    if (!isReviewMode) {
-      onSelect?.(id);
+    // On tablet+, just open modal without selecting (selection happens in modal)
+    if (window.innerWidth >= 768 && onOpenModal) {
+      onOpenModal();
+    } else {
+      // On mobile, select directly since there's no modal
+      if (!isReviewMode) {
+        onSelect?.(id);
+      }
     }
   };
 
   const handleExpandClick = (e) => {
     e.stopPropagation();
-    // Toggle expansion via parent callback
-    onExpand?.(id, !isExpanded);
+    // On tablet+, open modal; on mobile, expand inline
+    if (window.innerWidth >= 768 && onOpenModal) {
+      onOpenModal();
+    } else {
+      // Toggle expansion via parent callback
+      onExpand?.(id, !isExpanded);
+    }
+  };
+
+  // Handle checkbox click - always toggle selection directly
+  const handleCheckboxClick = (e) => {
+    e.stopPropagation();
+    onSelect?.(id);
   };
 
   // Checkmark SVG icon for selected state
@@ -108,7 +126,11 @@ const ChoiceCard = ({
       {/* Header with checkbox and title */}
       <div className="choice-card__header" onClick={handleCardClick}>
         {!isReviewMode && (
-          <div className="choice-card__checkbox" aria-hidden="true">
+          <div
+            className="choice-card__checkbox"
+            aria-hidden="true"
+            onClick={handleCheckboxClick}
+          >
             {isSelected && (
               <div className="choice-card__checkbox-fill">
                 <CheckIcon />
@@ -125,26 +147,26 @@ const ChoiceCard = ({
 
       {/* Image - shown in both collapsed and expanded */}
       {image && (
-        <div className="choice-card__image">
+        <div className="choice-card__image" onClick={handleCardClick}>
           <img src={image} alt={title} />
         </div>
       )}
 
       {/* Description text - shown in both collapsed and expanded */}
-      <p className="choice-card__description">
+      <p className="choice-card__description" onClick={handleCardClick}>
         {description || title}
       </p>
 
       {/* Collapsed state */}
       {!isExpanded ? (
         <>
-          {/* Expand button - "Are you sure?" */}
-          <button 
+          {/* Expand button - opens modal on tablet+, inline expand on mobile */}
+          <button
             className="choice-card__expand"
             onClick={handleExpandClick}
             aria-expanded={isExpanded}
           >
-            <span>{isReviewMode ? 'Expand' : 'Are you sure?'}</span>
+            <span>{isReviewMode ? 'View Details' : 'Learn More'}</span>
             <ArrowIcon rotated={true} />
           </button>
         </>

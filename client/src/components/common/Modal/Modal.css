@@ -64,7 +64,7 @@
 }
 
 .modal__title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 20px;
   font-weight: 700;
   color: #1e1e1e;

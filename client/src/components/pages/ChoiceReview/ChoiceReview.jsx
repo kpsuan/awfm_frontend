@@ -3,9 +3,10 @@ import './ChoiceReview.css';
 import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton, SecondaryButton } from '../../common/Button';
 import { ChoiceCard } from '../../common/Card';
+import { ChoiceCardModal } from '../../common/Modal';
 import image1 from '../../../styles/image1.png';
 
-const ChoiceReview = ({ 
+const ChoiceReview = ({
   question,
   selectedChoice,
   selectedChoices = [], // Support for multiple choices
@@ -14,15 +15,38 @@ const ChoiceReview = ({
   onBack,
   onChangeAnswer
 }) => {
-  const { title, subtitle, instruction, checkpointLabel } = question || {};
+  const { title, subtitle, instruction, checkpointLabel, image } = question || {};
   const [expandedCardId, setExpandedCardId] = useState(null);
-  
+  const [modalChoice, setModalChoice] = useState(null);
+
+  // Use database image if available, otherwise fallback to static image
+  const questionImage = image || image1;
+
   // Use selectedChoices array if provided, otherwise fall back to single selectedChoice
   const choices = selectedChoices.length > 0 ? selectedChoices : (selectedChoice ? [selectedChoice] : []);
+
+  // Check if we're on tablet or larger (popup only for non-mobile)
+  const isTabletOrLarger = () => window.innerWidth >= 768;
 
   const handleExpandChange = (choiceId, shouldExpand) => {
     setExpandedCardId(shouldExpand ? choiceId : null);
   };
+
+  // Open modal with choice details (only on tablet+)
+  const handleOpenModal = (choice) => {
+    if (isTabletOrLarger()) {
+      setModalChoice(choice);
+    }
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setModalChoice(null);
+  };
+
+  // Determine Q2/Q3 based on checkpointLabel
+  const isQ2 = checkpointLabel === 'YOUR CHALLENGES';
+  const isQ3 = checkpointLabel === 'YOUR MIND-CHANGER';
 
   return (
     <TwoColumnLayout>
@@ -30,7 +54,7 @@ const ChoiceReview = ({
         <div className="choice-review">
           {/* Image on left panel */}
           <div className="choice-review__image">
-            <img src={image1} alt="Question illustration" />
+            <img src={questionImage} alt="Question illustration" />
           </div>
           
           <div className="choice-review__header">
@@ -47,7 +71,7 @@ const ChoiceReview = ({
           {/* Mobile/Tablet header - shown only on smaller screens */}
           <div className="choice-review__mobile-header">
             <div className="choice-review__mobile-image">
-              <img src={image1} alt="Question illustration" />
+              <img src={questionImage} alt="Question illustration" />
             </div>
             <div className="choice-review__mobile-info">
               {checkpointLabel && subtitle && (
@@ -71,9 +95,10 @@ const ChoiceReview = ({
                   isSelected={true}
                   isExpanded={expandedCardId === choice.id}
                   onExpand={handleExpandChange}
+                  onOpenModal={() => handleOpenModal(choice)}
                   variant="review"
-                  isQ2={question?.checkpointLabel === 'YOUR CHALLENGES'}
-                  isQ3={question?.checkpointLabel === 'YOUR MIND-CHANGER'}
+                  isQ2={isQ2}
+                  isQ3={isQ3}
                 />
               ))}
           </div>
@@ -90,6 +115,17 @@ const ChoiceReview = ({
           </div>
         </div>
       </ContentPanel>
+
+      {/* Choice Card Modal - only shown on tablet+ */}
+      <ChoiceCardModal
+        isOpen={!!modalChoice}
+        choice={modalChoice}
+        isSelected={true}
+        onClose={handleCloseModal}
+        onSelect={handleCloseModal}
+        isQ2={isQ2}
+        isQ3={isQ3}
+      />
     </TwoColumnLayout>
   );
 };

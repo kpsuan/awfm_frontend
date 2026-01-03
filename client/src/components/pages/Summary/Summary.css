@@ -87,7 +87,7 @@
 }
 
 .summary__header-label {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8a8e99;
@@ -126,7 +126,7 @@
 }
 
 .summary__checkpoint-title {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #B432A3;
@@ -153,7 +153,7 @@
 }
 
 .summary__choice-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8A8E99;
@@ -168,7 +168,7 @@
 }
 
 .summary__affirmation-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #5C40FB;
@@ -177,7 +177,7 @@
 }
 
 .summary__affirmation-description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 510;
   color: #8A8E99;
@@ -257,21 +257,21 @@
 }
 
 .summary__avatar-tooltip-name {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 600;
   color: #1e1e1e;
 }
 
 .summary__avatar-tooltip-date {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 500;
   color: #5C40FB;
 }
 
 .summary__avatar-tooltip-pending {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 500;
   color: #8A8E99;
@@ -283,7 +283,7 @@
 }
 
 .summary__reveal-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #B432A3;
@@ -313,7 +313,7 @@
 }
 
 .summary__reveal-paragraph {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   color: #333;
@@ -322,7 +322,7 @@
 }
 
 .summary__reveal-link {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 500;
   color: #B432A3;
@@ -356,7 +356,7 @@
 }
 
 .summary__team-visibility-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #5C40FB;
@@ -365,7 +365,7 @@
 }
 
 .summary__team-visibility-count {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 500;
   color: #8A8E99;
@@ -375,7 +375,7 @@
 }
 
 .summary__team-visibility-description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   color: #6B7280;
@@ -430,7 +430,7 @@
 }
 
 .summary__recording-name {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 500;
   color: #4B5563;
@@ -442,7 +442,7 @@
 }
 
 .summary__team-visibility-link {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 600;
   color: #B432A3;
@@ -499,7 +499,7 @@
 }
 
 .summary__recording-modal-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 20px;
   font-weight: 700;
   color: #1e1e1e;
@@ -508,7 +508,7 @@
 }
 
 .summary__recording-modal-description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   color: #6B7280;

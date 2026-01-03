@@ -31,8 +31,8 @@ export function transformOptionToChoice(option, layerNumber) {
     id: `q${layerNumber}_${option.option_number}`,
     subtitle: option.option_text,
     title: option.option_text,
-    // Placeholder image - can be updated with actual images later
-    image: `https://images.unsplash.com/photo-${1559757175 + option.option_number}000000?w=600&h=400&fit=crop`
+    // Use database image if available, otherwise null (frontend will handle fallback)
+    image: option.image_url || null
   };
 
   // Map components to frontend fields
@@ -62,7 +62,8 @@ export function transformLayerToQuestion(layer) {
       ? `Select up to ${layer.max_selections} options that apply to your situation.`
       : 'Select the option that best represents what matters most to you.',
     selectionType: layer.selection_type,
-    maxSelections: layer.max_selections
+    maxSelections: layer.max_selections,
+    image: layer.image_url || null
   };
 }
 

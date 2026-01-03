@@ -290,6 +290,31 @@
   margin: 0;
 }
 
+/* Go to layer button */
+.main-screen__go-to-layer-btn {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(180deg, #b432a3 0%, #ae59cf 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.main-screen__go-to-layer-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(180, 50, 163, 0.3);
+}
+
+.main-screen__go-to-layer-btn:active {
+  transform: scale(0.98);
+}
+
 /* Team slide */
 .main-screen__team-avatars {
   display: flex;
@@ -517,7 +542,7 @@
 }
 
 .main-screen__onboarding-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 700;
   color: white;
@@ -526,7 +551,7 @@
 }
 
 .main-screen__onboarding-desc {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.85);
@@ -535,7 +560,7 @@
 }
 
 .main-screen__onboarding-dismiss {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 600;
   color: white;

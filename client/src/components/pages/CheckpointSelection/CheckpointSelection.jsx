@@ -4,6 +4,7 @@ import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton, SecondaryButton } from '../../common/Button';
 import { ChoiceCarousel } from '../../features/Choices';
 import { CarouselIndicator } from '../../common/Indicator';
+import { ChoiceCardModal } from '../../common/Modal';
 import image1 from '../../../styles/image1.png';
 
 const CheckpointSelection = ({
@@ -23,8 +24,36 @@ const CheckpointSelection = ({
   const [selectedChoices, setSelectedChoices] = useState(initialSelection);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [expandedCardId, setExpandedCardId] = useState(null);
+  const [modalChoice, setModalChoice] = useState(null);
   const carouselRef = useRef(null);
-  const { title, subtitle, instruction, checkpointLabel } = question || {};
+  const { title, subtitle, instruction, checkpointLabel, image } = question || {};
+
+  // Use database image if available, otherwise fallback to static image
+  const questionImage = image || image1;
+
+  // Check if we're on tablet or larger (popup only for non-mobile)
+  const isTabletOrLarger = () => {
+    return window.innerWidth >= 768;
+  };
+
+  // Open modal with choice details (only on tablet+)
+  const handleOpenModal = (choice) => {
+    if (isTabletOrLarger()) {
+      setModalChoice(choice);
+    }
+  };
+
+  // Close modal
+  const handleCloseModal = () => {
+    setModalChoice(null);
+  };
+
+  // Handle selection from modal
+  const handleModalSelect = (choiceId) => {
+    handleSelect(choiceId);
+    // Close modal after selection
+    setModalChoice(null);
+  };
 
   // Sync with initialSelection when it changes (e.g., when returning to edit)
   useEffect(() => {
@@ -103,7 +132,7 @@ const CheckpointSelection = ({
         <div className="checkpoint-selection">
           {/* Image on left panel */}
           <div className="checkpoint-selection__image">
-            <img src={image1} alt="Question illustration" />
+            <img src={questionImage} alt="Question illustration" />
           </div>
           
           <div className="checkpoint-selection__header">
@@ -120,7 +149,7 @@ const CheckpointSelection = ({
           {/* Mobile/Tablet header - shown only on smaller screens */}
           <div className="checkpoint-selection__mobile-header">
             <div className="checkpoint-selection__mobile-image">
-              <img src={image1} alt="Question illustration" />
+              <img src={questionImage} alt="Question illustration" />
             </div>
             <div className="checkpoint-selection__mobile-info">
               {checkpointLabel && subtitle && (
@@ -146,6 +175,7 @@ const CheckpointSelection = ({
                 onIndexChange={setActiveCardIndex}
                 expandedCardId={expandedCardId}
                 onExpandChange={handleExpandChange}
+                onOpenModal={handleOpenModal}
                 layout={layout}
                 isQ2={isQ2}
                 isQ3={isQ3}
@@ -177,6 +207,17 @@ const CheckpointSelection = ({
           </div>
         </div>
       </ContentPanel>
+
+      {/* Choice Card Modal - only shown on tablet+ */}
+      <ChoiceCardModal
+        isOpen={!!modalChoice}
+        choice={modalChoice}
+        isSelected={modalChoice ? selectedChoices.includes(modalChoice.id) : false}
+        onClose={handleCloseModal}
+        onSelect={handleModalSelect}
+        isQ2={isQ2}
+        isQ3={isQ3}
+      />
     </TwoColumnLayout>
   );
 };

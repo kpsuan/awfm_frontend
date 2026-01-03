@@ -13,7 +13,7 @@
 }
 
 .add-member-modal__title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 20px;
   font-weight: 700;
   color: #5C40FB;
@@ -32,7 +32,7 @@
 
 .add-member-modal__tab {
   flex: 1;
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 600;
   color: #B432A3;
@@ -67,14 +67,14 @@
 }
 
 .add-member-modal__label {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 500;
   color: #374151;
 }
 
 .add-member-modal__email-input {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 500;
   color: #5C40FB;
@@ -99,7 +99,7 @@
 }
 
 .add-member-modal__select {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 400;
   color: #1e1e1e;
@@ -126,7 +126,7 @@
 }
 
 .add-member-modal__limit-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   color: #6B7280;
@@ -158,14 +158,14 @@
 }
 
 .add-member-modal__message-greeting {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #1e1e1e;
 }
 
 .add-member-modal__message-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   color: #6B7280;
@@ -183,7 +183,7 @@
 
 .add-member-modal__btn {
   width: 100%;
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 600;
   padding: 16px 24px;
@@ -249,7 +249,7 @@
 }
 
 .add-member-modal__stat-number {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 28px;
   font-weight: 700;
   color: #5C40FB;
@@ -257,7 +257,7 @@
 }
 
 .add-member-modal__stat-label {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 500;
   color: #6B7280;
@@ -318,14 +318,14 @@
 }
 
 .add-member-modal__invite-email {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 500;
   color: #1e1e1e;
 }
 
 .add-member-modal__invite-status {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;

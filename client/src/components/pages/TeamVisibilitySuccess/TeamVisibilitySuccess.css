@@ -141,7 +141,7 @@
 }
 
 .team-success__title {
-  font-family: 'Besley', serif;
+  font-family: var(--font-heading);
   font-size: 36px;
   font-weight: 400;
   line-height: 52.5px;
@@ -154,7 +154,7 @@
 }
 
 .team-success__subtitle {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 24px;
   font-weight: 400;
   line-height: 36px;
@@ -200,7 +200,7 @@
 }
 
 .team-success__option-label {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 800;
   line-height: 1.2;

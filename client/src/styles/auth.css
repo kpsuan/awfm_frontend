@@ -140,7 +140,7 @@
   font-weight: 300;
   line-height: 1.2;
   margin: 0 0 10px 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif;
+  font-family: var(--font-system);
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 

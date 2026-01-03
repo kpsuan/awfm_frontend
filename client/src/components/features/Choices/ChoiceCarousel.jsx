@@ -9,6 +9,7 @@ const ChoiceCarousel = forwardRef(({
   onIndexChange,
   expandedCardId = null,
   onExpandChange, // callback when card expand state changes
+  onOpenModal, // callback to open modal with choice details (tablet+)
   layout = 'horizontal' // 'vertical' for scrolling list, 'horizontal' for carousel
   , isQ2 = false, isQ3 = false
 }, ref) => {
@@ -88,6 +89,7 @@ const ChoiceCarousel = forwardRef(({
               isExpanded={expandedCardId === choice.id}
               onSelect={onSelect}
               onExpand={onExpandChange}
+              onOpenModal={() => onOpenModal?.(choice)}
               isQ2={isQ2}
               isQ3={isQ3}
             />
@@ -112,6 +114,7 @@ const ChoiceCarousel = forwardRef(({
             isExpanded={expandedCardId === choice.id}
             onSelect={onSelect}
             onExpand={onExpandChange}
+            onOpenModal={() => onOpenModal?.(choice)}
             isQ2={isQ2}
             isQ3={isQ3}
           />

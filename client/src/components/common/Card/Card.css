@@ -91,7 +91,7 @@
 }
 
 .choice-card__subtitle {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 12px;
   font-weight: 600;
   color: #8a8e99;
@@ -101,7 +101,7 @@
 }
 
 .choice-card__title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #191c24;
@@ -121,7 +121,7 @@
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, rgba(180, 50, 163, 0.4) 0%, rgba(174, 89, 207, 0.05) 100%);
-  margin: 16px 0;
+  margin: 20px 0;
 }
 
 /* Image */
@@ -133,8 +133,9 @@
   max-height: 220px;
   border-radius: 0;
   overflow: hidden;
-  margin-top: 12px;
-  margin-bottom: 16px;
+  margin-top: 16px;
+  margin-bottom: 20px;
+  cursor: pointer;
 }
 
 .choice-card__image img {
@@ -178,19 +179,19 @@
 
 /* Quote/description text - for expanded state (same as collapsed) */
 .choice-card__quote {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 400;
   color: #5a5e6b;
-  line-height: 24px;
+  line-height: 26px;
   letter-spacing: -0.3px;
-  margin: 0 0 8px 0;
+  margin: 0 0 12px 0;
 }
 
 /* Description text - for collapsed state */
 .choice-card__description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 16px;
+  font-family: var(--font-system);
+  font-size: 12px;
   font-weight: 400;
   color: #5a5e6b;
   line-height: 24px;
@@ -201,11 +202,11 @@
 .choice-card__preview {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .choice-card__preview-label {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 600;
   color: #8a8e99;
@@ -215,7 +216,7 @@
 }
 
 .choice-card__preview-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 400;
   color: #8a8e99;
@@ -232,17 +233,18 @@
 .choice-card__content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .choice-card__description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 20px;
+  font-family: var(--font-system);
+  font-size: 18px;
   font-weight: 400;
   color: #8a8e99;
-  line-height: 22px;
+  line-height: 24px;
   letter-spacing: 0;
   margin: 0;
+  cursor: pointer;
 }
 
 /* Expand button */
@@ -250,7 +252,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 700;
   background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
@@ -281,15 +283,16 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  margin-top: 8px;
-  animation: fadeIn var(--transition-fast);
+  margin-top: 12px;
+  animation: fadeIn 0.1s ease;
+
 }
 
 .choice-card__section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px 0;
+  gap: 14px;
+  padding: 20px 0;
 }
 
 .choice-card__section:first-child {
@@ -303,7 +306,7 @@
 }
 
 .choice-card__section-title {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 600;
   background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
@@ -361,7 +364,7 @@
 .choice-card__tooltip-content {
   background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
   color: #fff;
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
@@ -380,11 +383,11 @@
 }
 
 .choice-card__section-text {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 15px;
   font-weight: 400;
   color: #4a4d57;
-  line-height: 22px;
+  line-height: 24px;
   letter-spacing: -0.3px;
   margin: 0;
 }
@@ -589,7 +592,7 @@
 }
 
 .flip-choice-card__title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #191c24;
@@ -605,7 +608,7 @@
 }
 
 .flip-choice-card__hint {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 13px;
   font-weight: 500;
   color: #8A8E99;
@@ -637,7 +640,7 @@
 }
 
 .flip-choice-card__back-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 16px;
   font-weight: 700;
   color: #B432A3;
@@ -651,7 +654,7 @@
 }
 
 .flip-choice-card__description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 18px;
   font-weight: 400;
   color: #333;
@@ -666,7 +669,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 16px;
   font-weight: 700;
   background: linear-gradient(180deg, #b432a3 25%, #ae59cf 100%);
@@ -712,7 +715,7 @@
 }
 
 .flip-choice-card__expanded-title {
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-size: 18px;
   font-weight: 700;
   color: #191c24;
@@ -728,7 +731,7 @@
 }
 
 .flip-choice-card__expanded-description {
-  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-system);
   font-size: 15px;
   font-weight: 400;
   color: #5a5e6b;

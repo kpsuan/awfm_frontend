@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  font-family: 'Mulish', sans-serif;
+  font-family: var(--font-body);
   font-weight: 800;
   border-radius: 999px;
   cursor: pointer;
