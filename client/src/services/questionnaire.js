@@ -195,6 +195,32 @@ export const responsesService = {
   }
 };
 
+// Progress service - manages user questionnaire progress
+export const progressService = {
+  getAll: async (params = {}) => {
+    if (useMockData) {
+      return mockResponse([]);
+    }
+    const response = await api.get('/v1/user/progress/', { params });
+    return { data: response };
+  },
+  getByQuestion: async (questionId) => {
+    if (useMockData) {
+      return mockResponse(null);
+    }
+    const response = await api.get(`/v1/user/progress/by-question/${questionId}/`);
+    return { data: response };
+  },
+  save: async (data) => {
+    if (useMockData) {
+      return mockResponse({ success: true, data });
+    }
+    // Save progress (creates or updates)
+    const response = await api.post('/v1/user/progress/', data);
+    return { data: response };
+  }
+};
+
 // Team service - fetches team member data
 export const teamService = {
   getAll: async () => {

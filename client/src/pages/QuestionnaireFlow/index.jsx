@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuestionnaire, useAuth } from '../../context';
@@ -8,7 +8,6 @@ import { clearQuestionCache } from '../../services';
 
 // Components
 import MainScreen from '../../components/pages/MainScreen';
-import QuestionIntro from '../../components/pages/QuestionIntro';
 import CheckpointSelection from '../../components/pages/CheckpointSelection';
 import ChoiceReview from '../../components/pages/ChoiceReview';
 import CompletionSuccess from '../../components/pages/CompletionSuccess';
@@ -28,7 +27,7 @@ import {
 } from './phases';
 
 // Hooks & Constants
-import { useQuestionnaireState } from './hooks';
+import { useQuestionnaireState, useResponseSync } from './hooks';
 import { FLOW_PHASES } from './constants';
 
 const QuestionnaireFlow = () => {
@@ -39,6 +38,10 @@ const QuestionnaireFlow = () => {
   const queryClient = useQueryClient();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [isLoadingResponses, setIsLoadingResponses] = useState(false);
+
+  // Response sync hook for saving/loading from backend
+  const { saveResponse: saveResponseToBackend, loadSavedResponses, isAuthenticated } = useResponseSync(questionId);
 
   // Clear caches when questionId changes to ensure fresh data
   useEffect(() => {
@@ -62,6 +65,7 @@ const QuestionnaireFlow = () => {
     setQ1Choices,
     setQ2Choices,
     setQ3Choices,
+    setCompletedCheckpoints,
     setSelectedMemberForFullSummary,
     progress,
     progressPercentage,
@@ -91,6 +95,81 @@ const QuestionnaireFlow = () => {
     q2: q2QuestionData,
     q3: q3QuestionData
   };
+
+  // Save response to backend when confirming a review
+  const handleConfirmAndSave = useCallback(async (layerNumber, choices) => {
+    // Save to backend if authenticated
+    if (isAuthenticated && choices.length > 0) {
+      // Convert local IDs (q1_1, q2_1, etc.) to actual UUIDs for backend
+      const choicesData = layerNumber === 1 ? q1ChoicesData :
+                          layerNumber === 2 ? q2ChoicesData : q3ChoicesData;
+
+      const optionUuids = choices.map(choiceId => {
+        const choice = choicesData?.find(c => c.id === choiceId);
+        return choice?.uuid || choiceId; // Fall back to original ID if UUID not found
+      }).filter(Boolean);
+
+      try {
+        await saveResponseToBackend(layerNumber, optionUuids, true);
+        console.log(`Saved L${layerNumber} response to backend`);
+      } catch (error) {
+        console.error(`Failed to save L${layerNumber} response:`, error);
+        // Continue anyway - localStorage is the fallback
+      }
+    }
+    // Continue to next phase
+    handleContinue();
+  }, [isAuthenticated, saveResponseToBackend, handleContinue, q1ChoicesData, q2ChoicesData, q3ChoicesData]);
+
+  // Load saved responses from backend when user logs in and choices data is available
+  useEffect(() => {
+    const loadResponses = async () => {
+      // Wait for choices data to be loaded before trying to convert UUIDs
+      if (!isAuthenticated || !q1ChoicesData || !q2ChoicesData || !q3ChoicesData) return;
+
+      setIsLoadingResponses(true);
+      try {
+        const savedData = await loadSavedResponses();
+        if (savedData) {
+          // Helper to convert UUIDs to local IDs
+          const convertUuidsToLocalIds = (uuids, choicesData, layerNum) => {
+            return uuids.map(uuid => {
+              const choice = choicesData?.find(c => c.uuid === uuid);
+              return choice?.id || `q${layerNum}_${uuid}`; // Fallback to constructed ID
+            });
+          };
+
+          // Only update if we have saved data and local state is empty
+          if (savedData.q1Choices.length > 0 && q1Choices.length === 0) {
+            const localIds = convertUuidsToLocalIds(savedData.q1Choices, q1ChoicesData, 1);
+            setQ1Choices(localIds);
+          }
+          if (savedData.q2Choices.length > 0 && q2Choices.length === 0) {
+            const localIds = convertUuidsToLocalIds(savedData.q2Choices, q2ChoicesData, 2);
+            setQ2Choices(localIds);
+          }
+          if (savedData.q3Choices.length > 0 && q3Choices.length === 0) {
+            const localIds = convertUuidsToLocalIds(savedData.q3Choices, q3ChoicesData, 3);
+            setQ3Choices(localIds);
+          }
+          // Update completed checkpoints from backend data
+          if (savedData.completedCheckpoints) {
+            setCompletedCheckpoints(prev => ({
+              q1: savedData.completedCheckpoints.q1 || prev.q1,
+              q2: savedData.completedCheckpoints.q2 || prev.q2,
+              q3: savedData.completedCheckpoints.q3 || prev.q3
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load saved responses:', error);
+      } finally {
+        setIsLoadingResponses(false);
+      }
+    };
+
+    loadResponses();
+  }, [isAuthenticated, questionId, q1ChoicesData, q2ChoicesData, q3ChoicesData]);
 
   // Handle back with exit modal
   const onBack = () => {
@@ -234,7 +313,7 @@ const QuestionnaireFlow = () => {
             selectedChoice={q1ChoicesData.find(c => q1Choices.includes(c.id))}
             selectedChoices={q1Choices.map(id => q1ChoicesData.find(c => c.id === id)).filter(Boolean)}
             progress={progress}
-            onConfirm={handleContinue}
+            onConfirm={() => handleConfirmAndSave(1, q1Choices)}
             onBack={onBack}
             onChangeAnswer={onBack}
           />
@@ -278,7 +357,7 @@ const QuestionnaireFlow = () => {
             question={questionData.q2}
             selectedChoices={q2Choices.map(id => q2ChoicesData.find(c => c.id === id)).filter(Boolean)}
             progress={progress}
-            onConfirm={handleContinue}
+            onConfirm={() => handleConfirmAndSave(2, q2Choices)}
             onBack={onBack}
             onChangeAnswer={onBack}
           />
@@ -322,7 +401,7 @@ const QuestionnaireFlow = () => {
             question={questionData.q3}
             selectedChoices={q3Choices.map(id => q3ChoicesData.find(c => c.id === id)).filter(Boolean)}
             progress={progress}
-            onConfirm={handleContinue}
+            onConfirm={() => handleConfirmAndSave(3, q3Choices)}
             onBack={onBack}
             onChangeAnswer={onBack}
           />

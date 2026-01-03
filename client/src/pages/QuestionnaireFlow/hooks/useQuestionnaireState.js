@@ -139,6 +139,7 @@ export const useQuestionnaireState = () => {
     setQ1Choices,
     setQ2Choices,
     setQ3Choices,
+    setCompletedCheckpoints,
     setSelectedMemberForFullSummary,
 
     // Computed

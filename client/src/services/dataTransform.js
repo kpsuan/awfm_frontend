@@ -29,6 +29,9 @@ const COMPONENT_MAP = {
 export function transformOptionToChoice(option, layerNumber) {
   const choice = {
     id: `q${layerNumber}_${option.option_number}`,
+    // Store actual UUID for backend API calls
+    uuid: option.id,
+    optionNumber: option.option_number,
     subtitle: option.option_text,
     title: option.option_text,
     // Use database image if available, otherwise null (frontend will handle fallback)
