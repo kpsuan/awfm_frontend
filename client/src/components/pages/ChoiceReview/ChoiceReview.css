@@ -1,14 +1,14 @@
 .choice-review {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  justify-content: space-evenly;
   height: 100%;
 }
 
 .choice-review__image {
   width: 100%;
   aspect-ratio: 16 / 9;
-  max-height: 280px;
+  max-height: 380px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 16px;
@@ -118,18 +118,172 @@
   letter-spacing: -0.5px;
 }
 
-/* Page title */
+/* Summary Header */
+.choice-review__summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .choice-review__page-title {
   font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 400;
   color: var(--color-primary);
-  margin: 0 0 24px 0;
+  margin: 0;
   line-height: 34px;
   letter-spacing: -0.5px;
 }
 
-/* Cards container - vertical scroll */
+.choice-review__count {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-gray-500);
+  background: var(--color-gray-100);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* Summary Panel */
+.choice-review__summary-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.choice-review__summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 16px;
+}
+
+.choice-review__summary-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.choice-review__summary-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.choice-review__summary-list::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 4px;
+}
+
+/* Summary Item - Horizontal style with image on left */
+.choice-review__summary-item {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: var(--color-white);
+  border: 2px solid var(--color-primary);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.choice-review__summary-item:hover {
+  box-shadow: 0 4px 16px rgba(180, 50, 163, 0.2);
+  transform: translateY(-2px);
+}
+
+.choice-review__summary-image {
+  width: 180px;
+  min-height: 120px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.choice-review__summary-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.choice-review__summary-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.choice-review__summary-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.choice-review__summary-title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-black);
+  margin: 0;
+  line-height: 24px;
+}
+
+.choice-review__summary-description {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-gray-600);
+  margin: 0;
+  line-height: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.choice-review__summary-expand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+  background: var(--color-gray-50);
+  border: none;
+  border-left: 1px solid var(--color-gray-200);
+  cursor: pointer;
+  color: var(--color-gray-500);
+  transition: all 0.2s ease;
+}
+
+.choice-review__summary-expand:hover {
+  background: var(--color-gray-100);
+  color: var(--color-primary);
+}
+
+/* Confirmation message */
+.choice-review__confirmation {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(180, 50, 163, 0.05), rgba(174, 89, 207, 0.05));
+  border-radius: 12px;
+  margin-top: auto;
+}
+
+.choice-review__confirmation p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-gray-600);
+  margin: 0;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* Cards container - vertical scroll (legacy) */
 .choice-review__cards {
   display: flex;
   flex-direction: column;
@@ -179,12 +333,12 @@
     display: block;
     margin-bottom: 16px;
   }
-  
+
   .choice-review__content {
     padding: 0;
     overflow-y: auto;
   }
-  
+
   .choice-review__mobile-image {
     width: 100%;
     margin-left: 0;
@@ -192,28 +346,50 @@
     margin-top: 0;
     border-radius: 0;
   }
-  
+
   .choice-review__mobile-info {
     padding: 0 16px;
   }
-  
-  .choice-review__page-title {
+
+  .choice-review__summary-header {
     padding: 0 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
-  
+
+  .choice-review__page-title {
+    padding: 0;
+  }
+
+  .choice-review__summary-panel {
+    padding: 0 16px;
+    flex: none;
+  }
+
+  .choice-review__summary-list {
+    flex: none;
+    overflow-y: visible;
+    gap: 12px;
+  }
+
+  .choice-review__confirmation {
+    margin-top: 16px;
+  }
+
   .choice-review__cards {
     flex: none;
     min-height: auto;
     margin-bottom: 16px;
     padding: 0 16px;
   }
-  
+
   .choice-review__indicators {
     padding: 16px;
   }
-  
+
   .choice-review__actions {
-    padding: 0 16px 16px 16px;
+    padding: 16px;
   }
 }
 
@@ -222,35 +398,66 @@
   .choice-review__content {
     padding: 0;
   }
-  
+
   .choice-review__page-title {
     font-size: 22px;
     line-height: 28px;
   }
-  
+
   .choice-review__mobile-title {
     font-size: 20px;
     line-height: 28px;
   }
-  
+
   .choice-review__mobile-image {
     aspect-ratio: 4 / 3;
     border-radius: 0;
   }
-  
+
   .choice-review__mobile-info {
     padding: 16px;
   }
-  
+
+  .choice-review__summary-list {
+    gap: 12px;
+  }
+
+  /* Stack items vertically on small mobile */
+  .choice-review__summary-item {
+    flex-direction: column;
+  }
+
+  .choice-review__summary-image {
+    width: 100%;
+    height: 140px;
+    min-height: auto;
+  }
+
+  .choice-review__summary-content {
+    padding: 12px;
+  }
+
+  .choice-review__summary-title {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .choice-review__summary-expand {
+    width: 100%;
+    height: 44px;
+    border-left: none;
+    border-top: 1px solid var(--color-gray-200);
+  }
+
   .choice-review__cards {
     padding: 0 16px;
   }
-  
+
   .choice-review__indicators {
     padding: 16px;
   }
-  
+
   .choice-review__actions {
-    padding: 0 16px 16px 16px;
+    padding: 16px;
   }
 }

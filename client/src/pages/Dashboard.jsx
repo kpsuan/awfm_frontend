@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context';
 import Button from '../components/common/Button/Button';
 import { ContentHeader } from '../components/common/Navigation';
 import { questionsService, responsesService } from '../services/questionnaire';
 import { teamsService } from '../services/teams';
+import { getAllProgress } from './QuestionnaireFlow/utils/progressStorage';
 import './Dashboard.css';
 
 // Carousel images for welcome header
@@ -95,6 +96,7 @@ function Dashboard() {
   const [questions, setQuestions] = useState([]);
   const [progressData, setProgressData] = useState([]);
   const [careTeams, setCareTeams] = useState([]);
+  const [localProgress, setLocalProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -110,8 +112,6 @@ function Dashboard() {
   }, []);
 
   // Carousel navigation
-  const nextSlide = () => setCarouselIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
-  const prevSlide = () => setCarouselIndex((prev) => (prev - 1 + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length);
   const goToSlide = (index) => setCarouselIndex(index);
 
   // Redirect to login if not authenticated
@@ -121,46 +121,46 @@ function Dashboard() {
     }
   }, [authUser, authLoading, navigate]);
 
-  // Fetch data on mount
+  // Load localStorage progress immediately (sync, before any API calls)
+  useEffect(() => {
+    setLocalProgress(getAllProgress());
+  }, []);
+
+  // Fetch data on mount - parallel API calls for speed
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch questions from content API
-        const questionsResponse = await questionsService.getAll();
-        // Handle both paginated (results array) and non-paginated (direct array) responses
+        // Fetch all data in parallel for faster loading
+        const [questionsResponse, progressResponse, teamsResponse] = await Promise.all([
+          questionsService.getAll().catch(err => {
+            console.log('Could not fetch questions:', err.message);
+            return { data: [] };
+          }),
+          responsesService.getSummary().catch(err => {
+            console.log('Could not fetch progress:', err.message);
+            return { data: [] };
+          }),
+          teamsService.getTeams().catch(err => {
+            console.log('Could not fetch teams:', err.message);
+            return [];
+          })
+        ]);
+
+        // Process questions data
         let questionsData = questionsResponse.data || [];
         if (questionsData.results) {
           questionsData = questionsData.results;
         }
         if (!Array.isArray(questionsData)) {
-          console.warn('Questions data is not an array:', questionsData);
           questionsData = [];
-        }
-
-        // Fetch user progress (requires auth)
-        let progressResponse = { data: [] };
-        try {
-          progressResponse = await responsesService.getSummary();
-        } catch (err) {
-          // User might not be logged in, use empty progress
-          console.log('Could not fetch progress (user may not be logged in):', err.message);
-        }
-
-        // Fetch care teams (requires auth)
-        let teamsData = [];
-        try {
-          teamsData = await teamsService.getTeams();
-        } catch (err) {
-          // User might not be logged in
-          console.log('Could not fetch teams (user may not be logged in):', err.message);
         }
 
         setQuestions(questionsData);
         setProgressData(progressResponse.data || []);
-        setCareTeams(Array.isArray(teamsData) ? teamsData : []);
+        setCareTeams(Array.isArray(teamsResponse) ? teamsResponse : []);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err.message);
@@ -175,11 +175,34 @@ function Dashboard() {
   // Transform questions for display with progress
   const getQuestionsWithProgress = () => {
     if (!Array.isArray(questions)) return [];
+
     return questions.map(question => {
-      // Find progress for this question
-      const progress = progressData.find(p => p.question_id === question.id);
-      const totalLayers = 3; // Default to 3 layers
-      const completedLayers = progress?.completed_layers || 0;
+      // Find backend progress for this question
+      const backendProgress = progressData.find(p => p.question_id === question.id);
+
+      // Find localStorage progress for this question
+      const localQuestionProgress = localProgress[question.id];
+
+      // Calculate completed layers from localStorage (completedCheckpoints)
+      let localCompletedLayers = 0;
+      if (localQuestionProgress?.completedCheckpoints) {
+        const cp = localQuestionProgress.completedCheckpoints;
+        if (cp.q1) localCompletedLayers++;
+        if (cp.q2) localCompletedLayers++;
+        if (cp.q3) localCompletedLayers++;
+      }
+
+      // Check if user has started (has any choices selected)
+      const hasStartedLocal = localQuestionProgress && (
+        (localQuestionProgress.q1Choices?.length > 0) ||
+        (localQuestionProgress.q2Choices?.length > 0) ||
+        (localQuestionProgress.q3Choices?.length > 0)
+      );
+
+      const totalLayers = 3;
+      // Use the higher of backend or local progress
+      const backendLayers = backendProgress?.completed_layers || 0;
+      const completedLayers = Math.max(backendLayers, localCompletedLayers);
       const progressPercent = Math.round((completedLayers / totalLayers) * 100);
 
       return {
@@ -189,9 +212,10 @@ function Dashboard() {
         progress: progressPercent,
         layersCompleted: completedLayers,
         totalLayers: totalLayers,
-        lastUpdated: progress?.last_updated,
+        lastUpdated: backendProgress?.last_updated,
         imageUrl: question.image_url || question.thumbnail_url || null,
         thumbnailUrl: question.thumbnail_url || question.image_url || null,
+        hasStarted: hasStartedLocal || completedLayers > 0,
       };
     });
   };
@@ -263,15 +287,15 @@ function Dashboard() {
   };
 
   const getButtonText = (question) => {
-    if (question.progress === 0) return 'Start';
     if (question.progress === 100) return 'Review';
-    return 'Continue';
+    if (question.hasStarted || question.progress > 0) return 'Continue';
+    return 'Start';
   };
 
-  // Get transformed data
-  const displayQuestions = getQuestionsWithProgress();
-  const recentSessions = getRecentSessions();
-  const displayTeams = getTransformedTeams();
+  // Memoize transformed data to prevent recalculation on every render
+  const displayQuestions = useMemo(() => getQuestionsWithProgress(), [questions, progressData, localProgress]);
+  const recentSessions = useMemo(() => getRecentSessions(), [progressData]);
+  const displayTeams = useMemo(() => getTransformedTeams(), [careTeams, questions]);
 
   // Loading state
   if (loading || authLoading) {

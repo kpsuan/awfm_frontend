@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import './Card.css';
 
 const ChoiceCard = ({
@@ -7,42 +7,56 @@ const ChoiceCard = ({
   isExpanded = false, // fully controlled by parent
   onSelect,
   onExpand, // callback for expand/collapse
-  onOpenModal, // callback to open modal popup (tablet+)
+  onOpenModal, // callback to open modal popup
   variant = 'default', // 'default', 'review'
   isQ2 = false,
   isQ3 = false
 }) => {
+  const cardRef = useRef(null);
   const { id, title, subtitle, description, image, whyThisMatters, researchEvidence, decisionImpact, expandedContent } = choice;
 
   const isReviewMode = variant === 'review';
 
-  const handleCardClick = () => {
-    // On tablet+, just open modal without selecting (selection happens in modal)
-    if (window.innerWidth >= 768 && onOpenModal) {
-      onOpenModal();
-    } else {
-      // On mobile, select directly since there's no modal
-      if (!isReviewMode) {
-        onSelect?.(id);
+  // Scroll card into view with delay
+  const scrollToCard = useCallback(() => {
+    setTimeout(() => {
+      if (cardRef.current) {
+        cardRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
       }
+    }, 150);
+  }, []);
+
+  // Card click - select and scroll (no modal)
+  const handleCardClick = () => {
+    if (!isReviewMode) {
+      onSelect?.(id);
     }
+    scrollToCard();
   };
 
+  // Check if we're on mobile
+  const isMobile = () => window.innerWidth < 768;
+
+  // Learn More click - opens modal on tablet+, inline expand on mobile
   const handleExpandClick = (e) => {
     e.stopPropagation();
-    // On tablet+, open modal; on mobile, expand inline
-    if (window.innerWidth >= 768 && onOpenModal) {
+    if (onOpenModal && !isMobile()) {
+      // Use modal on tablet and larger
       onOpenModal();
     } else {
-      // Toggle expansion via parent callback
+      // Use inline expand on mobile or if no modal available
       onExpand?.(id, !isExpanded);
     }
   };
 
-  // Handle checkbox click - always toggle selection directly
+  // Handle checkbox click - toggle selection and scroll
   const handleCheckboxClick = (e) => {
     e.stopPropagation();
     onSelect?.(id);
+    scrollToCard();
   };
 
   // Checkmark SVG icon for selected state
@@ -117,7 +131,8 @@ const ChoiceCard = ({
   }
 
   return (
-    <div 
+    <div
+      ref={cardRef}
       className={`choice-card ${isSelected ? 'choice-card--selected' : ''} ${isExpanded ? 'choice-card--expanded' : ''} ${isReviewMode ? 'choice-card--review' : ''}`}
       role="button"
       tabIndex={0}
@@ -157,17 +172,17 @@ const ChoiceCard = ({
         {description || title}
       </p>
 
-      {/* Collapsed state */}
-      {!isExpanded ? (
+      {/* Collapsed state - show button when not expanded, or when on desktop with modal available */}
+      {(!isExpanded || (onOpenModal && !isMobile())) ? (
         <>
-          {/* Expand button - opens modal on tablet+, inline expand on mobile */}
+          {/* Learn More button - opens modal on desktop, inline expand on mobile */}
           <button
             className="choice-card__expand"
             onClick={handleExpandClick}
-            aria-expanded={isExpanded}
+            aria-expanded={!onOpenModal && isExpanded}
           >
             <span>{isReviewMode ? 'View Details' : 'Learn More'}</span>
-            <ArrowIcon rotated={true} />
+           
           </button>
         </>
       ) : (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import './Card.css';
 
 const FlipChoiceCard = ({
@@ -11,21 +11,184 @@ const FlipChoiceCard = ({
   isQ3 = false
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [backPageIndex, setBackPageIndex] = useState(0);
+  const cardRef = useRef(null);
+  const touchStartRef = useRef(null);
+  const touchEndRef = useRef(null);
+
   const { id, title, description, image, whyThisMatters, researchEvidence, decisionImpact, expandedContent } = choice;
+
+  // Build back pages array based on available content
+  const backPages = [];
+
+  // Page 1: How This Sounds (description)
+  if (description) {
+    backPages.push({
+      id: 'description',
+      label: 'How This Sounds',
+      content: description
+    });
+  }
+
+  // Page 2: Why This Matters
+  if (whyThisMatters) {
+    backPages.push({
+      id: 'whyThisMatters',
+      label: 'Why This Matters',
+      content: whyThisMatters
+    });
+  }
+
+  // Page 3: Research Evidence (Q1)
+  if (researchEvidence) {
+    backPages.push({
+      id: 'researchEvidence',
+      label: 'Research Evidence',
+      content: researchEvidence
+    });
+  }
+
+  // Page 4: Decision Impact (Q1)
+  if (decisionImpact) {
+    backPages.push({
+      id: 'decisionImpact',
+      label: 'Decision Impact',
+      content: decisionImpact
+    });
+  }
+
+  // Q2 specific pages
+  if (isQ2) {
+    if (choice.whatYouAreFightingFor) {
+      backPages.push({
+        id: 'whatYouAreFightingFor',
+        label: "What You're Fighting For",
+        content: choice.whatYouAreFightingFor
+      });
+    }
+    if (choice.cooperativeLearning) {
+      backPages.push({
+        id: 'cooperativeLearning',
+        label: 'Cooperative Learning',
+        content: choice.cooperativeLearning
+      });
+    }
+    if (choice.barriersToAccess) {
+      backPages.push({
+        id: 'barriersToAccess',
+        label: 'Barriers to Access',
+        content: choice.barriersToAccess
+      });
+    }
+  }
+
+  // Q3 specific pages
+  if (isQ3) {
+    if (choice.interdependencyAtWork) {
+      backPages.push({
+        id: 'interdependencyAtWork',
+        label: 'Interdependency at Work',
+        content: choice.interdependencyAtWork
+      });
+    }
+    if (choice.reflectionGuidance) {
+      backPages.push({
+        id: 'reflectionGuidance',
+        label: 'Reflection Guidance',
+        content: choice.reflectionGuidance
+      });
+    }
+    if (choice.careTeamAffirmation) {
+      backPages.push({
+        id: 'careTeamAffirmation',
+        label: 'Care Team Affirmation',
+        content: choice.careTeamAffirmation
+      });
+    }
+  }
+
+  // Fallback if no pages
+  if (backPages.length === 0) {
+    backPages.push({
+      id: 'title',
+      label: 'Description',
+      content: title
+    });
+  }
+
+  const currentPage = backPages[backPageIndex] || backPages[0];
+  const hasNextPage = backPageIndex < backPages.length - 1;
+  const hasPrevPage = backPageIndex > 0;
+
+  // Scroll card into view with delay
+  const scrollToCard = useCallback(() => {
+    setTimeout(() => {
+      cardRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }, 100);
+  }, []);
 
   const handleFlip = (e) => {
     e.stopPropagation();
+    if (isFlipped) {
+      // Flipping back to front - reset page index
+      setBackPageIndex(0);
+    }
     setIsFlipped(!isFlipped);
+    scrollToCard();
   };
 
   const handleCardClick = () => {
     onSelect?.(id);
+    scrollToCard();
   };
 
-  const handleExpandClick = (e) => {
+
+  // Back page navigation
+  const goToNextPage = useCallback((e) => {
     e.stopPropagation();
-    onExpand?.(id, !isExpanded);
-  };
+    if (hasNextPage) {
+      setBackPageIndex(prev => prev + 1);
+    }
+  }, [hasNextPage]);
+
+  const goToPrevPage = useCallback((e) => {
+    e.stopPropagation();
+    if (hasPrevPage) {
+      setBackPageIndex(prev => prev - 1);
+    }
+  }, [hasPrevPage]);
+
+  // Touch handlers for swipe on back
+  const handleBackTouchStart = useCallback((e) => {
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleBackTouchMove = useCallback((e) => {
+    touchEndRef.current = e.targetTouches[0].clientX;
+  }, []);
+
+  const handleBackTouchEnd = useCallback((e) => {
+    if (!touchStartRef.current || !touchEndRef.current) return;
+    const distance = touchStartRef.current - touchEndRef.current;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance && hasNextPage) {
+      // Swipe left - next page
+      setBackPageIndex(prev => prev + 1);
+      e.stopPropagation();
+    } else if (distance < -minSwipeDistance && hasPrevPage) {
+      // Swipe right - prev page
+      setBackPageIndex(prev => prev - 1);
+      e.stopPropagation();
+    }
+
+    touchStartRef.current = null;
+    touchEndRef.current = null;
+  }, [hasNextPage, hasPrevPage]);
 
   // Checkmark SVG icon for selected state
   const CheckIcon = () => (
@@ -54,6 +217,19 @@ const FlipChoiceCard = ({
       <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
       <path d="M7 23l-4-4 4-4"/>
       <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+    </svg>
+  );
+
+  // Navigation arrow icons
+  const ChevronLeft = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+  );
+
+  const ChevronRight = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 18l6-6-6-6"/>
     </svg>
   );
 
@@ -108,7 +284,7 @@ const FlipChoiceCard = ({
   }
 
   return (
-    <div className={`flip-choice-card ${isSelected ? 'flip-choice-card--selected' : ''}`}>
+    <div ref={cardRef} className={`flip-choice-card ${isSelected ? 'flip-choice-card--selected' : ''}`}>
       {/* Flip Card Container */}
       <div
         className={`flip-choice-card__flipper ${isFlipped ? 'flip-choice-card__flipper--flipped' : ''}`}
@@ -152,134 +328,71 @@ const FlipChoiceCard = ({
           </div>
         </div>
 
-        {/* Back of card - Description */}
-        <div className="flip-choice-card__back">
+        {/* Back of card - Paginated Content */}
+        <div
+          className="flip-choice-card__back"
+          onTouchStart={handleBackTouchStart}
+          onTouchMove={handleBackTouchMove}
+          onTouchEnd={handleBackTouchEnd}
+        >
+          {/* Navigation arrows */}
+          {backPages.length > 1 && (
+            <>
+              <button
+                className={`flip-choice-card__nav-btn flip-choice-card__nav-btn--prev ${!hasPrevPage ? 'flip-choice-card__nav-btn--disabled' : ''}`}
+                onClick={goToPrevPage}
+                disabled={!hasPrevPage}
+                aria-label="Previous page"
+              >
+                <ChevronLeft />
+              </button>
+              <button
+                className={`flip-choice-card__nav-btn flip-choice-card__nav-btn--next ${!hasNextPage ? 'flip-choice-card__nav-btn--disabled' : ''}`}
+                onClick={goToNextPage}
+                disabled={!hasNextPage}
+                aria-label="Next page"
+              >
+                <ChevronRight />
+              </button>
+            </>
+          )}
+
           <div className="flip-choice-card__back-content">
+            {/* Page label */}
+            <span className="flip-choice-card__page-label">{currentPage.label}</span>
             <h3 className="flip-choice-card__back-title">{title}</h3>
             <div className="flip-choice-card__divider" />
-            <p className="flip-choice-card__description">{description || title}</p>
+
+            {/* Page content with animation */}
+            <div className="flip-choice-card__page-content" key={currentPage.id}>
+              <p className="flip-choice-card__description">{currentPage.content}</p>
+            </div>
+
+            {/* Page indicators */}
+            {backPages.length > 1 && (
+              <div className="flip-choice-card__page-indicators">
+                {backPages.map((page, idx) => (
+                  <button
+                    key={page.id}
+                    className={`flip-choice-card__page-dot ${idx === backPageIndex ? 'flip-choice-card__page-dot--active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBackPageIndex(idx);
+                    }}
+                    aria-label={`Go to ${page.label}`}
+                  />
+                ))}
+              </div>
+            )}
+
             <span className="flip-choice-card__hint flip-choice-card__hint--back">
               <FlipIcon />
-              Tap to flip back
+              Tap card to flip back
             </span>
           </div>
         </div>
       </div>
-
-      {/* Expand/Collapse button - outside the flip area */}
-      <button
-        className="flip-choice-card__expand"
-        onClick={handleExpandClick}
-        aria-expanded={isExpanded}
-      >
-        <span>{isExpanded ? 'See Less' : 'See More'}</span>
-        <ArrowIcon rotated={!isExpanded} />
-      </button>
-
-      {/* Expanded content - shows image, title, description, then sections */}
-      {isExpanded && (
-        <div className="flip-choice-card__expanded">
-          {/* Image */}
-          {image && (
-            <div className="flip-choice-card__expanded-image">
-              <img src={image} alt={title} />
-            </div>
-          )}
-
-          {/* Title */}
-          <h3 className={`flip-choice-card__expanded-title ${isSelected ? 'flip-choice-card__expanded-title--selected' : ''}`}>
-            {title}
-          </h3>
-
-          {/* Description */}
-          <p className="flip-choice-card__expanded-description">
-            {description || title}
-          </p>
-
-          {/* Divider before sections */}
-          {sections.length > 0 && <div className="flip-choice-card__expanded-divider" />}
-
-          {/* Expanded content sections */}
-          {sections.map((section, index) => (
-            <React.Fragment key={index}>
-              <div className="choice-card__section">
-                <div className="choice-card__section-header">
-                  <span className="choice-card__section-title">{section.title}</span>
-                  <InfoIconWithTooltip tooltip={section.tooltip} />
-                </div>
-                <p className="choice-card__section-text">{section.text}</p>
-              </div>
-              {index < sections.length - 1 && <div className="choice-card__section-divider" />}
-            </React.Fragment>
-          ))}
-
-          {/* Show extra fields for q2 only */}
-          {isQ2 && (
-            <>
-              {choice.whatYouAreFightingFor && (
-                <div className="choice-card__section">
-                  <div className="choice-card__section-header">
-                    <span className="choice-card__section-title">What You're Fighting For</span>
-                    <InfoIconWithTooltip tooltip="This describes what this choice helps you protect or achieve, and what you may sacrifice." />
-                  </div>
-                  <p className="choice-card__section-text">{choice.whatYouAreFightingFor}</p>
-                </div>
-              )}
-              {choice.cooperativeLearning && (
-                <div className="choice-card__section">
-                  <div className="choice-card__section-header">
-                    <span className="choice-card__section-title">Cooperative Learning</span>
-                    <InfoIconWithTooltip tooltip="How this challenge affects teamwork, communication, and shared decision-making." />
-                  </div>
-                  <p className="choice-card__section-text">{choice.cooperativeLearning}</p>
-                </div>
-              )}
-              {choice.barriersToAccess && (
-                <div className="choice-card__section">
-                  <div className="choice-card__section-header">
-                    <span className="choice-card__section-title">Barriers to Access</span>
-                    <InfoIconWithTooltip tooltip="Barriers that make this challenge harder for some people or groups." />
-                  </div>
-                  <p className="choice-card__section-text">{choice.barriersToAccess}</p>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Show extra fields for q3 only */}
-          {isQ3 && (
-            <>
-              {choice.careTeamAffirmation && (
-                <div className="choice-card__section">
-                  <div className="choice-card__section-header">
-                    <span className="choice-card__section-title">Care Team Affirmation</span>
-                    <InfoIconWithTooltip tooltip="How your care team will support and affirm this change." />
-                  </div>
-                  <p className="choice-card__section-text">{choice.careTeamAffirmation}</p>
-                </div>
-              )}
-              {choice.interdependencyAtWork && (
-                <div className="choice-card__section">
-                  <div className="choice-card__section-header">
-                    <span className="choice-card__section-title">Interdependency at Work</span>
-                    <InfoIconWithTooltip tooltip="How this change involves teamwork, roles, and shared responsibilities." />
-                  </div>
-                  <p className="choice-card__section-text">{choice.interdependencyAtWork}</p>
-                </div>
-              )}
-              {choice.reflectionGuidance && (
-                <div className="choice-card__section">
-                  <div className="choice-card__section-header">
-                    <span className="choice-card__section-title">Reflection Guidance</span>
-                    <InfoIconWithTooltip tooltip="Questions and prompts to help you reflect on this change." />
-                  </div>
-                  <p className="choice-card__section-text">{choice.reflectionGuidance}</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
+      
     </div>
   );
 };

@@ -202,13 +202,7 @@ const Summary = ({
           <div className="summary__reveal">
             <h3 className="summary__reveal-title">What Your Choices Reveal About You</h3>
 
-            <div className="summary__reveal-image">
-              <img
-                src="https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=800&q=80"
-                alt="Two people embracing warmly"
-                className="summary__reveal-photo"
-              />
-            </div>
+           
 
             <div className="summary__reveal-analysis">
               {pprText ? (
@@ -238,7 +232,7 @@ const Summary = ({
               <span className="summary__team-visibility-count">{recordingsCount} recording{recordingsCount !== 1 ? 's' : ''}</span>
             </div>
             <p className="summary__team-visibility-description">
-              See what your care team members have shared about their commitment to supporting your decisions.
+              See how your care team members have shared their responses to these questions
             </p>
 
             <div className="summary__team-visibility-preview">

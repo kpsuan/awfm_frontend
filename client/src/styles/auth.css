@@ -463,6 +463,42 @@
   padding: 10px 14px;
   border-radius: 8px;
   margin-bottom: 12px;
+}
+
+/* Invitation Banner */
+.auth-invitation-banner {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auth-invitation-banner--loading {
+  background: #e2e8f0;
+  color: #4a5568;
+  text-align: center;
+}
+
+.auth-invitation-banner--error {
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.auth-invitation-banner--success {
+  background: linear-gradient(135deg, rgba(92, 64, 251, 0.1), rgba(180, 50, 163, 0.1));
+  border: 1px solid rgba(92, 64, 251, 0.3);
+  color: #2d3748;
+}
+
+.auth-invitation-banner--success strong {
+  color: #5C40FB;
+}
+
+.auth-invitation-message {
+  margin: 8px 0 0 0;
+  font-style: italic;
+  color: #4a5568;
   font-size: 13px;
 }
 
@@ -516,6 +552,13 @@
 
 .form-group input.input-error:focus {
   border-color: #e53e3e;
+}
+
+.field-hint {
+  display: block;
+  font-size: 12px;
+  color: #5C40FB;
+  margin-top: 4px;
 }
 
 .field-error {

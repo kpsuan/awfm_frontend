@@ -125,6 +125,86 @@
   box-shadow: 0 0 0 3px rgba(180, 50, 163, 0.1);
 }
 
+/* Text Input */
+.add-member-modal__input {
+  font-family: var(--font-system);
+  font-size: 16px;
+  font-weight: 400;
+  color: #1e1e1e;
+  padding: 14px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.add-member-modal__input:focus {
+  outline: none;
+  border-color: #B432A3;
+  box-shadow: 0 0 0 3px rgba(180, 50, 163, 0.1);
+}
+
+.add-member-modal__input::placeholder {
+  color: #9CA3AF;
+}
+
+/* Textarea */
+.add-member-modal__textarea {
+  font-family: var(--font-system);
+  font-size: 16px;
+  font-weight: 400;
+  color: #1e1e1e;
+  padding: 14px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.add-member-modal__textarea:focus {
+  outline: none;
+  border-color: #B432A3;
+  box-shadow: 0 0 0 3px rgba(180, 50, 163, 0.1);
+}
+
+.add-member-modal__textarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* Required/Optional labels */
+.add-member-modal__required {
+  color: #EF4444;
+  font-weight: 600;
+}
+
+.add-member-modal__optional {
+  color: #9CA3AF;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* Hint text */
+.add-member-modal__hint {
+  font-family: var(--font-system);
+  font-size: 13px;
+  font-weight: 400;
+  color: #6B7280;
+  line-height: 1.4;
+  margin: 4px 0 0 0;
+}
+
+/* Disabled tab */
+.add-member-modal__tab:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .add-member-modal__limit-text {
   font-family: var(--font-system);
   font-size: 14px;
@@ -162,6 +242,80 @@
   font-size: 18px;
   font-weight: 700;
   color: #1e1e1e;
+  flex: 1;
+}
+
+/* Edit Button */
+.add-member-modal__edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-family: var(--font-system);
+  font-size: 13px;
+  font-weight: 500;
+  color: #5C40FB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-member-modal__edit-btn:hover {
+  background: #F3F4F6;
+  border-color: #5C40FB;
+}
+
+.add-member-modal__edit-btn svg {
+  color: #5C40FB;
+}
+
+/* Message Textarea (for editing) */
+.add-member-modal__message-textarea {
+  font-family: var(--font-system);
+  font-size: 14px;
+  font-weight: 400;
+  color: #1e1e1e;
+  line-height: 1.6;
+  padding: 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.add-member-modal__message-textarea:focus {
+  outline: none;
+  border-color: #5C40FB;
+  box-shadow: 0 0 0 2px rgba(92, 64, 251, 0.1);
+}
+
+.add-member-modal__message-textarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* Reset Button */
+.add-member-modal__reset-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: var(--font-system);
+  font-size: 13px;
+  font-weight: 500;
+  color: #6B7280;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.add-member-modal__reset-btn:hover {
+  color: #B432A3;
 }
 
 .add-member-modal__message-text {
@@ -342,6 +496,45 @@
 
 .add-member-modal__invite-status--sent {
   color: #8A8E99;
+}
+
+/* Loading and Empty states */
+.add-member-modal__loading,
+.add-member-modal__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.add-member-modal__loading p,
+.add-member-modal__empty p {
+  font-family: var(--font-system);
+  font-size: 16px;
+  font-weight: 500;
+  color: #6B7280;
+  margin: 0 0 8px 0;
+}
+
+.add-member-modal__empty .add-member-modal__hint {
+  margin: 0;
+}
+
+/* Role badge */
+.add-member-modal__role-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: rgba(92, 64, 251, 0.1);
+  color: #5C40FB;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 10px;
+  vertical-align: middle;
 }
 
 /* Responsive */

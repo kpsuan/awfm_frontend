@@ -126,8 +126,11 @@ const CheckpointSelection = ({
     carouselRef.current?.scrollToIndex(index);
   };
 
+  // Animate panel when user starts selecting
+  const hasSelection = selectedChoices.length > 0;
+
   return (
-    <TwoColumnLayout>
+    <TwoColumnLayout isContentFocused={hasSelection}>
       <QuestionPanel progress={progress} showBack={true} onBack={onBack}>
         <div className="checkpoint-selection">
           {/* Image on left panel */}

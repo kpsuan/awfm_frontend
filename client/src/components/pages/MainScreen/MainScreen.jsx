@@ -1,19 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './MainScreen.css';
+
+// Layout components
 import { TwoColumnLayout, QuestionPanel, ContentPanel } from '../../layout';
 import { PrimaryButton } from '../../common/Button';
 import { CarouselIndicator } from '../../common/Indicator';
-import { AvatarRow } from '../../common/Avatar';
 import { AddMemberModal } from '../../common/Modal';
+
+// Services
+import { teamsService } from '../../../services/teams';
+
+// Slide components
+import { WhyMattersSlide, HowItWorksSlide, CareTeamSlide } from './components';
+
+// Hooks and config
+import { useSwipeGesture, useScrollCollapse } from './hooks';
+import { generateSlides, SLIDE_TYPES } from './config/slideConfig';
+
+// Assets
 import image1 from '../../../styles/image1.png';
 import logo from '../../../styles/logo.png';
-
-// Plus icon for add member button
-const PlusIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 
 // Swipe icon for onboarding tooltip
 const SwipeIcon = () => (
@@ -22,6 +28,10 @@ const SwipeIcon = () => (
   </svg>
 );
 
+/**
+ * MainScreen Component
+ * Landing screen for a questionnaire showing question info, progress, and team members
+ */
 const MainScreen = ({
   question,
   team = [],
@@ -34,270 +44,126 @@ const MainScreen = ({
   onBack,
   onViewTeamRecordings,
   onAddTeamMember,
-  onGoToLayer, // callback to navigate to specific layer (1, 2, or 3)
+  onGoToLayer,
   user = null,
   userName = "Norman",
-  userAvatar = "https://i.pravatar.cc/82?img=12",
-  sentInvites = []
+  userAvatar = "https://i.pravatar.cc/82?img=12"
 }) => {
+  // State
   const [activeSlide, setActiveSlide] = useState(0);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [createdTeam, setCreatedTeam] = useState(null);
 
-  // Use refs for touch coordinates to avoid stale closure issues
-  const touchStartRef = useRef(null);
-  const touchEndRef = useRef(null);
+  // Scroll collapse for mobile header
+  const { isCollapsed, scrollContainerRef } = useScrollCollapse({ threshold: 30 });
 
-  // Minimum swipe distance to trigger slide change
-  const minSwipeDistance = 50;
+  // Handle team creation
+  const handleCreateTeam = useCallback(async (teamData) => {
+    const response = await teamsService.createTeam(
+      teamData.name,
+      teamData.description || '',
+      teamData.team_level || null
+    );
+    const result = response.data || response;
+    setCreatedTeam(result.team);
+    return result;
+  }, []);
 
-  // Check if user has seen onboarding before
+  // Handle inviting a member
+  const handleInviteMember = useCallback(async (inviteData) => {
+    const teamId = createdTeam?.id;
+    if (!teamId) {
+      throw new Error('No team created yet');
+    }
+    const response = await teamsService.inviteMember(teamId, inviteData.email, inviteData.role);
+    return response.data || response;
+  }, [createdTeam]);
+
+  // Generate slides from config
+  const slides = generateSlides({ progressPercentage, completedCheckpoints });
+
+  // Onboarding dismissal
+  const dismissOnboarding = useCallback(() => {
+    setShowOnboarding(false);
+    localStorage.setItem('awfm_main_screen_onboarding', 'true');
+  }, []);
+
+  // Swipe gesture handling
+  const swipeHandlers = useSwipeGesture({
+    onSwipeLeft: () => {
+      setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
+      dismissOnboarding();
+    },
+    onSwipeRight: () => {
+      setActiveSlide(prev => Math.max(prev - 1, 0));
+      dismissOnboarding();
+    }
+  });
+
+  // Onboarding tooltip logic
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('awfm_main_screen_onboarding');
     if (!hasSeenOnboarding) {
-      // Show onboarding after a short delay
-      const timer = setTimeout(() => {
-        setShowOnboarding(true);
-      }, 1000);
+      const timer = setTimeout(() => setShowOnboarding(true), 1000);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const dismissOnboarding = () => {
-    setShowOnboarding(false);
-    localStorage.setItem('awfm_main_screen_onboarding', 'true');
-  };
-
+  // Question data with defaults
   const { title, subtitle, sectionLabel } = question || {
     title: "How important is staying alive even if you have substantial physical limitations?",
     subtitle: "Question 10 A",
     sectionLabel: "Advance Care Planning"
   };
 
-  // Determine button text based on progress state
+  // Button text based on progress
   const getButtonText = () => {
     if (isComplete) return "View Summary";
     if (hasStarted) return "Continue";
     return "Get Started";
   };
 
-  const slides = [
-    {
-      id: 0,
-      title: "Why this Matters:",
-      content: [
-        {
-          text: 'Unlike prescriptive approaches, asking "What do you want your loved ones to know?" acknowledges that patients are the experts on their own lives and relationships.'
-        },
-        {
-          text: 'This open-ended format respects individual differences in privacy preferences, cultural values, and family dynamics while still facilitating meaningful communication.'
-        }
-      ]
-    },
-    {
-      id: 1,
-      title: "How it Works",
-      headerRight: `${progressPercentage}% PROGRESS`,
-      layers: "3 Layers",
-      content: [
-        {
-          checkpoint: "Layer 1: Your Position",
-          description: "Where you stand what's your initial choice",
-          completed: completedCheckpoints.q1,
-          layerNumber: 1
-        },
-        {
-          checkpoint: "Layer 2: Your Challenges",
-          description: "What challenges might change your position",
-          completed: completedCheckpoints.q2,
-          layerNumber: 2
-        },
-        {
-          checkpoint: "Layer 3: What Would Change Your Mind",
-          description: "What would make you change your mind",
-          completed: completedCheckpoints.q3,
-          layerNumber: 3
-        }
-      ]
-    },
-    {
-      id: 2,
-      title: "Your Care Team",
-      content: [
-        {
-          text: "Help each other make plans that prioritize dignity and wellbeing."
-        }
-      ],
-      showTeam: true
+  // Render active slide content
+  const renderSlideContent = () => {
+    const slide = slides[activeSlide];
+
+    switch (slide.id) {
+      case SLIDE_TYPES.WHY_MATTERS:
+        return <WhyMattersSlide title={slide.title} content={slide.content} />;
+
+      case SLIDE_TYPES.HOW_IT_WORKS:
+        return (
+          <HowItWorksSlide
+            title={slide.title}
+            layers={slide.layers}
+            headerRight={slide.headerRight}
+            content={slide.content}
+            onGoToLayer={onGoToLayer}
+          />
+        );
+
+      case SLIDE_TYPES.CARE_TEAM:
+        return (
+          <CareTeamSlide
+            title={slide.title}
+            content={slide.content}
+            user={user}
+            userAvatar={userAvatar}
+            team={team}
+            onViewTeamRecordings={onViewTeamRecordings}
+            onOpenAddMemberModal={() => setIsAddMemberModalOpen(true)}
+          />
+        );
+
+      default:
+        return null;
     }
-  ];
-
-  const handleSlideChange = (index) => {
-    setActiveSlide(index);
-  };
-
-  // Touch handlers for swipe
-  const onTouchStart = (e) => {
-    touchEndRef.current = null;
-    touchStartRef.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchMove = (e) => {
-    touchEndRef.current = e.targetTouches[0].clientX;
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStartRef.current || !touchEndRef.current) return;
-
-    const distance = touchStartRef.current - touchEndRef.current;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) {
-      setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
-      dismissOnboarding();
-    }
-    if (isRightSwipe) {
-      setActiveSlide(prev => Math.max(prev - 1, 0));
-      dismissOnboarding();
-    }
-
-    // Reset refs
-    touchStartRef.current = null;
-    touchEndRef.current = null;
-  };
-
-  const renderSlideContent = (slide) => {
-    if (slide.id === 0) {
-      return (
-        <div className="main-screen__slide-content">
-          <h3 className="main-screen__slide-title">{slide.title}</h3>
-          {slide.content.map((item, idx) => (
-            <p key={idx} className="main-screen__slide-text">{item.text}</p>
-          ))}
-        </div>
-      );
-    }
-    
-    if (slide.id === 1) {
-      return (
-        <div className="main-screen__slide-content">
-          <h3 className="main-screen__slide-title">{slide.title}</h3>
-          <div className="main-screen__slide-header">
-            <span className="main-screen__layers-label">{slide.layers}</span>
-            <span className="main-screen__progress-label">{slide.headerRight}</span>
-          </div>
-          <div className="main-screen__checkpoints">
-            {slide.content.map((item, idx) => (
-              <div key={idx} className={`main-screen__checkpoint-item ${item.completed ? 'main-screen__checkpoint-item--completed' : ''}`}>
-                <div className="main-screen__checkpoint-header">
-                  <p className={`main-screen__checkpoint-link ${item.completed ? 'main-screen__checkpoint-link--completed' : ''}`}>
-                    {item.checkpoint}
-                  </p>
-                  {item.completed && (
-                    <span className="main-screen__checkpoint-check">✓</span>
-                  )}
-                  {onGoToLayer && (
-                    <button
-                      className="main-screen__go-to-layer-btn"
-                      onClick={() => onGoToLayer(item.layerNumber)}
-                      title={`Go to Layer ${item.layerNumber}`}
-                    >
-                      Go →
-                    </button>
-                  )}
-                </div>
-                <p className="main-screen__checkpoint-desc">{item.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    
-    if (slide.id === 2) {
-      const handleAvatarClick = (member) => {
-        if (onViewTeamRecordings) {
-          onViewTeamRecordings(member.id);
-        }
-      };
-
-      return (
-        <div className="main-screen__slide-content">
-          <h3 className="main-screen__slide-title">{slide.title}</h3>
-          {slide.content.map((item, idx) => (
-            <p key={idx} className="main-screen__slide-text">{item.text}</p>
-          ))}
-          <div className="main-screen__team-avatars">
-            {/* Current User (You) - only show if logged in */}
-            {user && (
-              <div
-                className="main-screen__team-avatar-wrapper main-screen__team-avatar-wrapper--current-user"
-                onClick={() => handleAvatarClick({ id: 'current-user', name: user.display_name || user.email })}
-                title="You"
-              >
-                <img
-                  src={user.profile_photo_url || userAvatar}
-                  alt={user.display_name || user.email}
-                  className="main-screen__team-avatar-img"
-                />
-                <span className="main-screen__team-avatar-name">You</span>
-              </div>
-            )}
-            {/* Other Team Members */}
-            {team.map((member) => (
-              <div
-                key={member.id}
-                className={`main-screen__team-avatar-wrapper ${member.hasRecording ? 'main-screen__team-avatar-wrapper--has-recording' : ''}`}
-                onClick={() => handleAvatarClick(member)}
-                title={member.hasRecording ? `View ${member.name}'s recording` : member.name}
-              >
-                <img
-                  src={member.avatar}
-                  alt={member.name}
-                  className="main-screen__team-avatar-img"
-                />
-                {member.hasRecording && (
-                  <div className="main-screen__team-avatar-play">
-                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="10" cy="10" r="10" fill="rgba(255, 255, 255, 0.95)" />
-                      <path d="M8 6L14 10L8 14V6Z" fill="#B432A3" />
-                    </svg>
-                  </div>
-                )}
-                <span className="main-screen__team-avatar-name">{member.name}</span>
-              </div>
-            ))}
-            {/* Add Member Button */}
-            <div
-              className="main-screen__team-avatar-wrapper main-screen__add-member-btn"
-              onClick={() => setIsAddMemberModalOpen(true)}
-              title="Add team member"
-            >
-              <div className="main-screen__add-member-icon">
-                <PlusIcon />
-              </div>
-              <span className="main-screen__team-avatar-name">Add</span>
-            </div>
-          </div>
-          {onViewTeamRecordings && (
-            <button
-              type="button"
-              className="main-screen__view-recordings-link"
-              onClick={() => onViewTeamRecordings()}
-            >
-              View All Recordings →
-            </button>
-          )}
-        </div>
-      );
-    }
-    
-    return null;
   };
 
   return (
     <TwoColumnLayout>
+      {/* Left Panel - Question Info */}
       <QuestionPanel progress={progress} showBack={true} onBack={onBack} hideProgress={true}>
         <div className="main-screen__left">
           <div className="main-screen__icon">
@@ -307,7 +173,6 @@ const MainScreen = ({
               </div>
             </div>
           </div>
-          
           <div className="main-screen__question-info">
             <span className="main-screen__section-label">{sectionLabel || "Advance Care Planning"}</span>
             <span className="main-screen__question-number">{subtitle || "Question 10 A"}</span>
@@ -316,35 +181,37 @@ const MainScreen = ({
         </div>
       </QuestionPanel>
 
+      {/* Right Panel - Content */}
       <ContentPanel>
-        <div className="main-screen__right">
-          <div className="main-screen__image-container">
-            <img src={image1} alt="Elderly person" className="main-screen__image" />
+        <div className="main-screen__right" ref={scrollContainerRef}>
+          {/* Collapsible Header (image + question info) */}
+          <div className={`main-screen__header ${isCollapsed ? 'main-screen__header--collapsed' : ''}`}>
+            {/* Hero Image */}
+            <div className="main-screen__image-container">
+              <img src={image1} alt="Elderly person" className="main-screen__image" />
+            </div>
+
+            {/* Tablet Question Info */}
+            <div className="main-screen__tablet-question-info">
+              <span className="main-screen__tablet-section-label">{sectionLabel || "Advance Care Planning"}</span>
+              <span className="main-screen__tablet-question-number">{subtitle || "Question 10 A"}</span>
+              <h1 className="main-screen__tablet-question-title">{title}</h1>
+            </div>
           </div>
-          
-          {/* Question info for tablet view */}
-          <div className="main-screen__tablet-question-info">
-            <span className="main-screen__tablet-section-label">{sectionLabel || "Advance Care Planning"}</span>
-            <span className="main-screen__tablet-question-number">{subtitle || "Question 10 A"}</span>
-            <h1 className="main-screen__tablet-question-title">{title}</h1>
+
+          {/* Swipeable Slide Content */}
+          <div className="main-screen__info-section" {...swipeHandlers}>
+            {renderSlideContent()}
           </div>
-          
-          <div
-            className="main-screen__info-section"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            {renderSlideContent(slides[activeSlide])}
-          </div>
-          
+
+          {/* Carousel Indicator */}
           <div className="main-screen__carousel-indicator">
             <CarouselIndicator
               total={slides.length}
               active={activeSlide}
-              onClick={handleSlideChange}
+              onClick={setActiveSlide}
             />
-            {/* Onboarding tooltip */}
+            {/* Onboarding Tooltip */}
             {showOnboarding && (
               <div className="main-screen__onboarding-tooltip">
                 <div className="main-screen__onboarding-content">
@@ -367,7 +234,8 @@ const MainScreen = ({
               </div>
             )}
           </div>
-          
+
+          {/* Action Button */}
           <div className="main-screen__action">
             <PrimaryButton onClick={onContinue} fullWidth>
               {getButtonText()}
@@ -381,15 +249,16 @@ const MainScreen = ({
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
         onClose={() => setIsAddMemberModalOpen(false)}
+        onCreateTeam={handleCreateTeam}
+        onInviteMember={handleInviteMember}
+        teamId={createdTeam?.id}
         onAddMember={(memberData) => {
           if (onAddTeamMember) {
             onAddTeamMember(memberData);
           }
-          console.log('Adding team member:', memberData);
         }}
-        userName={userName}
-        userAvatar={userAvatar}
-        sentInvites={sentInvites}
+        userName={user?.display_name || user?.first_name || userName}
+        userAvatar={user?.profile_photo_url || userAvatar}
       />
     </TwoColumnLayout>
   );

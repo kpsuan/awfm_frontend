@@ -69,7 +69,9 @@
   --transition-slow: 350ms ease;
 
   /* Layout */
-  --panel-left-width: 51%;
-  --panel-right-width: 49%;
+  --panel-left-width: 45%;
+  --panel-right-width: 55%;
+  --panel-left-width-focused: 32%;
+  --panel-right-width-focused: 68%;
   --max-content-width: 1440px;
 }

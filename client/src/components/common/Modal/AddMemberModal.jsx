@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'react-toastify';
 import Modal from './Modal';
+import { teamsService } from '../../../services/teams';
 import './AddMemberModal.css';
 
 // Team icon for header
@@ -14,37 +16,152 @@ const TeamIcon = () => (
   </svg>
 );
 
+// Edit icon
+const EditIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Default invite message
+const DEFAULT_MESSAGE = "I'm reaching out to ask you to join my advance care team so we can teamwork and see through our advance care plans together, interdependently, as A Whole Family Matter. Thank you!";
+
 const AddMemberModal = ({
   isOpen,
   onClose,
   onAddMember,
   onInviteMember,
+  onCreateTeam,
   onRemind,
   onRevoke,
-  sentInvites = [],
+  teamId = null,
+  existingTeam = null,
   userName = "Norman",
   userAvatar = "https://i.pravatar.cc/82?img=12"
 }) => {
-  const [activeTab, setActiveTab] = useState('invite'); // 'invite' or 'sent'
+  // If existing team, skip to invite tab
+  const initialTab = existingTeam ? 'invite' : 'team';
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [emails, setEmails] = useState('');
-  const [role, setRole] = useState('family');
+  const [role, setRole] = useState('member');
   const [selectedInvites, setSelectedInvites] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Default sent invites for demo
-  const defaultSentInvites = [
-    { id: 1, email: "gillian.anderson@gmail.com", status: "joined", date: "9:35 AM FRI 12 SEP 2025" },
-    { id: 2, email: "charlize.theron@gmail.com", status: "sent", date: "9:35 AM FRI 12 SEP 2025" },
-    { id: 3, email: "ana.de.armas@gmail.com", status: "opened", date: "9:35 AM FRI 12 SEP 2025" }
-  ];
+  // Team creation fields
+  const [teamName, setTeamName] = useState(existingTeam?.name || '');
+  const [teamDescription, setTeamDescription] = useState(existingTeam?.description || '');
+  const [teamLevel, setTeamLevel] = useState(existingTeam?.team_level || '');
+  const [teamCreated, setTeamCreated] = useState(!!existingTeam);
+  const [createdTeamId, setCreatedTeamId] = useState(null);
 
-  const displayInvites = sentInvites.length > 0 ? sentInvites : defaultSentInvites;
+  // Editable invite message
+  const [inviteMessage, setInviteMessage] = useState(DEFAULT_MESSAGE);
+  const [isEditingMessage, setIsEditingMessage] = useState(false);
+
+  // Sent invites state - fetched from API
+  const [sentInvites, setSentInvites] = useState([]);
+  const [isLoadingInvites, setIsLoadingInvites] = useState(false);
+
+  // Get the active team ID (existing or newly created)
+  const activeTeamId = teamId || existingTeam?.id || createdTeamId;
+
+  // Fetch sent invitations for the team
+  const fetchSentInvites = useCallback(async () => {
+    if (!activeTeamId) return;
+
+    setIsLoadingInvites(true);
+    try {
+      const response = await teamsService.getTeamMembers(activeTeamId);
+      // Filter for pending invitations and active members (excluding leader)
+      const members = response.data || response || [];
+      const invitations = members
+        .filter(m => m.status === 'pending' || m.status === 'active')
+        .filter(m => m.role !== 'leader') // Exclude the leader
+        .map(m => ({
+          id: m.id,
+          email: m.email,
+          display_name: m.display_name,
+          role: m.role,
+          status: m.status === 'active' ? 'joined' : 'sent',
+          date: formatDate(m.created_at)
+        }));
+      setSentInvites(invitations);
+    } catch (error) {
+      console.error('Error fetching sent invites:', error);
+      setSentInvites([]);
+    } finally {
+      setIsLoadingInvites(false);
+    }
+  }, [activeTeamId]);
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    const day = date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+    const dayNum = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+    const year = date.getFullYear();
+    return `${time} ${day} ${dayNum} ${month} ${year}`;
+  };
+
+  // Reset when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(existingTeam ? 'invite' : 'team');
+      setTeamCreated(!!existingTeam);
+      if (existingTeam) {
+        setTeamName(existingTeam.name || '');
+        setTeamDescription(existingTeam.description || '');
+        setTeamLevel(existingTeam.team_level || '');
+      }
+    }
+  }, [isOpen, existingTeam]);
+
+  // Fetch invites when switching to sent tab or when team changes
+  useEffect(() => {
+    if (isOpen && activeTab === 'sent' && activeTeamId) {
+      fetchSentInvites();
+    }
+  }, [isOpen, activeTab, activeTeamId, fetchSentInvites]);
+
+  const displayInvites = sentInvites;
 
   // Calculate stats
   const stats = {
     sent: displayInvites.length,
     opened: displayInvites.filter(i => i.status === 'opened' || i.status === 'joined').length,
     joined: displayInvites.filter(i => i.status === 'joined').length
+  };
+
+  // Handle team creation
+  const handleCreateTeam = async (e) => {
+    e.preventDefault();
+    if (!teamName.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      if (onCreateTeam) {
+        const result = await onCreateTeam({
+          name: teamName.trim(),
+          description: teamDescription.trim(),
+          team_level: teamLevel || null
+        });
+        // Store the created team ID for fetching invites later
+        if (result?.team?.id) {
+          setCreatedTeamId(result.team.id);
+        }
+      }
+      setTeamCreated(true);
+      setActiveTab('invite');
+      toast.success(`Care team "${teamName.trim()}" created successfully!`);
+    } catch (error) {
+      console.error('Error creating team:', error);
+      toast.error('Failed to create care team. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -55,21 +172,40 @@ const AddMemberModal = ({
     try {
       // Parse multiple emails (comma or newline separated)
       const emailList = emails.split(/[,\n]/).map(e => e.trim()).filter(e => e);
+      let successCount = 0;
 
       for (const email of emailList) {
-        if (onInviteMember) {
-          await onInviteMember({ email, role });
-        } else if (onAddMember) {
-          await onAddMember({ email, role });
+        try {
+          if (onInviteMember) {
+            await onInviteMember({ email, role, message: inviteMessage });
+            successCount++;
+          } else if (onAddMember) {
+            await onAddMember({ email, role, message: inviteMessage });
+            successCount++;
+          }
+        } catch (inviteError) {
+          console.error(`Error inviting ${email}:`, inviteError);
+          toast.error(`Failed to invite ${email}`);
         }
       }
+
+      // Show success toast
+      if (successCount > 0) {
+        const message = successCount === 1
+          ? 'Invitation sent successfully!'
+          : `${successCount} invitations sent successfully!`;
+        toast.success(message);
+      }
+
       // Reset form
       setEmails('');
-      setRole('family');
-      // Switch to sent tab to show the invites
+      setRole('member');
+      // Refresh the invites list and switch to sent tab
+      await fetchSentInvites();
       setActiveTab('sent');
     } catch (error) {
       console.error('Error sending invites:', error);
+      toast.error('Failed to send invitations. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -77,9 +213,19 @@ const AddMemberModal = ({
 
   const handleClose = () => {
     setEmails('');
-    setRole('family');
-    setActiveTab('invite');
+    setRole('member');
+    setActiveTab(existingTeam ? 'invite' : 'team');
     setSelectedInvites([]);
+    setIsEditingMessage(false);
+    setInviteMessage(DEFAULT_MESSAGE);
+    setSentInvites([]);
+    if (!existingTeam) {
+      setTeamName('');
+      setTeamDescription('');
+      setTeamLevel('');
+      setTeamCreated(false);
+      setCreatedTeamId(null);
+    }
     onClose();
   };
 
@@ -126,17 +272,29 @@ const AddMemberModal = ({
         {/* Header */}
         <div className="add-member-modal__header">
           <TeamIcon />
-          <h2 className="add-member-modal__title">Create your Care Team</h2>
+          <h2 className="add-member-modal__title">
+            {teamCreated || existingTeam ? 'Invite to Care Team' : 'Create your Care Team'}
+          </h2>
         </div>
 
         {/* Tabs */}
         <div className="add-member-modal__tabs">
+          {!existingTeam && (
+            <button
+              type="button"
+              className={`add-member-modal__tab ${activeTab === 'team' ? 'add-member-modal__tab--active' : ''}`}
+              onClick={() => setActiveTab('team')}
+            >
+              Team Info
+            </button>
+          )}
           <button
             type="button"
             className={`add-member-modal__tab ${activeTab === 'invite' ? 'add-member-modal__tab--active' : ''}`}
             onClick={() => setActiveTab('invite')}
+            disabled={!teamCreated && !existingTeam}
           >
-            Invite by Email
+            Invite Members
           </button>
           <button
             type="button"
@@ -147,15 +305,96 @@ const AddMemberModal = ({
           </button>
         </div>
 
+        {/* Team Info Tab */}
+        {activeTab === 'team' && (
+          <form onSubmit={handleCreateTeam} className="add-member-modal__invite-form">
+            {/* Team Name */}
+            <div className="add-member-modal__field">
+              <label htmlFor="team-name" className="add-member-modal__label">
+                Team Name <span className="add-member-modal__required">*</span>
+              </label>
+              <input
+                id="team-name"
+                type="text"
+                className="add-member-modal__input"
+                placeholder="e.g., My Family Care Team"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Team Description */}
+            <div className="add-member-modal__field">
+              <label htmlFor="team-description" className="add-member-modal__label">
+                Description <span className="add-member-modal__optional">(optional)</span>
+              </label>
+              <textarea
+                id="team-description"
+                className="add-member-modal__textarea"
+                placeholder="Describe your care team's purpose..."
+                value={teamDescription}
+                onChange={(e) => setTeamDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            {/* Team Level */}
+            <div className="add-member-modal__field">
+              <label htmlFor="team-level" className="add-member-modal__label">
+                Team Level <span className="add-member-modal__optional">(optional)</span>
+              </label>
+              <select
+                id="team-level"
+                className="add-member-modal__select"
+                value={teamLevel}
+                onChange={(e) => setTeamLevel(e.target.value)}
+              >
+                <option value="">Select a level...</option>
+                <option value="1">Level 1: Immediate Family</option>
+                <option value="2">Level 2: Family Back Home</option>
+                <option value="3">Level 3: Local Chosen Family</option>
+              </select>
+              <p className="add-member-modal__hint">
+                Different levels help organize multiple care teams for different contexts.
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="add-member-modal__actions">
+              <button
+                type="submit"
+                className="add-member-modal__btn add-member-modal__btn--primary"
+                disabled={isSubmitting || !teamName.trim()}
+              >
+                {isSubmitting ? 'Creating...' : 'Create Team & Continue'}
+                <span className="add-member-modal__btn-arrow">→</span>
+              </button>
+              <button
+                type="button"
+                className="add-member-modal__btn add-member-modal__btn--secondary"
+                onClick={handleClose}
+              >
+                Cancel
+                <span className="add-member-modal__btn-arrow">←</span>
+              </button>
+            </div>
+          </form>
+        )}
+
         {/* Invite Tab Content */}
         {activeTab === 'invite' && (
           <form onSubmit={handleSubmit} className="add-member-modal__invite-form">
             {/* Email Input */}
             <div className="add-member-modal__field">
+              <label htmlFor="invite-emails" className="add-member-modal__label">
+                Email Addresses
+              </label>
               <input
+                id="invite-emails"
                 type="text"
                 className="add-member-modal__email-input"
-                placeholder="Add multiple email addresses here..."
+                placeholder="Add multiple email addresses (comma separated)..."
                 value={emails}
                 onChange={(e) => setEmails(e.target.value)}
               />
@@ -172,20 +411,21 @@ const AddMemberModal = ({
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                <option value="family">Family Member</option>
-                <option value="doctor">Doctor / Physician</option>
-                <option value="nurse">Nurse</option>
-                <option value="caregiver">Caregiver</option>
-                <option value="friend">Friend</option>
-                <option value="other">Other</option>
+                <option value="member">Team Member</option>
+                <option value="witness">Witness (cannot be guardian/emergency contact)</option>
               </select>
+              <p className="add-member-modal__hint">
+                {role === 'witness'
+                  ? 'Witnesses can observe but cannot be designated as your guardian or emergency contact.'
+                  : 'Team members can be designated as guardians or emergency contacts.'}
+              </p>
             </div>
 
             <p className="add-member-modal__limit-text">
-              Maximum 5 members that join your care team (for optimal decision-making and collaboration).
+              Maximum 5 members for optimal decision-making and collaboration.
             </p>
 
-            {/* Message Preview */}
+            {/* Editable Message */}
             <div className="add-member-modal__message-preview">
               <div className="add-member-modal__message-header">
                 <img
@@ -194,10 +434,36 @@ const AddMemberModal = ({
                   className="add-member-modal__message-avatar"
                 />
                 <span className="add-member-modal__message-greeting">Hello there!</span>
+                <button
+                  type="button"
+                  className="add-member-modal__edit-btn"
+                  onClick={() => setIsEditingMessage(!isEditingMessage)}
+                  title={isEditingMessage ? 'Done editing' : 'Edit message'}
+                >
+                  <EditIcon />
+                  <span>{isEditingMessage ? 'Done' : 'Edit'}</span>
+                </button>
               </div>
-              <p className="add-member-modal__message-text">
-                I'm reaching out to ask you to join my advance care team so we can teamwork and see through our advance care plans together, interdependently, as A Whole Family Matter. Thank you!
-              </p>
+              {isEditingMessage ? (
+                <textarea
+                  className="add-member-modal__message-textarea"
+                  value={inviteMessage}
+                  onChange={(e) => setInviteMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Write your personalized message..."
+                />
+              ) : (
+                <p className="add-member-modal__message-text">{inviteMessage}</p>
+              )}
+              {isEditingMessage && (
+                <button
+                  type="button"
+                  className="add-member-modal__reset-btn"
+                  onClick={() => setInviteMessage(DEFAULT_MESSAGE)}
+                >
+                  Reset to default
+                </button>
+              )}
             </div>
 
             {/* Actions */}
@@ -225,68 +491,88 @@ const AddMemberModal = ({
         {/* Sent Invites Tab Content */}
         {activeTab === 'sent' && (
           <div className="add-member-modal__sent-content">
-            {/* Stats */}
-            <div className="add-member-modal__stats">
-              <div className="add-member-modal__stat">
-                <span className="add-member-modal__stat-number">{stats.sent}</span>
-                <span className="add-member-modal__stat-label">Sent</span>
+            {isLoadingInvites ? (
+              <div className="add-member-modal__loading">
+                <p>Loading invitations...</p>
               </div>
-              <div className="add-member-modal__stat">
-                <span className="add-member-modal__stat-number">{stats.opened}</span>
-                <span className="add-member-modal__stat-label">Opened</span>
+            ) : !activeTeamId ? (
+              <div className="add-member-modal__empty">
+                <p>Create a team first to see sent invitations.</p>
               </div>
-              <div className="add-member-modal__stat">
-                <span className="add-member-modal__stat-number">{stats.joined}</span>
-                <span className="add-member-modal__stat-label">Joined</span>
+            ) : displayInvites.length === 0 ? (
+              <div className="add-member-modal__empty">
+                <p>No invitations sent yet.</p>
+                <p className="add-member-modal__hint">Go to the "Invite Members" tab to send invitations.</p>
               </div>
-            </div>
-
-            {/* Invite List */}
-            <div className="add-member-modal__invite-list">
-              {displayInvites.map((invite) => (
-                <div
-                  key={invite.id}
-                  className={`add-member-modal__invite-item ${selectedInvites.includes(invite.id) ? 'add-member-modal__invite-item--selected' : ''}`}
-                  onClick={() => toggleInviteSelection(invite.id)}
-                >
-                  <div className="add-member-modal__invite-checkbox">
-                    <div className={`add-member-modal__checkbox ${selectedInvites.includes(invite.id) ? 'add-member-modal__checkbox--checked' : ''}`}>
-                      {selectedInvites.includes(invite.id) && (
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </div>
+            ) : (
+              <>
+                {/* Stats */}
+                <div className="add-member-modal__stats">
+                  <div className="add-member-modal__stat">
+                    <span className="add-member-modal__stat-number">{stats.sent}</span>
+                    <span className="add-member-modal__stat-label">Sent</span>
                   </div>
-                  <div className="add-member-modal__invite-details">
-                    <span className="add-member-modal__invite-email">{invite.email}</span>
-                    <span className={`add-member-modal__invite-status ${getStatusClass(invite.status)}`}>
-                      {getStatusLabel(invite.status)} {invite.date}
-                    </span>
+                  <div className="add-member-modal__stat">
+                    <span className="add-member-modal__stat-number">{stats.opened}</span>
+                    <span className="add-member-modal__stat-label">Opened</span>
+                  </div>
+                  <div className="add-member-modal__stat">
+                    <span className="add-member-modal__stat-number">{stats.joined}</span>
+                    <span className="add-member-modal__stat-label">Joined</span>
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Actions */}
-            <div className="add-member-modal__actions">
-              <button
-                type="button"
-                className="add-member-modal__btn add-member-modal__btn--primary"
-                onClick={handleRemind}
-                disabled={selectedInvites.length === 0}
-              >
-                Remind
-              </button>
-              <button
-                type="button"
-                className="add-member-modal__btn add-member-modal__btn--secondary"
-                onClick={handleRevoke}
-                disabled={selectedInvites.length === 0}
-              >
-                Revoke
-              </button>
-            </div>
+                {/* Invite List */}
+                <div className="add-member-modal__invite-list">
+                  {displayInvites.map((invite) => (
+                    <div
+                      key={invite.id}
+                      className={`add-member-modal__invite-item ${selectedInvites.includes(invite.id) ? 'add-member-modal__invite-item--selected' : ''}`}
+                      onClick={() => toggleInviteSelection(invite.id)}
+                    >
+                      <div className="add-member-modal__invite-checkbox">
+                        <div className={`add-member-modal__checkbox ${selectedInvites.includes(invite.id) ? 'add-member-modal__checkbox--checked' : ''}`}>
+                          {selectedInvites.includes(invite.id) && (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <div className="add-member-modal__invite-details">
+                        <span className="add-member-modal__invite-email">
+                          {invite.display_name || invite.email}
+                          {invite.role === 'witness' && <span className="add-member-modal__role-badge">Witness</span>}
+                        </span>
+                        <span className={`add-member-modal__invite-status ${getStatusClass(invite.status)}`}>
+                          {getStatusLabel(invite.status)} {invite.date}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="add-member-modal__actions">
+                  <button
+                    type="button"
+                    className="add-member-modal__btn add-member-modal__btn--primary"
+                    onClick={handleRemind}
+                    disabled={selectedInvites.length === 0}
+                  >
+                    Remind
+                  </button>
+                  <button
+                    type="button"
+                    className="add-member-modal__btn add-member-modal__btn--secondary"
+                    onClick={handleRevoke}
+                    disabled={selectedInvites.length === 0}
+                  >
+                    Revoke
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

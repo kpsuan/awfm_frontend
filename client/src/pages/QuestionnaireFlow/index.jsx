@@ -1,227 +1,94 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { useQuestionnaire, useAuth } from '../../context';
-import { useMainQuestion, useQ1Choices, useQ2Choices, useQ3Choices, useQuestionData, usePPRPatterns } from '../../hooks';
-import { teamWithAffirmation } from '../../services/mockData';
-import { clearQuestionCache } from '../../services';
+import React, { useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuestionnaire } from '../../context';
 
-// Components
-import MainScreen from '../../components/pages/MainScreen';
-import CheckpointSelection from '../../components/pages/CheckpointSelection';
-import ChoiceReview from '../../components/pages/ChoiceReview';
-import CompletionSuccess from '../../components/pages/CompletionSuccess';
-import MentalHealthCheck from '../../components/pages/MentalHealthCheck';
+// Modals
 import { AuthModal, ExitConfirmModal } from '../../components/common/Modal';
 
-// Phase Components
-import {
-  SummaryPhase,
-  TeamVisibilityPhase,
-  RecordVideoPhase,
-  RecordAudioPhase,
-  RecordTextPhase,
-  RecordingCompletePhase,
-  TeamRecordingsPhase,
-  MemberFullSummaryPhase
-} from './phases';
+// Components
+import { PhaseRenderer } from './components';
 
-// Hooks & Constants
-import { useQuestionnaireState, useResponseSync } from './hooks';
+// Hooks
+import {
+  useQuestionnaireState,
+  useQuestionnaireData,
+  useQuestionnaireModals,
+  useChoicesSync
+} from './hooks';
+
+// Constants
 import { FLOW_PHASES } from './constants';
 
+/**
+ * QuestionnaireFlow Component
+ * Main orchestrator for the questionnaire experience
+ * Manages state, data fetching, and phase rendering through configuration
+ */
 const QuestionnaireFlow = () => {
-  const navigate = useNavigate();
   const { questionId = 'Q10A' } = useParams();
-  const { state, saveResponse } = useQuestionnaire();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showExitModal, setShowExitModal] = useState(false);
-  const [isLoadingResponses, setIsLoadingResponses] = useState(false);
+  const { state } = useQuestionnaire();
 
-  // Response sync hook for saving/loading from backend
-  const { saveResponse: saveResponseToBackend, loadSavedResponses, isAuthenticated } = useResponseSync(questionId);
-
-  // Clear caches when questionId changes to ensure fresh data
-  useEffect(() => {
-    clearQuestionCache(questionId);
-    // Invalidate React Query cache for this question
-    queryClient.invalidateQueries({ queryKey: ['mainQuestion', questionId] });
-    queryClient.invalidateQueries({ queryKey: ['choices', questionId] });
-    queryClient.invalidateQueries({ queryKey: ['questionData', questionId] });
-  }, [questionId, queryClient]);
-
-  // Questionnaire state management
-  const questionnaireState = useQuestionnaireState();
+  // 1. Flow state management (choices, phase, progress) - per question
+  const flowState = useQuestionnaireState(questionId);
   const {
     currentPhase,
-    q1Choices,
-    q2Choices,
-    q3Choices,
-    completedCheckpoints,
+    q1Choices, q2Choices, q3Choices,
+    setQ1Choices, setQ2Choices, setQ3Choices,
+    completedCheckpoints, setCompletedCheckpoints,
     hasVisitedSummary,
     selectedMemberForFullSummary,
-    setQ1Choices,
-    setQ2Choices,
-    setQ3Choices,
-    setCompletedCheckpoints,
     setSelectedMemberForFullSummary,
-    progress,
-    progressPercentage,
-    isComplete,
-    hasStarted,
-    handleContinue,
-    handleBack,
-    handleRestart,
+    progress, progressPercentage,
+    isComplete, hasStarted,
+    handleContinue, handleBack, handleRestart,
+    goToPhase, getResumePhase, markSummaryVisited
+  } = flowState;
+
+  // 2. Fetch all questionnaire data
+  const {
+    mainScreenQuestion,
+    choices,
+    questionData,
+    pprPatterns,
+    isLoading,
+    isReady,
+    error
+  } = useQuestionnaireData(questionId);
+
+  // 3. Modal management
+  const modals = useQuestionnaireModals({
     goToPhase,
     getResumePhase,
-    markSummaryVisited,
-  } = questionnaireState;
+    isComplete,
+    hasStarted
+  });
 
-  // Fetch data from Django backend using React Query
-  const { data: mainScreenQuestion, isLoading: loadingMain, error: errorMain } = useMainQuestion(questionId);
-  const { data: q1ChoicesData, isLoading: loadingQ1, error: errorQ1 } = useQ1Choices(questionId);
-  const { data: q2ChoicesData, isLoading: loadingQ2, error: errorQ2 } = useQ2Choices(questionId);
-  const { data: q3ChoicesData, isLoading: loadingQ3, error: errorQ3 } = useQ3Choices(questionId);
-  const { data: q1QuestionData, isLoading: loadingQ1Meta } = useQuestionData(questionId, 'q1');
-  const { data: q2QuestionData, isLoading: loadingQ2Meta } = useQuestionData(questionId, 'q2');
-  const { data: q3QuestionData, isLoading: loadingQ3Meta } = useQuestionData(questionId, 'q3');
-  const { data: pprPatterns, isLoading: loadingPPR } = usePPRPatterns(questionId);
-
-  // Combine question metadata
-  const questionData = {
-    q1: q1QuestionData,
-    q2: q2QuestionData,
-    q3: q3QuestionData
-  };
-
-  // Save response to backend when confirming a review
-  const handleConfirmAndSave = useCallback(async (layerNumber, choices) => {
-    // Save to backend if authenticated
-    if (isAuthenticated && choices.length > 0) {
-      // Convert local IDs (q1_1, q2_1, etc.) to actual UUIDs for backend
-      const choicesData = layerNumber === 1 ? q1ChoicesData :
-                          layerNumber === 2 ? q2ChoicesData : q3ChoicesData;
-
-      const optionUuids = choices.map(choiceId => {
-        const choice = choicesData?.find(c => c.id === choiceId);
-        return choice?.uuid || choiceId; // Fall back to original ID if UUID not found
-      }).filter(Boolean);
-
-      try {
-        await saveResponseToBackend(layerNumber, optionUuids, true);
-        console.log(`Saved L${layerNumber} response to backend`);
-      } catch (error) {
-        console.error(`Failed to save L${layerNumber} response:`, error);
-        // Continue anyway - localStorage is the fallback
-      }
-    }
-    // Continue to next phase
-    handleContinue();
-  }, [isAuthenticated, saveResponseToBackend, handleContinue, q1ChoicesData, q2ChoicesData, q3ChoicesData]);
-
-  // Load saved responses from backend when user logs in and choices data is available
-  useEffect(() => {
-    const loadResponses = async () => {
-      // Wait for choices data to be loaded before trying to convert UUIDs
-      if (!isAuthenticated || !q1ChoicesData || !q2ChoicesData || !q3ChoicesData) return;
-
-      setIsLoadingResponses(true);
-      try {
-        const savedData = await loadSavedResponses();
-        if (savedData) {
-          // Helper to convert UUIDs to local IDs
-          const convertUuidsToLocalIds = (uuids, choicesData, layerNum) => {
-            return uuids.map(uuid => {
-              const choice = choicesData?.find(c => c.uuid === uuid);
-              return choice?.id || `q${layerNum}_${uuid}`; // Fallback to constructed ID
-            });
-          };
-
-          // Only update if we have saved data and local state is empty
-          if (savedData.q1Choices.length > 0 && q1Choices.length === 0) {
-            const localIds = convertUuidsToLocalIds(savedData.q1Choices, q1ChoicesData, 1);
-            setQ1Choices(localIds);
-          }
-          if (savedData.q2Choices.length > 0 && q2Choices.length === 0) {
-            const localIds = convertUuidsToLocalIds(savedData.q2Choices, q2ChoicesData, 2);
-            setQ2Choices(localIds);
-          }
-          if (savedData.q3Choices.length > 0 && q3Choices.length === 0) {
-            const localIds = convertUuidsToLocalIds(savedData.q3Choices, q3ChoicesData, 3);
-            setQ3Choices(localIds);
-          }
-          // Update completed checkpoints from backend data
-          if (savedData.completedCheckpoints) {
-            setCompletedCheckpoints(prev => ({
-              q1: savedData.completedCheckpoints.q1 || prev.q1,
-              q2: savedData.completedCheckpoints.q2 || prev.q2,
-              q3: savedData.completedCheckpoints.q3 || prev.q3
-            }));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load saved responses:', error);
-      } finally {
-        setIsLoadingResponses(false);
-      }
-    };
-
-    loadResponses();
-  }, [isAuthenticated, questionId, q1ChoicesData, q2ChoicesData, q3ChoicesData]);
+  // 4. Choices sync with backend
+  const { handleConfirmAndSave } = useChoicesSync(questionId, choices, {
+    q1Choices, q2Choices, q3Choices,
+    setQ1Choices, setQ2Choices, setQ3Choices,
+    setCompletedCheckpoints,
+    handleContinue
+  });
 
   // Handle back with exit modal
-  const onBack = () => {
+  const onBack = useCallback(() => {
     const shouldShowExitModal = handleBack();
     if (shouldShowExitModal) {
-      setShowExitModal(true);
+      modals.setShowExitModal(true);
     }
-  };
-
-  // Handle exit confirmation
-  const handleExitConfirm = () => {
-    setShowExitModal(false);
-    goToPhase(FLOW_PHASES.MAIN);
-  };
-
-  // Handle continue from main screen
-  const handleMainScreenContinue = () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
-    if (isComplete) {
-      goToPhase(FLOW_PHASES.SUMMARY);
-    } else if (hasStarted) {
-      goToPhase(getResumePhase());
-    } else {
-      goToPhase(FLOW_PHASES.Q1_SELECTION);
-    }
-  };
-
-  // Handle successful authentication
-  const handleAuthSuccess = () => {
-    if (isComplete) {
-      goToPhase(FLOW_PHASES.SUMMARY);
-    } else if (hasStarted) {
-      goToPhase(getResumePhase());
-    } else {
-      goToPhase(FLOW_PHASES.Q1_SELECTION);
-    }
-  };
+  }, [handleBack, modals]);
 
   // Handle view full report for team member
-  const handleViewFullReport = (member) => {
+  const handleViewFullReport = useCallback((member) => {
     setSelectedMemberForFullSummary(member);
     goToPhase(FLOW_PHASES.MEMBER_FULL_SUMMARY);
-  };
+  }, [setSelectedMemberForFullSummary, goToPhase]);
 
   // Handle go to layer button
-  const handleGoToLayer = (layerNumber) => {
-    if (!user) {
-      setShowAuthModal(true);
+  const handleGoToLayer = useCallback((layerNumber) => {
+    if (!modals.user) {
+      modals.setShowAuthModal(true);
       return;
     }
     const phases = {
@@ -230,12 +97,9 @@ const QuestionnaireFlow = () => {
       3: FLOW_PHASES.Q3_SELECTION
     };
     goToPhase(phases[layerNumber]);
-  };
+  }, [modals, goToPhase]);
 
   // Loading state
-  const isLoading = loadingMain || loadingQ1 || loadingQ2 || loadingQ3 || loadingQ1Meta || loadingQ2Meta || loadingQ3Meta;
-  const error = errorMain || errorQ1 || errorQ2 || errorQ3;
-
   if (isLoading) {
     return (
       <div className="loading-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
@@ -245,6 +109,7 @@ const QuestionnaireFlow = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="error-container" style={{ padding: '2rem', textAlign: 'center' }}>
@@ -258,8 +123,8 @@ const QuestionnaireFlow = () => {
     );
   }
 
-  // Don't render if data hasn't loaded yet
-  if (!mainScreenQuestion || !q1ChoicesData || !q2ChoicesData || !q3ChoicesData || !questionData.q1 || !questionData.q2 || !questionData.q3) {
+  // Not ready state
+  if (!isReady) {
     return (
       <div className="loading-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <p>Preparing questionnaire...</p>
@@ -267,236 +132,46 @@ const QuestionnaireFlow = () => {
     );
   }
 
-  // Render phase-specific content
-  const renderPhase = () => {
-    switch (currentPhase) {
-      // Main Screen
-      case FLOW_PHASES.MAIN:
-        return (
-          <MainScreen
-            question={mainScreenQuestion}
-            team={state.team}
-            user={user}
-            progress={progress}
-            progressPercentage={progressPercentage}
-            hasStarted={hasStarted}
-            isComplete={isComplete}
-            completedCheckpoints={completedCheckpoints}
-            onContinue={handleMainScreenContinue}
-            onBack={onBack}
-            onViewTeamRecordings={() => goToPhase(FLOW_PHASES.TEAM_RECORDINGS)}
-            onGoToLayer={handleGoToLayer}
-          />
-        );
+  // Build context for PhaseRenderer
+  const phaseContext = {
+    // Data
+    mainScreenQuestion,
+    choices,
+    questionData,
+    pprPatterns,
+    team: state.team,
 
-      // Q1 Selection
-      case FLOW_PHASES.Q1_SELECTION:
-        return (
-          <CheckpointSelection
-            question={questionData.q1}
-            choices={q1ChoicesData}
-            team={state.team}
-            progress={progress}
-            initialSelection={q1Choices}
-            onSelect={setQ1Choices}
-            onContinue={handleContinue}
-            onBack={onBack}
-            multiSelect={false}
-          />
-        );
+    // Flow state
+    q1Choices, q2Choices, q3Choices,
+    setQ1Choices, setQ2Choices, setQ3Choices,
+    completedCheckpoints,
+    hasVisitedSummary,
+    selectedMemberForFullSummary,
+    progress,
+    progressPercentage,
+    isComplete,
+    hasStarted,
 
-      // Q1 Review
-      case FLOW_PHASES.Q1_REVIEW:
-        return (
-          <ChoiceReview
-            question={questionData.q1}
-            selectedChoice={q1ChoicesData.find(c => q1Choices.includes(c.id))}
-            selectedChoices={q1Choices.map(id => q1ChoicesData.find(c => c.id === id)).filter(Boolean)}
-            progress={progress}
-            onConfirm={() => handleConfirmAndSave(1, q1Choices)}
-            onBack={onBack}
-            onChangeAnswer={onBack}
-          />
-        );
+    // Handlers
+    handleContinue,
+    handleConfirmAndSave,
+    handleRestart,
+    goToPhase,
+    markSummaryVisited,
+    onBack,
+    handleViewFullReport,
+    handleGoToLayer,
+    handleMainScreenContinue: modals.handleMainScreenContinue,
 
-      // Q1 Mental Health Check
-      case FLOW_PHASES.Q1_MENTAL_HEALTH:
-        return (
-          <MentalHealthCheck
-            question={questionData.q1}
-            progress={progress}
-            onContinue={handleContinue}
-            onBack={onBack}
-            onBackHome={() => goToPhase(FLOW_PHASES.MAIN)}
-            variant="doing-great"
-          />
-        );
-
-      // Q2 Selection
-      case FLOW_PHASES.Q2_SELECTION:
-        return (
-          <CheckpointSelection
-            question={questionData.q2}
-            choices={q2ChoicesData}
-            team={state.team}
-            progress={progress}
-            initialSelection={q2Choices}
-            onSelect={setQ2Choices}
-            onContinue={handleContinue}
-            onBack={onBack}
-            multiSelect={true}
-            layout="vertical"
-            isQ2={true}
-          />
-        );
-
-      // Q2 Review
-      case FLOW_PHASES.Q2_REVIEW:
-        return (
-          <ChoiceReview
-            question={questionData.q2}
-            selectedChoices={q2Choices.map(id => q2ChoicesData.find(c => c.id === id)).filter(Boolean)}
-            progress={progress}
-            onConfirm={() => handleConfirmAndSave(2, q2Choices)}
-            onBack={onBack}
-            onChangeAnswer={onBack}
-          />
-        );
-
-      // Q2 Mental Health Check
-      case FLOW_PHASES.Q2_MENTAL_HEALTH:
-        return (
-          <MentalHealthCheck
-            question={questionData.q2}
-            progress={progress}
-            onContinue={handleContinue}
-            onBack={onBack}
-            onBackHome={() => goToPhase(FLOW_PHASES.MAIN)}
-            variant="almost-there"
-          />
-        );
-
-      // Q3 Selection
-      case FLOW_PHASES.Q3_SELECTION:
-        return (
-          <CheckpointSelection
-            question={questionData.q3}
-            choices={q3ChoicesData}
-            team={state.team}
-            progress={progress}
-            initialSelection={q3Choices}
-            onSelect={setQ3Choices}
-            onContinue={handleContinue}
-            onBack={onBack}
-            multiSelect={true}
-            layout="vertical"
-            isQ3={true}
-          />
-        );
-
-      // Q3 Review
-      case FLOW_PHASES.Q3_REVIEW:
-        return (
-          <ChoiceReview
-            question={questionData.q3}
-            selectedChoices={q3Choices.map(id => q3ChoicesData.find(c => c.id === id)).filter(Boolean)}
-            progress={progress}
-            onConfirm={() => handleConfirmAndSave(3, q3Choices)}
-            onBack={onBack}
-            onChangeAnswer={onBack}
-          />
-        );
-
-      // Q3 Mental Health Check
-      case FLOW_PHASES.Q3_MENTAL_HEALTH:
-        return (
-          <MentalHealthCheck
-            question={questionData.q3}
-            progress={progress}
-            onContinue={handleContinue}
-            onBack={onBack}
-            onBackHome={() => goToPhase(FLOW_PHASES.MAIN)}
-            variant="take-break"
-          />
-        );
-
-      // Summary
-      case FLOW_PHASES.SUMMARY:
-        return (
-          <SummaryPhase
-            mainScreenQuestion={mainScreenQuestion}
-            questionData={questionData}
-            q1Choices={q1Choices}
-            q2Choices={q2Choices}
-            q3Choices={q3Choices}
-            q1ChoicesData={q1ChoicesData}
-            q2ChoicesData={q2ChoicesData}
-            q3ChoicesData={q3ChoicesData}
-            pprPatterns={pprPatterns}
-            progress={progress}
-            hasVisitedSummary={hasVisitedSummary}
-            onContinue={handleContinue}
-            onBack={onBack}
-            onGoToPhase={goToPhase}
-            onMarkSummaryVisited={markSummaryVisited}
-          />
-        );
-
-      // Team Visibility
-      case FLOW_PHASES.TEAM_VISIBILITY:
-        return <TeamVisibilityPhase onGoToPhase={goToPhase} />;
-
-      // Recording phases
-      case FLOW_PHASES.RECORD_VIDEO:
-        return <RecordVideoPhase onGoToPhase={goToPhase} />;
-
-      case FLOW_PHASES.RECORD_AUDIO:
-        return <RecordAudioPhase onGoToPhase={goToPhase} />;
-
-      case FLOW_PHASES.RECORD_TEXT:
-        return <RecordTextPhase onGoToPhase={goToPhase} />;
-
-      case FLOW_PHASES.RECORDING_COMPLETE:
-        return <RecordingCompletePhase onGoToPhase={goToPhase} />;
-
-      case FLOW_PHASES.TEAM_RECORDINGS:
-        return (
-          <TeamRecordingsPhase
-            onGoToPhase={goToPhase}
-            onViewFullReport={handleViewFullReport}
-          />
-        );
-
-      case FLOW_PHASES.MEMBER_FULL_SUMMARY:
-        return (
-          <MemberFullSummaryPhase
-            selectedMember={selectedMemberForFullSummary}
-            onGoToPhase={goToPhase}
-          />
-        );
-
-      // Complete
-      case FLOW_PHASES.COMPLETE:
-        return <CompletionSuccess onRestart={handleRestart} />;
-
-      default:
-        return <div className="loading-container"><p>Loading...</p></div>;
-    }
+    // User
+    user: modals.user
   };
 
   return (
     <>
-      {renderPhase()}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={handleAuthSuccess}
-      />
-      <ExitConfirmModal
-        isOpen={showExitModal}
-        onConfirm={handleExitConfirm}
-        onCancel={() => setShowExitModal(false)}
-      />
+      <PhaseRenderer phase={currentPhase} context={phaseContext} />
+      <AuthModal {...modals.authModalProps} />
+      <ExitConfirmModal {...modals.exitModalProps} />
     </>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context';
+import { teamsService } from '../services/teams';
 import GoogleSignInButton from '../components/common/GoogleSignInButton';
 import AuthHeroCarousel from '../components/common/AuthHeroCarousel';
 import ConsentTermsModal from '../components/common/Modal/ConsentTermsModal';
@@ -22,6 +23,9 @@ const CheckIcon = ({ valid }) => (
 );
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get('invitation');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -32,6 +36,11 @@ const Register = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
+  // Invitation state
+  const [invitation, setInvitation] = useState(null);
+  const [invitationLoading, setInvitationLoading] = useState(false);
+  const [invitationError, setInvitationError] = useState('');
+
   // Modal states
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showAIModal, setShowAIModal] = useState(false);
@@ -39,12 +48,47 @@ const Register = () => {
   const { register: registerUser, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
+  // Validate invitation token on mount
+  useEffect(() => {
+    const validateInvitation = async () => {
+      if (!invitationToken) return;
+
+      setInvitationLoading(true);
+      setInvitationError('');
+
+      try {
+        const response = await teamsService.validatePendingInvitation(invitationToken);
+        const data = response.data || response;
+
+        if (data.valid && data.invitation) {
+          setInvitation(data.invitation);
+          // Pre-fill email from invitation
+          setEmail(data.invitation.email);
+        }
+      } catch (err) {
+        const errorMsg = err.response?.data?.error || err.message || 'Invalid invitation link';
+        setInvitationError(errorMsg);
+      } finally {
+        setInvitationLoading(false);
+      }
+    };
+
+    validateInvitation();
+  }, [invitationToken]);
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      // If there's an invitation, claim it before redirecting
+      if (invitationToken && invitation) {
+        teamsService.claimPendingInvitation(invitationToken)
+          .then(() => navigate('/dashboard'))
+          .catch(() => navigate('/dashboard'));
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, invitationToken, invitation]);
 
   // Password validation
   const passwordValidation = useMemo(() => {
@@ -107,6 +151,17 @@ const Register = () => {
     setLoading(true);
     try {
       await registerUser(email, password, displayName, isHcw);
+
+      // If there's an invitation token, claim it after registration
+      if (invitationToken) {
+        try {
+          await teamsService.claimPendingInvitation(invitationToken);
+        } catch (claimError) {
+          console.error('Failed to claim invitation:', claimError);
+          // Continue anyway - user can claim later
+        }
+      }
+
       navigate('/verification-pending');
     } catch (err) {
       // Parse field-specific errors from the error message
@@ -177,6 +232,29 @@ const Register = () => {
             <Link to="/login" className="auth-tab">Sign In</Link>
           </div>
 
+          {/* Invitation Banner */}
+          {invitationLoading && (
+            <div className="auth-invitation-banner auth-invitation-banner--loading">
+              Loading invitation details...
+            </div>
+          )}
+
+          {invitationError && (
+            <div className="auth-invitation-banner auth-invitation-banner--error">
+              {invitationError}
+            </div>
+          )}
+
+          {invitation && !invitationLoading && (
+            <div className="auth-invitation-banner auth-invitation-banner--success">
+              <strong>{invitation.invited_by?.display_name}</strong> invited you to join
+              <strong> {invitation.team?.name}</strong>
+              {invitation.message && (
+                <p className="auth-invitation-message">"{invitation.message}"</p>
+              )}
+            </div>
+          )}
+
           {error && (
             <div className="auth-error">
               {error}
@@ -209,10 +287,14 @@ const Register = () => {
                 value={email}
                 onChange={(e) => handleFieldChange('email', e.target.value, setEmail)}
                 required
-                disabled={loading}
+                disabled={loading || !!invitation}
+                readOnly={!!invitation}
                 placeholder="Enter your email"
                 className={fieldErrors.email ? 'input-error' : ''}
               />
+              {invitation && (
+                <span className="field-hint">Email pre-filled from invitation</span>
+              )}
               {fieldErrors.email && (
                 <span className="field-error">{fieldErrors.email}</span>
               )}

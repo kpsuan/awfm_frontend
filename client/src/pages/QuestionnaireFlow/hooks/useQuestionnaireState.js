@@ -5,10 +5,11 @@ import { loadSavedProgress, saveProgress, clearProgress } from '../utils/progres
 /**
  * Custom hook to manage questionnaire state and navigation
  * Handles phase transitions, progress tracking, and localStorage persistence
+ * @param {string} questionId - The question ID for per-question progress storage
  */
-export const useQuestionnaireState = () => {
-  // Load saved progress on initial mount
-  const savedProgress = loadSavedProgress();
+export const useQuestionnaireState = (questionId) => {
+  // Load saved progress on initial mount (per-question)
+  const savedProgress = loadSavedProgress(questionId);
 
   const [currentPhase, setCurrentPhase] = useState(FLOW_PHASES.MAIN);
   const [q1Choices, setQ1Choices] = useState(savedProgress?.q1Choices || []);
@@ -24,7 +25,7 @@ export const useQuestionnaireState = () => {
     q3: false
   });
 
-  // Save progress whenever choices or completed checkpoints change
+  // Save progress whenever choices or completed checkpoints change (per-question)
   useEffect(() => {
     saveProgress({
       q1Choices,
@@ -32,8 +33,8 @@ export const useQuestionnaireState = () => {
       q3Choices,
       completedCheckpoints,
       hasVisitedSummary
-    });
-  }, [q1Choices, q2Choices, q3Choices, completedCheckpoints, hasVisitedSummary]);
+    }, questionId);
+  }, [q1Choices, q2Choices, q3Choices, completedCheckpoints, hasVisitedSummary, questionId]);
 
   // Calculate progress percentage for the "How it Works" section
   const getProgressPercentage = () => {
@@ -105,9 +106,9 @@ export const useQuestionnaireState = () => {
     return false;
   };
 
-  // Handle restart - clear all progress
+  // Handle restart - clear all progress for this question
   const handleRestart = () => {
-    clearProgress();
+    clearProgress(questionId);
     setQ1Choices([]);
     setQ2Choices([]);
     setQ3Choices([]);

@@ -98,4 +98,16 @@ export const teamsService = {
     });
     return response;
   },
+
+  // Validate a pending invitation token (for signup page, public endpoint)
+  validatePendingInvitation: async (token) => {
+    const response = await api.get(`/v1/teams/validate-invitation/?token=${token}`);
+    return response;
+  },
+
+  // Claim a pending invitation after signup
+  claimPendingInvitation: async (token) => {
+    const response = await api.post('/v1/teams/claim-invitation/', { token });
+    return response;
+  },
 };

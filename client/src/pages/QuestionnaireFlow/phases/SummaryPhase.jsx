@@ -1,6 +1,5 @@
 import React from 'react';
 import Summary from '../../../components/pages/Summary';
-import { teamWithAffirmation } from '../../../services/mockData';
 import { buildCheckpointsData, buildReflectionsData, matchPPRPattern } from '../utils/dataPreparation';
 import { FLOW_PHASES } from '../constants';
 
@@ -20,6 +19,8 @@ const SummaryPhase = ({
   pprPatterns,
   progress,
   hasVisitedSummary,
+  user,
+  team = [],
   onContinue,
   onBack,
   onGoToPhase,
@@ -55,15 +56,19 @@ const SummaryPhase = ({
     q3Choices
   });
 
+  // Get user display info
+  const userName = user?.display_name || user?.first_name || user?.email?.split('@')[0] || 'User';
+  const userAvatar = user?.profile_photo_url || user?.avatar || `https://i.pravatar.cc/82?u=${user?.id || 'default'}`;
+
   return (
     <Summary
       question={mainScreenQuestion}
-      userName="Norman"
-      userAvatar="https://i.pravatar.cc/82?img=8"
+      userName={userName}
+      userAvatar={userAvatar}
       checkpoints={checkpointsData}
       reflections={reflectionsData}
       pprText={matchedPPR?.text}
-      team={teamWithAffirmation}
+      team={team}
       progress={progress}
       onContinue={onContinue}
       onBack={onBack}

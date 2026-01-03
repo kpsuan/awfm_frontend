@@ -1,14 +1,14 @@
 .checkpoint-selection {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  justify-content: space-evenly;
   height: 100%;
 }
 
 .checkpoint-selection__image {
   width: 100%;
   aspect-ratio: 16 / 9;
-  max-height: 280px;
+  max-height: 380px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   margin-bottom: 16px;
