@@ -160,7 +160,13 @@ function Dashboard() {
 
         setQuestions(questionsData);
         setProgressData(progressResponse.data || []);
-        setCareTeams(Array.isArray(teamsResponse) ? teamsResponse : []);
+
+        // Handle teams response - could be array or {data: []} or {results: []}
+        let teamsData = teamsResponse;
+        if (teamsResponse?.data) teamsData = teamsResponse.data;
+        if (teamsResponse?.results) teamsData = teamsResponse.results;
+        setCareTeams(Array.isArray(teamsData) ? teamsData : []);
+        console.log('Teams fetched:', teamsData); // Debug log
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err.message);

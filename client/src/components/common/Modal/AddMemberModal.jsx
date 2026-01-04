@@ -83,6 +83,7 @@ const AddMemberModal = ({
           display_name: m.display_name,
           role: m.role,
           status: m.status === 'active' ? 'joined' : 'sent',
+          is_pending_signup: m.is_pending_signup || false, // Track non-registered users
           date: formatDate(m.created_at)
         }));
       setSentInvites(invitations);
@@ -158,11 +159,36 @@ const AddMemberModal = ({
       toast.success(`Care team "${teamName.trim()}" created successfully!`);
     } catch (error) {
       console.error('Error creating team:', error);
-      toast.error('Failed to create care team. Please try again.');
+      toast.error(error.message || 'Failed to create care team. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Handle team update (for existing teams)
+  const handleUpdateTeam = async (e) => {
+    e.preventDefault();
+    if (!teamName.trim() || !existingTeam) return;
+
+    setIsSubmitting(true);
+    try {
+      await teamsService.updateTeam(existingTeam.id, {
+        name: teamName.trim(),
+        description: teamDescription.trim(),
+        team_level: teamLevel || null
+      });
+      toast.success('Team updated successfully!');
+      setActiveTab('invite');
+    } catch (error) {
+      console.error('Error updating team:', error);
+      toast.error(error.message || 'Failed to update team. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle team form submit (create or update)
+  const handleTeamSubmit = existingTeam ? handleUpdateTeam : handleCreateTeam;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -249,7 +275,8 @@ const AddMemberModal = ({
     }
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status, isPendingSignup) => {
+    if (isPendingSignup) return 'AWAITING SIGNUP';
     switch (status) {
       case 'joined': return 'JOINED';
       case 'opened': return 'OPENED';
@@ -258,7 +285,8 @@ const AddMemberModal = ({
     }
   };
 
-  const getStatusClass = (status) => {
+  const getStatusClass = (status, isPendingSignup) => {
+    if (isPendingSignup) return 'add-member-modal__invite-status--pending-signup';
     switch (status) {
       case 'joined': return 'add-member-modal__invite-status--joined';
       case 'opened': return 'add-member-modal__invite-status--opened';
@@ -273,21 +301,22 @@ const AddMemberModal = ({
         <div className="add-member-modal__header">
           <TeamIcon />
           <h2 className="add-member-modal__title">
-            {teamCreated || existingTeam ? 'Invite to Care Team' : 'Create your Care Team'}
+            {existingTeam
+              ? existingTeam.name
+              : (teamCreated ? 'Invite to Care Team' : 'Create your Care Team')
+            }
           </h2>
         </div>
 
         {/* Tabs */}
         <div className="add-member-modal__tabs">
-          {!existingTeam && (
-            <button
-              type="button"
-              className={`add-member-modal__tab ${activeTab === 'team' ? 'add-member-modal__tab--active' : ''}`}
-              onClick={() => setActiveTab('team')}
-            >
-              Team Info
-            </button>
-          )}
+          <button
+            type="button"
+            className={`add-member-modal__tab ${activeTab === 'team' ? 'add-member-modal__tab--active' : ''}`}
+            onClick={() => setActiveTab('team')}
+          >
+            {existingTeam ? 'Edit Team' : 'Team Info'}
+          </button>
           <button
             type="button"
             className={`add-member-modal__tab ${activeTab === 'invite' ? 'add-member-modal__tab--active' : ''}`}
@@ -307,7 +336,7 @@ const AddMemberModal = ({
 
         {/* Team Info Tab */}
         {activeTab === 'team' && (
-          <form onSubmit={handleCreateTeam} className="add-member-modal__invite-form">
+          <form onSubmit={handleTeamSubmit} className="add-member-modal__invite-form">
             {/* Team Name */}
             <div className="add-member-modal__field">
               <label htmlFor="team-name" className="add-member-modal__label">
@@ -367,7 +396,10 @@ const AddMemberModal = ({
                 className="add-member-modal__btn add-member-modal__btn--primary"
                 disabled={isSubmitting || !teamName.trim()}
               >
-                {isSubmitting ? 'Creating...' : 'Create Team & Continue'}
+                {isSubmitting
+                  ? (existingTeam ? 'Saving...' : 'Creating...')
+                  : (existingTeam ? 'Save Changes' : 'Create Team & Continue')
+                }
                 <span className="add-member-modal__btn-arrow">→</span>
               </button>
               <button
@@ -544,8 +576,8 @@ const AddMemberModal = ({
                           {invite.display_name || invite.email}
                           {invite.role === 'witness' && <span className="add-member-modal__role-badge">Witness</span>}
                         </span>
-                        <span className={`add-member-modal__invite-status ${getStatusClass(invite.status)}`}>
-                          {getStatusLabel(invite.status)} {invite.date}
+                        <span className={`add-member-modal__invite-status ${getStatusClass(invite.status, invite.is_pending_signup)}`}>
+                          {getStatusLabel(invite.status, invite.is_pending_signup)} {invite.date}
                         </span>
                       </div>
                     </div>

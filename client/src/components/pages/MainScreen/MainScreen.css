@@ -321,6 +321,159 @@
 }
 
 /* Team slide */
+/* Team Carousel Navigation */
+.main-screen__team-carousel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0;
+  padding: 12px 0;
+}
+
+.main-screen__team-nav {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid #E5E7EB;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6B7280;
+  flex-shrink: 0;
+}
+
+.main-screen__team-nav:hover:not(:disabled) {
+  border-color: #B432A3;
+  color: #B432A3;
+  background: rgba(180, 50, 163, 0.05);
+}
+
+.main-screen__team-nav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.main-screen__team-name-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.main-screen__team-level {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: #B432A3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.main-screen__team-name {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e1e1e;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.main-screen__team-name--new {
+  color: #B432A3;
+  font-weight: 500;
+}
+
+.main-screen__team-name--empty {
+  color: #8a8e99;
+  font-style: italic;
+}
+
+.main-screen__team-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.main-screen__team-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #E5E7EB;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.main-screen__team-dot:hover {
+  background: #B432A3;
+  opacity: 0.6;
+}
+
+.main-screen__team-dot--active {
+  background: linear-gradient(180deg, #B432A3 0%, #5C40FB 100%);
+  width: 20px;
+  border-radius: 4px;
+}
+
+/* Create New Team Slide */
+.main-screen__create-team-slide {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.main-screen__create-team-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 24px 40px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(92, 64, 251, 0.05) 0%, rgba(180, 50, 163, 0.05) 100%);
+  border: 2px dashed #B432A3;
+}
+
+.main-screen__create-team-btn:hover {
+  background: linear-gradient(180deg, rgba(92, 64, 251, 0.1) 0%, rgba(180, 50, 163, 0.1) 100%);
+  border-color: #5C40FB;
+  transform: scale(1.02);
+}
+
+.main-screen__create-team-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #B432A3 0%, #5C40FB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.main-screen__create-team-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.main-screen__create-team-text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: #B432A3;
+}
+
 .main-screen__team-avatars {
   display: flex;
   align-items: flex-start;
@@ -356,6 +509,46 @@
 
 .main-screen__team-avatar-wrapper--has-recording .main-screen__team-avatar-img {
   border: 2px solid #B432A3;
+}
+
+/* Pending invitation avatar styling - greyed out */
+.main-screen__team-avatar-wrapper--pending {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.main-screen__team-avatar-wrapper--pending .main-screen__team-avatar-img {
+  filter: grayscale(100%);
+  border: 2px dashed #9CA3AF;
+}
+
+.main-screen__team-avatar-wrapper--pending:hover .main-screen__team-avatar-img {
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.15);
+}
+
+.main-screen__team-avatar-wrapper--pending .main-screen__team-avatar-name {
+  color: #9CA3AF;
+}
+
+.main-screen__team-avatar-pending-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.main-screen__pending-label {
+  color: #9CA3AF;
+  font-size: 10px;
+  font-weight: 400;
 }
 
 .main-screen__team-avatar-img {
@@ -836,5 +1029,61 @@
   .main-screen__team-placeholder {
     width: 50px;
     height: 50px;
+  }
+
+  /* Team carousel mobile */
+  .main-screen__team-carousel {
+    gap: 8px;
+    margin: 12px 0;
+    padding: 8px 0;
+  }
+
+  .main-screen__team-nav {
+    width: 32px;
+    height: 32px;
+  }
+
+  .main-screen__team-level {
+    font-size: 10px;
+  }
+
+  .main-screen__team-name {
+    font-size: 16px;
+  }
+
+  .main-screen__team-dots {
+    gap: 4px;
+  }
+
+  .main-screen__team-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .main-screen__team-dot--active {
+    width: 16px;
+  }
+
+  .main-screen__create-team-slide {
+    padding: 24px 0;
+  }
+
+  .main-screen__create-team-btn {
+    padding: 20px 32px;
+    border-radius: 12px;
+  }
+
+  .main-screen__create-team-icon {
+    width: 52px;
+    height: 52px;
+  }
+
+  .main-screen__create-team-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .main-screen__create-team-text {
+    font-size: 14px;
   }
 }

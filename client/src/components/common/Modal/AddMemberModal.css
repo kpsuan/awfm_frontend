@@ -498,6 +498,11 @@
   color: #8A8E99;
 }
 
+.add-member-modal__invite-status--pending-signup {
+  color: #F59E0B;
+  font-weight: 600;
+}
+
 /* Loading and Empty states */
 .add-member-modal__loading,
 .add-member-modal__empty {

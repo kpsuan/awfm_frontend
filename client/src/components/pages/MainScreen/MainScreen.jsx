@@ -55,8 +55,53 @@ const MainScreen = ({
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [createdTeam, setCreatedTeam] = useState(null);
 
+  // Teams carousel state
+  const [userTeams, setUserTeams] = useState([]);
+  const [currentTeamIndex, setCurrentTeamIndex] = useState(0);
+  const [isCreatingNewTeam, setIsCreatingNewTeam] = useState(false);
+
   // Scroll collapse for mobile header
   const { isCollapsed, scrollContainerRef } = useScrollCollapse({ threshold: 30 });
+
+  // Fetch user's teams on mount
+  const fetchUserTeams = useCallback(async () => {
+    try {
+      console.log('MainScreen: Fetching teams...');
+      const response = await teamsService.getTeams();
+      console.log('MainScreen: Raw response:', response);
+
+      // Handle different response formats
+      let teams = response;
+      if (response?.data) teams = response.data;
+      if (response?.results) teams = response.results;
+      teams = Array.isArray(teams) ? teams : [];
+
+      console.log('MainScreen: Parsed teams:', teams);
+      setUserTeams(teams);
+
+      // If user has no teams, stay at index 0 (will show "create team")
+      // Otherwise default to first team
+      if (teams.length === 0) {
+        setCurrentTeamIndex(0);
+      }
+    } catch (error) {
+      console.error('MainScreen: Error fetching teams:', error);
+      setUserTeams([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log('MainScreen: user prop:', user);
+    if (user) {
+      fetchUserTeams();
+    } else {
+      console.log('MainScreen: No user, skipping team fetch');
+    }
+  }, [user, fetchUserTeams]);
+
+  // Get current selected team
+  const selectedTeam = userTeams[currentTeamIndex] || null;
+  const isOnCreateNewTeamSlide = currentTeamIndex === userTeams.length;
 
   // Handle team creation
   const handleCreateTeam = useCallback(async (teamData) => {
@@ -67,18 +112,42 @@ const MainScreen = ({
     );
     const result = response.data || response;
     setCreatedTeam(result.team);
+    // Refresh teams list and select the new team
+    await fetchUserTeams();
     return result;
-  }, []);
+  }, [fetchUserTeams]);
 
   // Handle inviting a member
   const handleInviteMember = useCallback(async (inviteData) => {
-    const teamId = createdTeam?.id;
+    // Use selected team or newly created team
+    const teamId = selectedTeam?.id || createdTeam?.id;
     if (!teamId) {
-      throw new Error('No team created yet');
+      throw new Error('No team selected');
     }
     const response = await teamsService.inviteMember(teamId, inviteData.email, inviteData.role);
     return response.data || response;
-  }, [createdTeam]);
+  }, [selectedTeam, createdTeam]);
+
+  // Handle opening modal for existing team (edit mode)
+  const handleOpenAddMemberModal = useCallback(() => {
+    setIsCreatingNewTeam(false);
+    setIsAddMemberModalOpen(true);
+  }, []);
+
+  // Handle opening modal for creating new team
+  const handleCreateNewTeam = useCallback(() => {
+    setIsCreatingNewTeam(true);
+    setCreatedTeam(null);
+    setIsAddMemberModalOpen(true);
+  }, []);
+
+  // Handle modal close
+  const handleModalClose = useCallback(() => {
+    setIsAddMemberModalOpen(false);
+    setIsCreatingNewTeam(false);
+    // Refresh teams in case changes were made
+    fetchUserTeams();
+  }, [fetchUserTeams]);
 
   // Generate slides from config
   const slides = generateSlides({ progressPercentage, completedCheckpoints });
@@ -151,8 +220,12 @@ const MainScreen = ({
             user={user}
             userAvatar={userAvatar}
             team={team}
+            teams={userTeams}
+            currentTeamIndex={currentTeamIndex}
+            onTeamChange={setCurrentTeamIndex}
             onViewTeamRecordings={onViewTeamRecordings}
-            onOpenAddMemberModal={() => setIsAddMemberModalOpen(true)}
+            onOpenAddMemberModal={handleOpenAddMemberModal}
+            onCreateNewTeam={handleCreateNewTeam}
           />
         );
 
@@ -248,10 +321,11 @@ const MainScreen = ({
       {/* Add Member Modal */}
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
-        onClose={() => setIsAddMemberModalOpen(false)}
+        onClose={handleModalClose}
         onCreateTeam={handleCreateTeam}
         onInviteMember={handleInviteMember}
-        teamId={createdTeam?.id}
+        teamId={selectedTeam?.id || createdTeam?.id}
+        existingTeam={isCreatingNewTeam ? null : selectedTeam}
         onAddMember={(memberData) => {
           if (onAddTeamMember) {
             onAddTeamMember(memberData);
