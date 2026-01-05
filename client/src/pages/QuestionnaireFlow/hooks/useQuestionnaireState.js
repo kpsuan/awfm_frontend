@@ -11,12 +11,44 @@ export const useQuestionnaireState = (questionId) => {
   // Load saved progress on initial mount (per-question)
   const savedProgress = loadSavedProgress(questionId);
 
-  const [currentPhase, setCurrentPhase] = useState(FLOW_PHASES.MAIN);
+  // Phases that should not be restored on page load (transient phases)
+  const TRANSIENT_PHASES = [
+    FLOW_PHASES.RECORD_VIDEO,
+    FLOW_PHASES.RECORD_AUDIO,
+    FLOW_PHASES.RECORD_TEXT,
+    FLOW_PHASES.RECORDING_COMPLETE,
+    FLOW_PHASES.TEAM_VISIBILITY,
+    FLOW_PHASES.MEMBER_FULL_SUMMARY,
+  ];
+
+  // Validate saved phase is a valid phase constant and not a transient phase
+  const getInitialPhase = () => {
+    const savedPhase = savedProgress?.currentPhase;
+    if (savedPhase && Object.values(FLOW_PHASES).includes(savedPhase)) {
+      // Don't restore transient phases - go to SUMMARY or MAIN instead
+      if (TRANSIENT_PHASES.includes(savedPhase)) {
+        // If user has completed all checkpoints, go to SUMMARY
+        const checkpoints = savedProgress?.completedCheckpoints;
+        if (checkpoints?.q1 && checkpoints?.q2 && checkpoints?.q3) {
+          return FLOW_PHASES.SUMMARY;
+        }
+        return FLOW_PHASES.MAIN;
+      }
+      return savedPhase;
+    }
+    return FLOW_PHASES.MAIN;
+  };
+
+  const [currentPhase, setCurrentPhase] = useState(getInitialPhase);
   const [q1Choices, setQ1Choices] = useState(savedProgress?.q1Choices || []);
   const [q2Choices, setQ2Choices] = useState(savedProgress?.q2Choices || []);
   const [q3Choices, setQ3Choices] = useState(savedProgress?.q3Choices || []);
   const [selectedMemberForFullSummary, setSelectedMemberForFullSummary] = useState(null);
   const [hasVisitedSummary, setHasVisitedSummary] = useState(savedProgress?.hasVisitedSummary || false);
+
+  // Recording preview for RecordingComplete page
+  // { type: 'video'|'audio'|'text', url: string (for video/audio), content: string (for text) }
+  const [recordingPreview, setRecordingPreview] = useState(null);
 
   // Track the highest completed checkpoint for resume functionality
   const [completedCheckpoints, setCompletedCheckpoints] = useState(savedProgress?.completedCheckpoints || {
@@ -25,16 +57,17 @@ export const useQuestionnaireState = (questionId) => {
     q3: false
   });
 
-  // Save progress whenever choices or completed checkpoints change (per-question)
+  // Save progress whenever choices, phase, or completed checkpoints change (per-question)
   useEffect(() => {
     saveProgress({
+      currentPhase,
       q1Choices,
       q2Choices,
       q3Choices,
       completedCheckpoints,
       hasVisitedSummary
     }, questionId);
-  }, [q1Choices, q2Choices, q3Choices, completedCheckpoints, hasVisitedSummary, questionId]);
+  }, [currentPhase, q1Choices, q2Choices, q3Choices, completedCheckpoints, hasVisitedSummary, questionId]);
 
   // Calculate progress percentage for the "How it Works" section
   const getProgressPercentage = () => {
@@ -126,6 +159,11 @@ export const useQuestionnaireState = (questionId) => {
     setHasVisitedSummary(true);
   };
 
+  // Clear recording preview
+  const clearRecordingPreview = () => {
+    setRecordingPreview(null);
+  };
+
   return {
     // State
     currentPhase,
@@ -135,6 +173,7 @@ export const useQuestionnaireState = (questionId) => {
     completedCheckpoints,
     hasVisitedSummary,
     selectedMemberForFullSummary,
+    recordingPreview,
 
     // Setters
     setQ1Choices,
@@ -142,6 +181,7 @@ export const useQuestionnaireState = (questionId) => {
     setQ3Choices,
     setCompletedCheckpoints,
     setSelectedMemberForFullSummary,
+    setRecordingPreview,
 
     // Computed
     progress: getProgress(),
@@ -156,6 +196,7 @@ export const useQuestionnaireState = (questionId) => {
     goToPhase,
     getResumePhase,
     markSummaryVisited,
+    clearRecordingPreview,
   };
 };
 

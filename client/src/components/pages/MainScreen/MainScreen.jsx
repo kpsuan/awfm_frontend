@@ -180,11 +180,15 @@ const MainScreen = ({
   }, []);
 
   // Question data with defaults
-  const { title, subtitle, sectionLabel } = question || {
+  const { title, subtitle, sectionLabel, image: questionImage } = question || {
     title: "How important is staying alive even if you have substantial physical limitations?",
     subtitle: "Question 10 A",
-    sectionLabel: "Advance Care Planning"
+    sectionLabel: "Advance Care Planning",
+    image: null
   };
+
+  // Use question image or fallback to default
+  const heroImage = questionImage || image1;
 
   // Button text based on progress
   const getButtonText = () => {
@@ -261,7 +265,8 @@ const MainScreen = ({
           <div className={`main-screen__header ${isCollapsed ? 'main-screen__header--collapsed' : ''}`}>
             {/* Hero Image */}
             <div className="main-screen__image-container">
-              <img src={image1} alt="Elderly person" className="main-screen__image" />
+              <img src={heroImage} alt="Family care planning" className="main-screen__image" />
+              <div className="main-screen__image-overlay" />
             </div>
 
             {/* Tablet Question Info */}

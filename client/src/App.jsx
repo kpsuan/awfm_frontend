@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ToastContainer } from 'react-toastify';
 import { queryClient } from './lib/queryClient';
-import { QuestionnaireProvider, AuthProvider, useAuth } from './context';
+import { QuestionnaireProvider, AuthProvider, NotificationProvider, useAuth } from './context';
 import QuestionnaireFlow from './pages/QuestionnaireFlow';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,6 +15,8 @@ import RestoreAccount from './pages/RestoreAccount';
 import AccountSettings from './pages/AccountSettings';
 import ProfilePage from './pages/ProfilePage';
 import Dashboard from './pages/Dashboard';
+import CareTeamPage from './pages/CareTeamPage';
+import MyRecordingsPage from './pages/MyRecordingsPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import SplashScreen from './components/pages/SplashScreen';
@@ -104,6 +106,12 @@ function AppContent() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
 
+        {/* Care Team */}
+        <Route path="/team/:teamId" element={<CareTeamPage />} />
+
+        {/* My Recordings */}
+        <Route path="/my-recordings" element={<MyRecordingsPage />} />
+
         {/* Questionnaire routes */}
         <Route path="/questionnaire/:questionId" element={<QuestionnaireFlow />} />
         <Route path="/questionnaire" element={<Navigate to="/questionnaire/Q10A" replace />} />
@@ -128,11 +136,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <QuestionnaireProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </QuestionnaireProvider>
+        <NotificationProvider>
+          <QuestionnaireProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </QuestionnaireProvider>
+        </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

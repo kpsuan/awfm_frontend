@@ -7,6 +7,168 @@
   overflow: hidden;
 }
 
+/* Preview Wrapper - inside content area, above title */
+.recording-complete__preview-wrapper {
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: 24px;
+}
+
+.recording-complete__preview {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.recording-complete__preview--video {
+  background: #000;
+  aspect-ratio: 16/9;
+}
+
+.recording-complete__preview-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recording-complete__preview-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b432a3;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.recording-complete__preview-play:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  background: #fff;
+}
+
+.recording-complete__preview-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  color: #fff;
+  font-family: var(--font-label);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Audio Preview */
+.recording-complete__preview--audio {
+  background: linear-gradient(135deg, #b432a3 0%, #ae59cf 100%);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.recording-complete__audio-visualizer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.recording-complete__audio-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.recording-complete__audio-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 40px;
+}
+
+.recording-complete__audio-bar {
+  width: 6px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 3px;
+  transition: height 0.1s ease;
+}
+
+.recording-complete__audio-bar--playing {
+  animation: audioBar 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes audioBar {
+  0% { height: 12px; }
+  100% { height: 40px; }
+}
+
+.recording-complete__preview-play--audio {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.recording-complete__preview-play--audio:hover {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.recording-complete__preview--audio .recording-complete__preview-label {
+  position: relative;
+  background: none;
+  padding: 0;
+  margin-top: 8px;
+}
+
+/* Text Preview */
+.recording-complete__preview--text {
+  background: #fff;
+  border: 2px solid rgba(180, 50, 163, 0.2);
+  padding: 20px;
+}
+
+.recording-complete__text-content {
+  max-height: 120px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.recording-complete__text-content p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  margin: 0;
+}
+
+.recording-complete__preview--text .recording-complete__preview-label {
+  position: relative;
+  background: none;
+  color: #b432a3;
+  padding: 0;
+  font-size: 12px;
+  border-top: 1px solid rgba(180, 50, 163, 0.15);
+  padding-top: 12px;
+}
+
 /* Header */
 .recording-complete__header {
   display: flex;
@@ -242,6 +404,23 @@
 
 /* ==================== TABLET STYLES ==================== */
 @media (min-width: 768px) {
+  .recording-complete__preview-wrapper {
+    max-width: 340px;
+    margin-bottom: 32px;
+  }
+
+  .recording-complete__preview {
+    border-radius: 16px;
+  }
+
+  .recording-complete__preview--audio {
+    padding: 40px 32px;
+  }
+
+  .recording-complete__text-content {
+    max-height: 150px;
+  }
+
   .recording-complete__header {
     padding: 24px 40px;
   }
@@ -305,6 +484,46 @@
   .recording-complete {
     flex-direction: row;
     align-items: stretch;
+  }
+
+  .recording-complete__preview-wrapper {
+    max-width: 380px;
+    margin-bottom: 40px;
+  }
+
+  .recording-complete__preview--video {
+    aspect-ratio: 4/3;
+  }
+
+  .recording-complete__preview-play {
+    width: 64px;
+    height: 64px;
+  }
+
+  .recording-complete__preview-label {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .recording-complete__preview--audio {
+    padding: 40px 32px;
+  }
+
+  .recording-complete__audio-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .recording-complete__audio-bar {
+    width: 7px;
+  }
+
+  .recording-complete__text-content {
+    max-height: 140px;
+  }
+
+  .recording-complete__text-content p {
+    font-size: 15px;
   }
 
   .recording-complete__header {
@@ -375,6 +594,20 @@
 
 /* ==================== LARGE DESKTOP ==================== */
 @media (min-width: 1440px) {
+  .recording-complete__preview-wrapper {
+    max-width: 420px;
+    margin-bottom: 48px;
+  }
+
+  .recording-complete__preview-play {
+    width: 72px;
+    height: 72px;
+  }
+
+  .recording-complete__text-content {
+    max-height: 160px;
+  }
+
   .recording-complete__avatar {
     width: 140px;
     height: 140px;

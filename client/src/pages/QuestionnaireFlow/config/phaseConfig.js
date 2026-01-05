@@ -174,25 +174,47 @@ export const PHASE_CONFIG = {
   // Team Visibility
   [FLOW_PHASES.TEAM_VISIBILITY]: {
     component: TeamVisibilityPhase,
-    getProps: (ctx) => ({ onGoToPhase: ctx.goToPhase })
+    getProps: (ctx) => ({
+      onGoToPhase: ctx.goToPhase,
+      user: ctx.user
+    })
   },
 
   // Recording phases
   [FLOW_PHASES.RECORD_VIDEO]: {
     component: RecordVideoPhase,
-    getProps: (ctx) => ({ onGoToPhase: ctx.goToPhase })
+    getProps: (ctx) => ({
+      onGoToPhase: ctx.goToPhase,
+      questionId: ctx.questionId,
+      team: ctx.team,
+      setRecordingPreview: ctx.setRecordingPreview
+    })
   },
   [FLOW_PHASES.RECORD_AUDIO]: {
     component: RecordAudioPhase,
-    getProps: (ctx) => ({ onGoToPhase: ctx.goToPhase })
+    getProps: (ctx) => ({
+      onGoToPhase: ctx.goToPhase,
+      questionId: ctx.questionId,
+      team: ctx.team,
+      setRecordingPreview: ctx.setRecordingPreview
+    })
   },
   [FLOW_PHASES.RECORD_TEXT]: {
     component: RecordTextPhase,
-    getProps: (ctx) => ({ onGoToPhase: ctx.goToPhase })
+    getProps: (ctx) => ({
+      onGoToPhase: ctx.goToPhase,
+      questionId: ctx.questionId,
+      team: ctx.team,
+      setRecordingPreview: ctx.setRecordingPreview
+    })
   },
   [FLOW_PHASES.RECORDING_COMPLETE]: {
     component: RecordingCompletePhase,
-    getProps: (ctx) => ({ onGoToPhase: ctx.goToPhase })
+    getProps: (ctx) => ({
+      onGoToPhase: ctx.goToPhase,
+      recordingPreview: ctx.recordingPreview,
+      clearRecordingPreview: ctx.clearRecordingPreview
+    })
   },
 
   // Team recordings
@@ -200,7 +222,10 @@ export const PHASE_CONFIG = {
     component: TeamRecordingsPhase,
     getProps: (ctx) => ({
       onGoToPhase: ctx.goToPhase,
-      onViewFullReport: ctx.handleViewFullReport
+      onViewFullReport: ctx.handleViewFullReport,
+      team: ctx.team,
+      user: ctx.user,
+      questionId: ctx.questionId
     })
   },
 

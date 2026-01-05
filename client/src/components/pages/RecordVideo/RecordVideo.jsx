@@ -1,6 +1,93 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '../../common/Button';
+import { teamsService } from '../../../services';
 import './RecordVideo.css';
+
+// Team Icon
+const TeamIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Chevron Down Icon
+const ChevronDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Team Visibility Selector Component
+const TeamVisibilitySelector = ({ teams, selectedTeamId, onSelectTeam, isOpen, onToggle }) => {
+  const dropdownRef = useRef(null);
+  const selectedTeam = teams.find(t => t.id === selectedTeamId) || teams[0];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        if (isOpen) onToggle();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onToggle]);
+
+  if (!teams || teams.length === 0) return null;
+
+  return (
+    <div className="record-video__team-selector" ref={dropdownRef}>
+      <label className="record-video__team-label">Visible to:</label>
+      <button
+        className="record-video__team-selector-btn"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        type="button"
+      >
+        <TeamIcon />
+        <span className="record-video__team-name">{selectedTeam?.name || 'Select Team'}</span>
+        <ChevronDownIcon />
+      </button>
+
+      {isOpen && teams.length > 1 && (
+        <div className="record-video__team-dropdown">
+          {teams.map((team) => (
+            <button
+              key={team.id}
+              className={`record-video__team-dropdown-item ${team.id === selectedTeamId ? 'active' : ''}`}
+              onClick={() => {
+                onSelectTeam(team.id);
+                onToggle();
+              }}
+              type="button"
+            >
+              {team.avatar_url ? (
+                <img
+                  src={team.avatar_url}
+                  alt={team.name}
+                  className="record-video__team-dropdown-avatar"
+                />
+              ) : (
+                <div className="record-video__team-dropdown-avatar-placeholder">
+                  <TeamIcon />
+                </div>
+              )}
+              <span className="record-video__team-dropdown-name">{team.name}</span>
+              {team.id === selectedTeamId && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Delete/Trash Icon
 const DeleteIcon = () => (
@@ -61,17 +148,17 @@ const InstructionsModal = ({ isOpen, onClose }) => {
         <button className="record-video__modal-close" onClick={onClose} aria-label="Close">
           <CloseIcon />
         </button>
-        
+
         <div className="record-video__modal-content">
           <h2 className="record-video__modal-title">Record Your Reasoning</h2>
-          
+
           <p className="record-video__modal-intro">
-            Now that you've completed all three layers and seen what your 
-            choices reveal, please record your reasoning. You can record 
-            multiple times if you wish to address different aspects of 
+            Now that you've completed all three layers and seen what your
+            choices reveal, please record your reasoning. You can record
+            multiple times if you wish to address different aspects of
             your decision.
           </p>
-          
+
           <div className="record-video__modal-section">
             <h3 className="record-video__modal-subtitle">Consider explaining:</h3>
             <ul className="record-video__modal-list">
@@ -82,7 +169,7 @@ const InstructionsModal = ({ isOpen, onClose }) => {
               <li>Your responses to the reflection questions above</li>
             </ul>
           </div>
-          
+
           <div className="record-video__modal-tips">
             <h3 className="record-video__modal-subtitle">Tips:</h3>
             <ul className="record-video__modal-list">
@@ -92,10 +179,57 @@ const InstructionsModal = ({ isOpen, onClose }) => {
               <li>Your recording will be shared with your care team</li>
             </ul>
           </div>
-          
+
           <Button variant="primary" fullWidth onClick={onClose}>
             I'm Ready to Record
           </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Submit Confirmation Modal Component
+const SubmitConfirmModal = ({ isOpen, onConfirm, onCancel, type = 'video', isSubmitting = false }) => {
+  if (!isOpen) return null;
+
+  const typeLabels = {
+    video: 'video',
+    audio: 'audio recording',
+    text: 'written response'
+  };
+
+  return (
+    <div className="record-video__modal-overlay" onClick={onCancel}>
+      <div className="record-video__confirm-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="record-video__confirm-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2"/>
+            <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
+
+        <h2 className="record-video__confirm-title">Submit Recording?</h2>
+
+        <p className="record-video__confirm-message">
+          Are you sure you want to submit this {typeLabels[type]}? It will be shared with your care team.
+        </p>
+
+        <div className="record-video__confirm-actions">
+          <button
+            className="record-video__confirm-btn record-video__confirm-btn--cancel"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
+            Go Back
+          </button>
+          <button
+            className="record-video__confirm-btn record-video__confirm-btn--submit"
+            onClick={onConfirm}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : 'Yes, Submit'}
+          </button>
         </div>
       </div>
     </div>
@@ -107,7 +241,8 @@ const RecordVideo = ({
   onComplete,
   onSwitchToText,
   onSwitchToAudio,
-  initialMode = 'video'
+  initialMode = 'video',
+  defaultTeamId = null
 }) => {
   const [activeMode, setActiveMode] = useState(initialMode);
   const [recordingState, setRecordingState] = useState('idle'); // idle, recording, paused, reviewing
@@ -118,11 +253,37 @@ const RecordVideo = ({
   const [showInstructions, setShowInstructions] = useState(true);
   const [recordedBlobUrl, setRecordedBlobUrl] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const videoRef = useRef(null);
   const reviewVideoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
+
+  // Team visibility state
+  const [userTeams, setUserTeams] = useState([]);
+  const [selectedTeamId, setSelectedTeamId] = useState(defaultTeamId);
+  const [showTeamDropdown, setShowTeamDropdown] = useState(false);
+
+  // Fetch user's teams on mount
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const response = await teamsService.getTeams();
+        // Handle DRF pagination format { results: [...] } or direct array
+        const teams = response.results || response.data || (Array.isArray(response) ? response : []);
+        setUserTeams(teams);
+        // Set default team if not already set
+        if (!selectedTeamId && teams.length > 0) {
+          setSelectedTeamId(defaultTeamId || teams[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch teams:', err);
+      }
+    };
+    fetchTeams();
+  }, [defaultTeamId]);
 
   useEffect(() => {
     startCamera();
@@ -187,14 +348,15 @@ const RecordVideo = ({
       if (stream) {
         mediaRecorderRef.current = new MediaRecorder(stream);
         chunksRef.current = [];
-        
+
         mediaRecorderRef.current.ondataavailable = (e) => {
           if (e.data.size > 0) {
             chunksRef.current.push(e.data);
           }
         };
-        
-        mediaRecorderRef.current.start();
+
+        // Start with 1 second timeslice to capture data periodically
+        mediaRecorderRef.current.start(1000);
       }
     } else if (recordingState === 'recording') {
       // Pause recording
@@ -220,13 +382,17 @@ const RecordVideo = ({
     setRecordedTime(0);
     chunksRef.current = [];
     if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
+      if (mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      mediaRecorderRef.current = null;
     }
   };
 
   const handleConfirm = () => {
     // Stop recording and enter review mode
     stopTimer();
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.onstop = () => {
         // Create blob from recorded chunks
@@ -236,6 +402,12 @@ const RecordVideo = ({
         setRecordingState('reviewing');
       };
       mediaRecorderRef.current.stop();
+    } else if (chunksRef.current.length > 0) {
+      // MediaRecorder already stopped but we have chunks - create blob directly
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      setRecordedBlobUrl(url);
+      setRecordingState('reviewing');
     }
   };
 
@@ -250,19 +422,38 @@ const RecordVideo = ({
     setRecordedTime(0);
     setRecordingDescription('');
     setRecordingState('idle');
+    // Restart the camera since it was stopped during review
+    startCamera();
   };
 
-  const handleSubmit = () => {
-    // Submit the recording
-    if (onComplete) {
-      onComplete({ 
-        type: 'video', 
-        chunks: chunksRef.current, 
-        blobUrl: recordedBlobUrl, 
-        duration: recordedTime,
-        description: recordingDescription.trim() || 'Here is my explanation on my position'
-      });
+  const handleSubmitClick = () => {
+    // Show confirmation modal instead of submitting directly
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    // Actually submit the recording after confirmation based on activeMode
+    if (activeMode === 'video') {
+      setIsSubmitting(true);
+      if (onComplete) {
+        onComplete({
+          type: 'video',
+          chunks: chunksRef.current,
+          blobUrl: recordedBlobUrl,
+          duration: recordedTime,
+          description: recordingDescription.trim() || 'Here is my explanation on my position',
+          teamId: selectedTeamId
+        });
+      }
+    } else if (activeMode === 'audio') {
+      handleAudioSubmit();
+    } else if (activeMode === 'text') {
+      handleTextSubmit();
     }
+  };
+
+  const handleCancelSubmit = () => {
+    setShowConfirmModal(false);
   };
 
   const handlePlayPause = () => {
@@ -322,14 +513,53 @@ const RecordVideo = ({
   // Description for recording (shown in team recordings)
   const [recordingDescription, setRecordingDescription] = useState('');
 
-  // Clean up blob URL on unmount
+  // Clean up blob URLs and recorders on unmount
   useEffect(() => {
     return () => {
+      // Revoke video blob URL
       if (recordedBlobUrl) {
         URL.revokeObjectURL(recordedBlobUrl);
       }
+      // Revoke audio blob URL
+      if (audioBlobUrl) {
+        URL.revokeObjectURL(audioBlobUrl);
+      }
+      // Clean up media recorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      // Clean up audio recorder
+      if (audioRecorderRef.current) {
+        if (audioRecorderRef.current.state !== 'inactive') {
+          audioRecorderRef.current.stop();
+        }
+        if (audioRecorderRef.current.stream) {
+          audioRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
+      }
     };
-  }, [recordedBlobUrl]);
+  }, [recordedBlobUrl, audioBlobUrl]);
+
+  // Stop camera when entering review mode to prevent interference
+  useEffect(() => {
+    if (recordingState === 'reviewing' && stream) {
+      // Stop the camera stream when reviewing
+      stream.getTracks().forEach(track => track.stop());
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  }, [recordingState, stream]);
+
+  // Ensure review video uses blob URL not camera stream
+  useEffect(() => {
+    if (recordingState === 'reviewing' && reviewVideoRef.current && recordedBlobUrl) {
+      // Explicitly clear any srcObject and set src
+      reviewVideoRef.current.srcObject = null;
+      reviewVideoRef.current.src = recordedBlobUrl;
+      reviewVideoRef.current.load();
+    }
+  }, [recordingState, recordedBlobUrl]);
 
   // Render Review Mode Content
   const renderReviewMode = () => (
@@ -379,16 +609,16 @@ const RecordVideo = ({
 
       {/* Review Controls */}
       <div className="record-video__review-controls">
-        <button 
+        <button
           className="record-video__review-btn record-video__review-btn--rerecord"
           onClick={handleReRecord}
         >
           <ReRecordIcon />
           <span>Re-record</span>
         </button>
-        <button 
+        <button
           className="record-video__review-btn record-video__review-btn--submit"
-          onClick={handleSubmit}
+          onClick={handleSubmitClick}
         >
           <CheckIcon />
           <span>Use this video</span>
@@ -525,13 +755,20 @@ const RecordVideo = ({
     setTextReviewing(false);
   };
 
-  // Handle text final submit
+  // Handle text submit click (show modal)
+  const handleTextSubmitClick = () => {
+    setShowConfirmModal(true);
+  };
+
+  // Handle text final submit after confirmation
   const handleTextSubmit = () => {
+    setIsSubmitting(true);
     if (onComplete) {
       onComplete({
         type: 'text',
         content: textContent,
-        description: textDescription.trim() || 'My written explanation'
+        description: textDescription.trim() || 'My written explanation',
+        teamId: selectedTeamId
       });
     }
   };
@@ -572,7 +809,7 @@ const RecordVideo = ({
           </button>
           <button
             className="record-video__review-btn record-video__review-btn--submit"
-            onClick={handleTextSubmit}
+            onClick={handleTextSubmitClick}
           >
             <CheckIcon />
             <span>Use this text</span>
@@ -653,7 +890,8 @@ const RecordVideo = ({
         }
       };
 
-      audioRecorderRef.current.start();
+      // Start with 1 second timeslice to capture data periodically
+      audioRecorderRef.current.start(1000);
       setRecordingState('recording');
       setRecordedTime(0);
       startTimer();
@@ -687,14 +925,22 @@ const RecordVideo = ({
     setRecordingState('idle');
     setRecordedTime(0);
     audioChunksRef.current = [];
-    if (audioRecorderRef.current && audioRecorderRef.current.state !== 'inactive') {
-      audioRecorderRef.current.stop();
+    if (audioRecorderRef.current) {
+      if (audioRecorderRef.current.state !== 'inactive') {
+        audioRecorderRef.current.stop();
+      }
+      // Stop the audio stream tracks
+      if (audioRecorderRef.current.stream) {
+        audioRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      }
+      audioRecorderRef.current = null;
     }
   };
 
   // Handle audio confirm (go to review)
   const handleAudioConfirm = () => {
     stopTimer();
+
     if (audioRecorderRef.current && audioRecorderRef.current.state !== 'inactive') {
       audioRecorderRef.current.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
@@ -704,6 +950,13 @@ const RecordVideo = ({
         setRecordingState('idle');
       };
       audioRecorderRef.current.stop();
+    } else if (audioChunksRef.current.length > 0) {
+      // MediaRecorder already stopped but we have chunks - create blob directly
+      const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      setAudioBlobUrl(url);
+      setAudioReviewing(true);
+      setRecordingState('idle');
     }
   };
 
@@ -720,15 +973,22 @@ const RecordVideo = ({
     setAudioReviewing(false);
   };
 
-  // Handle audio submit
+  // Handle audio submit click (show modal)
+  const handleAudioSubmitClick = () => {
+    setShowConfirmModal(true);
+  };
+
+  // Handle audio submit after confirmation
   const handleAudioSubmit = () => {
+    setIsSubmitting(true);
     if (onComplete) {
       onComplete({
         type: 'audio',
         chunks: audioChunksRef.current,
         blobUrl: audioBlobUrl,
         duration: recordedTime,
-        description: audioDescription.trim() || 'My audio explanation'
+        description: audioDescription.trim() || 'My audio explanation',
+        teamId: selectedTeamId
       });
     }
   };
@@ -800,7 +1060,7 @@ const RecordVideo = ({
         </button>
         <button
           className="record-video__review-btn record-video__review-btn--submit"
-          onClick={handleAudioSubmit}
+          onClick={handleAudioSubmitClick}
         >
           <CheckIcon />
           <span>Use this audio</span>
@@ -899,6 +1159,17 @@ const RecordVideo = ({
         {/* Heading - show for all modes */}
         <h1 className="record-video__title">Record your Explanation</h1>
 
+        {/* Team Visibility Selector */}
+        {userTeams.length > 0 && (
+          <TeamVisibilitySelector
+            teams={userTeams}
+            selectedTeamId={selectedTeamId}
+            onSelectTeam={setSelectedTeamId}
+            isOpen={showTeamDropdown}
+            onToggle={() => setShowTeamDropdown(!showTeamDropdown)}
+          />
+        )}
+
         {/* Mode Content */}
         {activeMode === 'video' && renderVideoMode()}
         {activeMode === 'text' && renderTextMode()}
@@ -931,9 +1202,18 @@ const RecordVideo = ({
       </div>
 
       {/* Instructions Modal */}
-      <InstructionsModal 
-        isOpen={showInstructions} 
-        onClose={() => setShowInstructions(false)} 
+      <InstructionsModal
+        isOpen={showInstructions}
+        onClose={() => setShowInstructions(false)}
+      />
+
+      {/* Submit Confirmation Modal */}
+      <SubmitConfirmModal
+        isOpen={showConfirmModal}
+        onConfirm={handleConfirmSubmit}
+        onCancel={handleCancelSubmit}
+        type={activeMode}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

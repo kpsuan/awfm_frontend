@@ -15,7 +15,9 @@ export const useQuestionnaireModals = ({
   goToPhase,
   getResumePhase,
   isComplete,
-  hasStarted
+  hasStarted,
+  navigate,
+  currentPhase
 }) => {
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -36,8 +38,13 @@ export const useQuestionnaireModals = ({
   // Handle exit confirmation
   const handleExitConfirm = useCallback(() => {
     setShowExitModal(false);
-    goToPhase(FLOW_PHASES.MAIN);
-  }, [goToPhase]);
+    // If on main screen, navigate to dashboard; otherwise go to main
+    if (currentPhase === FLOW_PHASES.MAIN) {
+      navigate('/dashboard');
+    } else {
+      goToPhase(FLOW_PHASES.MAIN);
+    }
+  }, [currentPhase, goToPhase, navigate]);
 
   // Check auth and navigate or show modal
   const requireAuth = useCallback((onAuthenticated) => {

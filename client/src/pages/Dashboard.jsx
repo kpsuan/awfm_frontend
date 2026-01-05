@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context';
 import Button from '../components/common/Button/Button';
 import { ContentHeader } from '../components/common/Navigation';
+import { AddMemberModal } from '../components/common/Modal';
 import { questionsService, responsesService } from '../services/questionnaire';
 import { teamsService } from '../services/teams';
 import { getAllProgress } from './QuestionnaireFlow/utils/progressStorage';
@@ -102,6 +103,10 @@ function Dashboard() {
 
   // Carousel state
   const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // Care Team Modal state
+  const [isAddTeamModalOpen, setIsAddTeamModalOpen] = useState(false);
+  const [createdTeam, setCreatedTeam] = useState(null);
 
   // Carousel auto-advance
   useEffect(() => {
@@ -291,6 +296,43 @@ function Dashboard() {
   const handleQuestionClick = (questionId) => {
     navigate(`/questionnaire/${questionId}`);
   };
+
+  // Care Team Modal handlers
+  const handleOpenAddTeamModal = useCallback(() => {
+    setCreatedTeam(null);
+    setIsAddTeamModalOpen(true);
+  }, []);
+
+  const handleCloseAddTeamModal = useCallback(() => {
+    setIsAddTeamModalOpen(false);
+    setCreatedTeam(null);
+  }, []);
+
+  const handleCreateTeam = useCallback(async (teamData) => {
+    const response = await teamsService.createTeam(
+      teamData.name,
+      teamData.description || '',
+      teamData.team_level || null
+    );
+    const result = response.data || response;
+    setCreatedTeam(result.team);
+    // Refresh teams list
+    const teamsResponse = await teamsService.getTeams();
+    let teamsData = teamsResponse;
+    if (teamsResponse?.data) teamsData = teamsResponse.data;
+    if (teamsResponse?.results) teamsData = teamsResponse.results;
+    setCareTeams(Array.isArray(teamsData) ? teamsData : []);
+    return result;
+  }, []);
+
+  const handleInviteMember = useCallback(async (inviteData) => {
+    const teamId = createdTeam?.id;
+    if (!teamId) {
+      throw new Error('No team selected');
+    }
+    const response = await teamsService.inviteMember(teamId, inviteData.email, inviteData.role);
+    return response.data || response;
+  }, [createdTeam]);
 
   const getButtonText = (question) => {
     if (question.progress === 100) return 'Review';
@@ -568,6 +610,7 @@ function Dashboard() {
                   variant="secondary"
                   size="sm"
                   fullWidth
+                  onClick={handleOpenAddTeamModal}
                   leftIcon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 5v14M5 12h14" />
@@ -584,6 +627,7 @@ function Dashboard() {
                   variant="primary"
                   size="sm"
                   fullWidth
+                  onClick={handleOpenAddTeamModal}
                   leftIcon={
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 5v14M5 12h14" />
@@ -629,6 +673,18 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Add Care Team Modal */}
+      <AddMemberModal
+        isOpen={isAddTeamModalOpen}
+        onClose={handleCloseAddTeamModal}
+        onCreateTeam={handleCreateTeam}
+        onInviteMember={handleInviteMember}
+        teamId={createdTeam?.id}
+        existingTeam={null}
+        userName={authUser?.display_name || authUser?.first_name || userName}
+        userAvatar={authUser?.profile_photo_url}
+      />
     </div>
   );
 }

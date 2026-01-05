@@ -6,11 +6,11 @@ import { FLOW_PHASES } from '../constants';
  * Team Visibility phase component
  * Shows options to record video/audio/text explanation for care team
  */
-const TeamVisibilityPhase = ({ onGoToPhase }) => {
+const TeamVisibilityPhase = ({ onGoToPhase, user }) => {
   return (
     <TeamVisibilitySuccess
-      userName="Norman"
-      userAvatar="https://i.pravatar.cc/280?img=12"
+      userName={user?.display_name || user?.full_name || user?.name || 'User'}
+      userAvatar={user?.profile_photo_url || user?.avatar_url || user?.avatar}
       onSkip={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
       onBackHome={() => onGoToPhase(FLOW_PHASES.MAIN)}
       onRecordVideo={() => onGoToPhase(FLOW_PHASES.RECORD_VIDEO)}

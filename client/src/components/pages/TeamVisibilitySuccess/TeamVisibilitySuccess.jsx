@@ -26,15 +26,25 @@ const TextIcon = () => (
   </svg>
 );
 
-const TeamVisibilitySuccess = ({ 
-  userName = "Norman",
-  userAvatar = "https://i.pravatar.cc/280?img=12",
+const TeamVisibilitySuccess = ({
+  userName = "User",
+  userAvatar,
   onSkip,
   onBackHome,
   onRecordVideo,
   onRecordAudio,
   onEnterText
 }) => {
+  // Generate initials for fallback avatar
+  const getInitials = (name) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="team-success">
       {/* Background Gradient */}
@@ -46,56 +56,65 @@ const TeamVisibilitySuccess = ({
         <div className="team-success__orb team-success__orb--2" />
         <div className="team-success__orb team-success__orb--3" />
       </div>
-      
+
       {/* Content */}
       <div className="team-success__content">
         {/* User Avatar */}
         <div className="team-success__avatar-container">
-          <img 
-            src={userAvatar} 
-            alt={userName}
-            className="team-success__avatar"
-          />
-        </div>
-        
-        {/* Text Block */}
-        <div className="team-success__text">
-          <h1 className="team-success__title">You Did It!</h1>
-          <p className="team-success__subtitle">
-            You made your choice, now it's time to explain the reason behind it.
-          </p>
-        </div>
-        
-        {/* Response Options */}
-        <div className="team-success__options">
-          <button className="team-success__option" onClick={onRecordVideo}>
-            <div className="team-success__option-icon">
-              <VideoIcon />
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt={userName}
+              className="team-success__avatar"
+            />
+          ) : (
+            <div className="team-success__avatar team-success__avatar--initials">
+              {getInitials(userName)}
             </div>
-            <span className="team-success__option-label">
-              RECORD<br />VIDEO
-            </span>
-          </button>
-          
-          <button className="team-success__option" onClick={onRecordAudio}>
-            <div className="team-success__option-icon">
-              <AudioIcon />
-            </div>
-            <span className="team-success__option-label">
-              RECORD<br />AUDIO
-            </span>
-          </button>
-          
-          <button className="team-success__option" onClick={onEnterText}>
-            <div className="team-success__option-icon">
-              <TextIcon />
-            </div>
-            <span className="team-success__option-label">
-              ENTER<br />TEXT
-            </span>
-          </button>
+          )}
         </div>
-        
+
+        {/* Right side content group (for desktop layout) */}
+        <div className="team-success__right">
+          {/* Text Block */}
+          <div className="team-success__text">
+            <h1 className="team-success__title">You Did It!</h1>
+            <p className="team-success__subtitle">
+              You made your choice, now it's time to explain the reason behind it.
+            </p>
+          </div>
+
+          {/* Response Options */}
+          <div className="team-success__options">
+            <button className="team-success__option" onClick={onRecordVideo}>
+              <div className="team-success__option-icon">
+                <VideoIcon />
+              </div>
+              <span className="team-success__option-label">
+                RECORD<br />VIDEO
+              </span>
+            </button>
+
+            <button className="team-success__option" onClick={onRecordAudio}>
+              <div className="team-success__option-icon">
+                <AudioIcon />
+              </div>
+              <span className="team-success__option-label">
+                RECORD<br />AUDIO
+              </span>
+            </button>
+
+            <button className="team-success__option" onClick={onEnterText}>
+              <div className="team-success__option-icon">
+                <TextIcon />
+              </div>
+              <span className="team-success__option-label">
+                ENTER<br />TEXT
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* Action Buttons */}
         <div className="team-success__actions">
           <PrimaryButton onClick={onSkip} fullWidth>

@@ -46,7 +46,126 @@
   letter-spacing: 0;
   color: #fff;
   text-align: center;
-  margin: 0 0 30px 0;
+  margin: 0 0 16px 0;
+}
+
+/* Team Visibility Selector */
+.record-video__team-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.record-video__team-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.record-video__team-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.record-video__team-selector-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.record-video__team-selector-btn svg {
+  color: rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease;
+}
+
+.record-video__team-selector-btn[aria-expanded="true"] svg:last-child {
+  transform: rotate(180deg);
+}
+
+.record-video__team-name {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.record-video__team-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 8px;
+  min-width: 220px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  z-index: 100;
+}
+
+.record-video__team-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-align: left;
+}
+
+.record-video__team-dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.record-video__team-dropdown-item.active {
+  background: rgba(180, 50, 163, 0.1);
+}
+
+.record-video__team-dropdown-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.record-video__team-dropdown-avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #b432a3 0%, #ae59cf 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.record-video__team-dropdown-avatar-placeholder svg {
+  width: 16px;
+  height: 16px;
+}
+
+.record-video__team-dropdown-name {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.record-video__team-dropdown-item svg:last-child {
+  color: #b432a3;
 }
 
 /* Video Preview Container */
@@ -327,9 +446,29 @@
   transform: scale(1.1);
 }
 
-/* Close Button (hidden on desktop) */
+/* Close/Back Button */
 .record-video__close-btn {
-  display: none;
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.record-video__close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 /* ==================== TEXT MODE ==================== */
@@ -1418,5 +1557,121 @@
 
   .record-video__modal-tips {
     padding: 16px;
+  }
+}
+
+/* ==================== Submit Confirmation Modal ==================== */
+.record-video__confirm-modal {
+  position: relative;
+  background: white;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.3s ease;
+  padding: 32px;
+  text-align: center;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.record-video__confirm-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f39c12;
+}
+
+.record-video__confirm-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 12px 0;
+}
+
+.record-video__confirm-message {
+  font-size: 15px;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0 0 28px 0;
+}
+
+.record-video__confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.record-video__confirm-btn {
+  flex: 1;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.record-video__confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.record-video__confirm-btn--cancel {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+.record-video__confirm-btn--cancel:hover:not(:disabled) {
+  background: #cbd5e0;
+}
+
+.record-video__confirm-btn--submit {
+  background: linear-gradient(135deg, #E91E8C 0%, #B4177A 100%);
+  color: white;
+}
+
+.record-video__confirm-btn--submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(233, 30, 140, 0.3);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .record-video__confirm-modal {
+    padding: 28px 20px;
+    margin: 0 16px;
+  }
+
+  .record-video__confirm-title {
+    font-size: 20px;
+  }
+
+  .record-video__confirm-message {
+    font-size: 14px;
+  }
+
+  .record-video__confirm-actions {
+    flex-direction: column;
+  }
+
+  .record-video__confirm-btn {
+    width: 100%;
   }
 }

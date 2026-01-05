@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuestionnaire } from '../../context';
 
 // Modals
@@ -26,6 +26,7 @@ import { FLOW_PHASES } from './constants';
  */
 const QuestionnaireFlow = () => {
   const { questionId = 'Q10A' } = useParams();
+  const navigate = useNavigate();
   const { state } = useQuestionnaire();
 
   // 1. Flow state management (choices, phase, progress) - per question
@@ -38,10 +39,12 @@ const QuestionnaireFlow = () => {
     hasVisitedSummary,
     selectedMemberForFullSummary,
     setSelectedMemberForFullSummary,
+    recordingPreview,
+    setRecordingPreview,
     progress, progressPercentage,
     isComplete, hasStarted,
     handleContinue, handleBack, handleRestart,
-    goToPhase, getResumePhase, markSummaryVisited
+    goToPhase, getResumePhase, markSummaryVisited, clearRecordingPreview
   } = flowState;
 
   // 2. Fetch all questionnaire data
@@ -60,7 +63,9 @@ const QuestionnaireFlow = () => {
     goToPhase,
     getResumePhase,
     isComplete,
-    hasStarted
+    hasStarted,
+    navigate,
+    currentPhase
   });
 
   // 4. Choices sync with backend
@@ -73,11 +78,16 @@ const QuestionnaireFlow = () => {
 
   // Handle back with exit modal
   const onBack = useCallback(() => {
+    // If on main screen, show exit modal to confirm leaving
+    if (currentPhase === FLOW_PHASES.MAIN) {
+      modals.setShowExitModal(true);
+      return;
+    }
     const shouldShowExitModal = handleBack();
     if (shouldShowExitModal) {
       modals.setShowExitModal(true);
     }
-  }, [handleBack, modals]);
+  }, [currentPhase, handleBack, modals]);
 
   // Handle view full report for team member
   const handleViewFullReport = useCallback((member) => {
@@ -135,6 +145,7 @@ const QuestionnaireFlow = () => {
   // Build context for PhaseRenderer
   const phaseContext = {
     // Data
+    questionId,
     mainScreenQuestion,
     choices,
     questionData,
@@ -147,6 +158,9 @@ const QuestionnaireFlow = () => {
     completedCheckpoints,
     hasVisitedSummary,
     selectedMemberForFullSummary,
+    recordingPreview,
+    setRecordingPreview,
+    clearRecordingPreview,
     progress,
     progressPercentage,
     isComplete,

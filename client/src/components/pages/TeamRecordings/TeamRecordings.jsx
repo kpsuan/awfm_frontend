@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './TeamRecordings.css';
+import { recordingsService, teamsService } from '../../../services';
 
 // Icons
 const HeartIcon = ({ filled }) => (
@@ -347,44 +348,121 @@ const AskAIPanel = ({ isOpen, onClose, userName }) => {
   );
 };
 
-// Recording Card Component
-const RecordingCard = ({ recording, isActive, onClick }) => {
+// Recording Card Component - With glassmorphism overlay for name
+const RecordingCard = ({ recording, isActive, member, onAvatarClick, onNameClick }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef(null);
+  const audioRef = useRef(null);
+
+  const handlePlayPause = () => {
+    if (recording?.type === 'video' && videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    } else if (recording?.type === 'audio' && audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleEnded = () => {
+    setIsPlaying(false);
+  };
+
+  // Handle empty recordings state
+  if (!recording) {
+    return (
+      <div className={`team-recordings__card ${isActive ? 'team-recordings__card--active' : ''}`}>
+        <div className="team-recordings__card-avatar" onClick={onAvatarClick}>
+          <img src={member?.avatar} alt={member?.name} />
+        </div>
+        <div className="team-recordings__card-empty">
+          <p>No recordings yet</p>
+        </div>
+        <div className="team-recordings__card-overlay" onClick={onNameClick}>
+          <h3 className="team-recordings__card-name">{member?.name}</h3>
+          <p className="team-recordings__card-desc">{member?.description}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div 
-      className={`team-recordings__card ${isActive ? 'team-recordings__card--active' : ''}`}
-      onClick={onClick}
-    >
+    <div className={`team-recordings__card ${isActive ? 'team-recordings__card--active' : ''}`}>
+      {/* Avatar at top-left */}
+      <div className="team-recordings__card-avatar" onClick={onAvatarClick}>
+        <img src={member?.avatar} alt={member?.name} />
+      </div>
+
+      {/* Recording content */}
       {recording.type === 'video' && (
         <div className="team-recordings__card-video">
-          {recording.thumbnail ? (
+          {recording.mediaUrl ? (
+            <>
+              <video
+                ref={videoRef}
+                src={recording.mediaUrl}
+                poster={recording.thumbnail}
+                onEnded={handleEnded}
+                playsInline
+              />
+              {!isPlaying && recording.thumbnail && (
+                <img src={recording.thumbnail} alt="Recording thumbnail" className="team-recordings__card-poster" />
+              )}
+            </>
+          ) : recording.thumbnail ? (
             <img src={recording.thumbnail} alt="Recording thumbnail" />
           ) : (
             <div className="team-recordings__card-placeholder">
               <VideoIcon />
             </div>
           )}
-          {!isPlaying && (
-            <button className="team-recordings__card-play" onClick={() => setIsPlaying(true)}>
+          <button className="team-recordings__card-play" onClick={handlePlayPause}>
+            {isPlaying ? (
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
+                <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
+              </svg>
+            ) : (
               <PlayIcon />
-            </button>
-          )}
-          <div className="team-recordings__card-gradient" />
+            )}
+          </button>
         </div>
       )}
       {recording.type === 'audio' && (
         <div className="team-recordings__card-audio">
+          {recording.mediaUrl && (
+            <audio
+              ref={audioRef}
+              src={recording.mediaUrl}
+              onEnded={handleEnded}
+            />
+          )}
           <div className="team-recordings__card-audio-wave">
             {[...Array(20)].map((_, i) => (
-              <span key={i} className="team-recordings__card-audio-bar" style={{ height: `${Math.random() * 60 + 20}%` }} />
+              <span
+                key={i}
+                className={`team-recordings__card-audio-bar ${isPlaying ? 'playing' : ''}`}
+                style={{ height: `${Math.random() * 60 + 20}%`, animationDelay: `${i * 0.05}s` }}
+              />
             ))}
           </div>
-          {!isPlaying && (
-            <button className="team-recordings__card-play" onClick={() => setIsPlaying(true)}>
+          <button className="team-recordings__card-play" onClick={handlePlayPause}>
+            {isPlaying ? (
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
+                <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
+              </svg>
+            ) : (
               <PlayIcon />
-            </button>
-          )}
+            )}
+          </button>
         </div>
       )}
       {recording.type === 'text' && (
@@ -392,24 +470,176 @@ const RecordingCard = ({ recording, isActive, onClick }) => {
           <p>{recording.content}</p>
         </div>
       )}
+
+      {/* Glassmorphism overlay with name/description */}
+      <div className="team-recordings__card-overlay" onClick={onNameClick}>
+        <h3 className="team-recordings__card-name">{member?.name}</h3>
+        <p className="team-recordings__card-desc">{recording.description || member?.description}</p>
+      </div>
     </div>
   );
 };
 
+// Dropdown Arrow Icon
+const ChevronDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Back Arrow Icon
+const BackArrowIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+// Team Selector Dropdown Component
+const TeamSelector = ({ teams, selectedTeamId, onSelectTeam, isOpen, onToggle }) => {
+  const selectedTeam = teams.find(t => t.id === selectedTeamId) || teams[0];
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        if (isOpen) onToggle();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onToggle]);
+
+  return (
+    <div className="team-recordings__team-selector" ref={dropdownRef}>
+      <button
+        className="team-recordings__team-selector-btn"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        <div className="team-recordings__team-selector-info">
+          {selectedTeam.avatar && (
+            <img
+              src={selectedTeam.avatar}
+              alt={selectedTeam.name}
+              className="team-recordings__team-selector-avatar"
+            />
+          )}
+          <span className="team-recordings__team-selector-name">{selectedTeam.name}</span>
+        </div>
+        <ChevronDownIcon />
+      </button>
+
+      {isOpen && teams.length > 1 && (
+        <div className="team-recordings__team-dropdown">
+          {teams.map((team) => (
+            <button
+              key={team.id}
+              className={`team-recordings__team-dropdown-item ${team.id === selectedTeamId ? 'active' : ''}`}
+              onClick={() => {
+                onSelectTeam(team.id);
+                onToggle();
+              }}
+            >
+              {team.avatar && (
+                <img
+                  src={team.avatar}
+                  alt={team.name}
+                  className="team-recordings__team-dropdown-avatar"
+                />
+              )}
+              <div className="team-recordings__team-dropdown-info">
+                <span className="team-recordings__team-dropdown-name">{team.name}</span>
+                <span className="team-recordings__team-dropdown-count">
+                  {team.memberCount || team.members?.length || 0} members
+                </span>
+              </div>
+              {team.id === selectedTeamId && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Helper to format count numbers
+const formatCount = (count) => {
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
+  return count.toString();
+};
+
+// Helper to group recordings by user
+const groupRecordingsByUser = (recordings, currentUserId) => {
+  const userMap = new Map();
+
+  recordings.forEach(rec => {
+    const userId = rec.user;
+    if (!userMap.has(userId)) {
+      userMap.set(userId, {
+        id: userId,
+        name: rec.user_name || 'Unknown User',
+        avatar: rec.user_avatar || `https://i.pravatar.cc/125?u=${userId}`,
+        description: rec.description || 'Shared their perspective',
+        isCurrentUser: userId === currentUserId,
+        recordings: [],
+        stats: { likes: 0, comments: 0, shares: 0 }
+      });
+    }
+
+    const user = userMap.get(userId);
+    user.recordings.push({
+      id: rec.id,
+      type: rec.recording_type,
+      mediaUrl: rec.media_url,
+      thumbnail: rec.thumbnail_url,
+      content: rec.text_content,
+      description: rec.description,
+      duration: rec.duration,
+      likesCount: rec.likes_count || 0,
+      commentsCount: rec.comments_count || 0,
+      affirmationsCount: rec.affirmations_count || 0,
+      userHasLiked: rec.user_has_liked || false,
+      userHasAffirmed: rec.user_has_affirmed || false,
+    });
+
+    // Aggregate stats
+    user.stats.likes += rec.likes_count || 0;
+    user.stats.comments += rec.comments_count || 0;
+  });
+
+  // Sort to put current user first
+  const users = Array.from(userMap.values());
+  users.sort((a, b) => {
+    if (a.isCurrentUser) return -1;
+    if (b.isCurrentUser) return 1;
+    return 0;
+  });
+
+  return users;
+};
+
 // Main Component
-const TeamRecordings = ({ 
+const TeamRecordings = ({
   onSkip,
+  onBack,
   onBackHome,
   onRecordVideo,
   onRecordAudio,
   onEnterText,
   onViewFullReport,
-  currentUser = {
-    id: 'user',
-    name: 'Norman',
-    avatar: 'https://i.pravatar.cc/125?img=12',
-    description: 'Here is my explanation on my position',
-  }
+  currentUser = null,
+  team = null,
+  questionId = null,
+  // Legacy props for multiple teams support
+  teams = [],
+  selectedTeamId = null,
+  onSelectTeam,
 }) => {
   const [activeTeamMemberIndex, setActiveTeamMemberIndex] = useState(0);
   const [activeRecordingIndex, setActiveRecordingIndex] = useState(0);
@@ -418,58 +648,159 @@ const TeamRecordings = ({
   const [showProfile, setShowProfile] = useState(false);
   const [liked, setLiked] = useState({});
   const [affirmed, setAffirmed] = useState({});
+  const [showTeamDropdown, setShowTeamDropdown] = useState(false);
   const carouselRef = useRef(null);
 
-  // Mock team data - current user + care team
-  const teamMembers = [
-    {
-      ...currentUser,
-      isCurrentUser: true,
-      recordings: [
-        { id: 'r1', type: 'video', thumbnail: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=500&fit=crop' },
-        { id: 'r2', type: 'audio', duration: '2:34' },
-        { id: 'r3', type: 'text', content: 'I believe that quality of life is more important than quantity. My faith guides me to accept that there is a time for everything...' },
-      ],
-      stats: { likes: '10k', comments: '10k', shares: '10k' }
-    },
-    {
-      id: 'dr_sarah',
-      name: 'Dr. Sarah',
-      avatar: 'https://i.pravatar.cc/125?img=1',
-      description: 'My perspective as your primary care physician',
-      isCurrentUser: false,
-      recordings: [
-        { id: 'r4', type: 'video', thumbnail: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=800&h=500&fit=crop' },
-      ],
-      stats: { likes: '5.2k', comments: '3.1k', shares: '1.2k' }
-    },
-    {
-      id: 'mary',
-      name: 'Mary',
-      avatar: 'https://i.pravatar.cc/125?img=3',
-      description: 'Supporting you through this journey',
-      isCurrentUser: false,
-      recordings: [
-        { id: 'r5', type: 'video', thumbnail: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&h=500&fit=crop' },
-        { id: 'r6', type: 'text', content: 'Dad, I understand your wishes and I want you to know that we will honor them...' },
-      ],
-      stats: { likes: '8.3k', comments: '4.5k', shares: '2.1k' }
-    },
-    {
-      id: 'john',
-      name: 'John',
-      avatar: 'https://i.pravatar.cc/125?img=2',
-      description: 'My thoughts on your care preferences',
-      isCurrentUser: false,
-      recordings: [
-        { id: 'r7', type: 'audio', duration: '3:45' },
-      ],
-      stats: { likes: '6.7k', comments: '2.8k', shares: '1.5k' }
-    },
-  ];
+  // API data state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [fetchedTeams, setFetchedTeams] = useState([]);
+  const [selectedFetchedTeamId, setSelectedFetchedTeamId] = useState(null);
 
-  const activeMember = teamMembers[activeTeamMemberIndex];
-  const activeRecording = activeMember.recordings[activeRecordingIndex];
+  // Get the currently selected team from fetched teams
+  const fetchedTeam = fetchedTeams.find(t => t.id === selectedFetchedTeamId) || fetchedTeams[0] || null;
+
+  // Use provided team or fetched team
+  const activeTeam = team || fetchedTeam;
+
+  // Fetch user's teams if not provided (only on mount)
+  useEffect(() => {
+    const fetchTeamData = async () => {
+      if (team) return; // Already have team prop
+
+      try {
+        const response = await teamsService.getTeams();
+        // Handle DRF pagination format { results: [...] } or direct array
+        const teamsData = response.results || response.data || (Array.isArray(response) ? response : []);
+        setFetchedTeams(teamsData);
+        if (teamsData.length > 0) {
+          setSelectedFetchedTeamId(teamsData[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to fetch teams:', err);
+      }
+    };
+
+    fetchTeamData();
+  }, [team]); // Only depend on team prop, not selectedFetchedTeamId
+
+  // Fetch recordings from API
+  const fetchRecordings = useCallback(async () => {
+    if (!activeTeam?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await recordingsService.getTeamRecordings(activeTeam.id);
+      const recordings = response.data || response || [];
+
+      // Group recordings by user
+      const currentUserId = currentUser?.id || currentUser?.user_id;
+      const groupedUsers = groupRecordingsByUser(recordings, currentUserId);
+
+      // If current user has no recordings yet, add them with empty recordings
+      if (currentUser && !groupedUsers.some(u => u.isCurrentUser)) {
+        groupedUsers.unshift({
+          id: currentUserId,
+          name: currentUser.full_name || currentUser.name || 'You',
+          avatar: currentUser.avatar_url || currentUser.avatar || `https://i.pravatar.cc/125?u=${currentUserId}`,
+          description: 'Share your perspective',
+          isCurrentUser: true,
+          recordings: [],
+          stats: { likes: 0, comments: 0, shares: 0 }
+        });
+      }
+
+      setTeamMembers(groupedUsers);
+
+      // Initialize liked/affirmed state from API data
+      const initialLiked = {};
+      const initialAffirmed = {};
+      recordings.forEach(rec => {
+        if (rec.user_has_liked) initialLiked[rec.id] = true;
+        if (rec.user_has_affirmed) initialAffirmed[rec.id] = true;
+      });
+      setLiked(initialLiked);
+      setAffirmed(initialAffirmed);
+
+    } catch (err) {
+      console.error('Failed to fetch team recordings:', err);
+      setError(err.message || 'Failed to load recordings');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeTeam?.id, currentUser]);
+
+  // Fetch on mount and when team changes
+  useEffect(() => {
+    fetchRecordings();
+  }, [fetchRecordings]);
+
+  // Default/fallback team data if API returns empty
+  // Transform fetched teams to display format
+  const transformedFetchedTeams = fetchedTeams.map(t => ({
+    id: t.id,
+    name: t.name || 'Care Team',
+    avatar: t.avatar_url || 'https://i.pravatar.cc/60?img=10',
+    memberCount: t.member_count || 0,
+  }));
+
+  const defaultTeam = activeTeam ? {
+    id: activeTeam.id,
+    name: activeTeam.name || 'Care Team',
+    avatar: activeTeam.avatar_url || 'https://i.pravatar.cc/60?img=10',
+    memberCount: teamMembers.length,
+  } : {
+    id: 'default',
+    name: 'Loading...',
+    avatar: 'https://i.pravatar.cc/60?img=10',
+    memberCount: 0,
+  };
+
+  // Use props teams, or fetched teams, or fallback to default
+  const displayTeams = teams.length > 0 ? teams : (transformedFetchedTeams.length > 0 ? transformedFetchedTeams : [defaultTeam]);
+  const [currentTeamId, setCurrentTeamId] = useState(selectedTeamId || activeTeam?.id || displayTeams[0]?.id);
+
+  // Update currentTeamId when activeTeam is fetched
+  useEffect(() => {
+    if (activeTeam?.id && !currentTeamId) {
+      setCurrentTeamId(activeTeam.id);
+    }
+  }, [activeTeam?.id, currentTeamId]);
+
+  // Reset member index when team changes
+  useEffect(() => {
+    setActiveTeamMemberIndex(0);
+    setActiveRecordingIndex(0);
+  }, [currentTeamId]);
+
+  const handleTeamChange = (teamId) => {
+    setCurrentTeamId(teamId);
+    // Update fetched team selection if using fetched teams
+    if (fetchedTeams.length > 0) {
+      setSelectedFetchedTeamId(teamId);
+    }
+    if (onSelectTeam) {
+      onSelectTeam(teamId);
+    }
+  };
+
+  // Get active member and recording safely
+  const activeMember = teamMembers[activeTeamMemberIndex] || {
+    id: 'placeholder',
+    name: 'Loading...',
+    avatar: 'https://i.pravatar.cc/125',
+    description: '',
+    isCurrentUser: false,
+    recordings: [],
+    stats: { likes: 0, comments: 0, shares: 0 }
+  };
+  const activeRecording = activeMember.recordings?.[activeRecordingIndex] || null;
 
   const handleSwipe = (direction) => {
     if (direction === 'left' && activeTeamMemberIndex < teamMembers.length - 1) {
@@ -485,19 +816,55 @@ const TeamRecordings = ({
     setActiveRecordingIndex(index);
   };
 
-  const handleLike = () => {
+  // Handle like with API call
+  const handleLike = useCallback(async () => {
+    if (!activeRecording?.id) return;
+
+    const recordingId = activeRecording.id;
+    const wasLiked = liked[recordingId];
+
+    // Optimistic update
     setLiked(prev => ({
       ...prev,
-      [activeMember.id]: !prev[activeMember.id]
+      [recordingId]: !prev[recordingId]
     }));
-  };
 
-  const handleAffirm = () => {
+    try {
+      await recordingsService.toggleLike(recordingId);
+    } catch (err) {
+      // Revert on error
+      console.error('Failed to toggle like:', err);
+      setLiked(prev => ({
+        ...prev,
+        [recordingId]: wasLiked
+      }));
+    }
+  }, [activeRecording?.id, liked]);
+
+  // Handle affirm with API call
+  const handleAffirm = useCallback(async () => {
+    if (!activeRecording?.id) return;
+
+    const recordingId = activeRecording.id;
+    const wasAffirmed = affirmed[recordingId];
+
+    // Optimistic update
     setAffirmed(prev => ({
       ...prev,
-      [activeMember.id]: !prev[activeMember.id]
+      [recordingId]: !prev[recordingId]
     }));
-  };
+
+    try {
+      await recordingsService.toggleAffirmation(recordingId);
+    } catch (err) {
+      // Revert on error
+      console.error('Failed to toggle affirmation:', err);
+      setAffirmed(prev => ({
+        ...prev,
+        [recordingId]: wasAffirmed
+      }));
+    }
+  }, [activeRecording?.id, affirmed]);
 
   const handleNameClick = () => {
     setShowProfile(true);
@@ -518,25 +885,87 @@ const TeamRecordings = ({
 
   return (
     <div className="team-recordings">
+      {/* Header with Back Button and Team Selector */}
+      <div className="team-recordings__header">
+        <button
+          className="team-recordings__back-btn"
+          onClick={onBack || onBackHome}
+          aria-label="Go back"
+        >
+          <BackArrowIcon />
+        </button>
+
+        {displayTeams.length > 0 && (
+          <TeamSelector
+            teams={displayTeams}
+            selectedTeamId={currentTeamId}
+            onSelectTeam={handleTeamChange}
+            isOpen={showTeamDropdown}
+            onToggle={() => setShowTeamDropdown(!showTeamDropdown)}
+          />
+        )}
+
+        <div className="team-recordings__header-spacer" />
+      </div>
+
       {/* Background */}
       <div className="team-recordings__background"></div>
 
-      {/* Recording Carousel */}
-      <div 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="team-recordings__loading">
+          <div className="team-recordings__loading-spinner" />
+          <p>Loading team recordings...</p>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="team-recordings__error">
+          <p>Failed to load recordings</p>
+          <button onClick={fetchRecordings}>Try Again</button>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !error && teamMembers.length === 0 && (
+        <div className="team-recordings__empty">
+          <p>No recordings yet</p>
+          <p>Be the first to share your perspective!</p>
+        </div>
+      )}
+
+      {/* Recording Carousel - only show when data is loaded */}
+      {!isLoading && !error && teamMembers.length > 0 && (
+      <div
         className="team-recordings__carousel"
         ref={carouselRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div 
+        <div
           className="team-recordings__carousel-track"
-          style={{ transform: `translateX(-${activeTeamMemberIndex * 100}%)` }}
+          style={{ '--active-index': activeTeamMemberIndex }}
         >
           {teamMembers.map((member, memberIdx) => (
-            <div key={member.id} className="team-recordings__carousel-slide">
-              <RecordingCard 
+            <div
+              key={member.id}
+              className={`team-recordings__carousel-slide ${memberIdx === activeTeamMemberIndex ? 'active' : ''}`}
+            >
+              <RecordingCard
                 recording={member.recordings[memberIdx === activeTeamMemberIndex ? activeRecordingIndex : 0]}
                 isActive={memberIdx === activeTeamMemberIndex}
+                member={member}
+                onAvatarClick={() => {
+                  if (memberIdx === activeTeamMemberIndex) {
+                    setShowProfile(true);
+                  }
+                }}
+                onNameClick={() => {
+                  if (memberIdx === activeTeamMemberIndex) {
+                    setShowProfile(true);
+                  }
+                }}
               />
             </div>
           ))}
@@ -573,8 +1002,10 @@ const TeamRecordings = ({
           </button>
         )}
       </div>
+      )}
 
       {/* User Info */}
+      {!isLoading && !error && teamMembers.length > 0 && (
       <div className="team-recordings__user-info">
         <div className="team-recordings__avatar" onClick={handleNameClick}>
           <img src={activeMember.avatar} alt={activeMember.name} />
@@ -585,15 +1016,15 @@ const TeamRecordings = ({
         <p className="team-recordings__description">{activeMember.description}</p>
 
         {/* Affirm Button - Only for other team members */}
-        {!activeMember.isCurrentUser && (
-          <button 
-            className={`team-recordings__affirm-btn ${affirmed[activeMember.id] ? 'affirmed' : ''}`}
+        {!activeMember.isCurrentUser && activeRecording && (
+          <button
+            className={`team-recordings__affirm-btn ${affirmed[activeRecording.id] ? 'affirmed' : ''}`}
             onClick={handleAffirm}
           >
             <span className="btn-text-default">
-              {affirmed[activeMember.id] ? 'Commitment Affirmed' : 'Affirm Commitment'}
+              {affirmed[activeRecording.id] ? 'Commitment Affirmed' : 'Affirm Commitment'}
             </span>
-            {affirmed[activeMember.id] && (
+            {affirmed[activeRecording.id] && (
               <span className="btn-text-hover">Undo</span>
             )}
           </button>
@@ -601,23 +1032,23 @@ const TeamRecordings = ({
 
         {/* Social Interactions */}
         <div className="team-recordings__social">
-          <button 
-            className={`team-recordings__social-btn ${liked[activeMember.id] ? 'liked' : ''}`}
+          <button
+            className={`team-recordings__social-btn ${activeRecording && liked[activeRecording.id] ? 'liked' : ''}`}
             onClick={handleLike}
           >
-            <HeartIcon filled={liked[activeMember.id]} />
-            <span>{activeMember.stats.likes}</span>
+            <HeartIcon filled={activeRecording && liked[activeRecording.id]} />
+            <span>{formatCount(activeMember.stats.likes)}</span>
           </button>
-          <button 
+          <button
             className="team-recordings__social-btn"
             onClick={() => setShowComments(true)}
           >
             <CommentIcon />
-            <span>{activeMember.stats.comments}</span>
+            <span>{formatCount(activeMember.stats.comments)}</span>
           </button>
           <button className="team-recordings__social-btn">
             <ShareIcon />
-            <span>{activeMember.stats.shares}</span>
+            <span>{formatCount(activeMember.stats.shares)}</span>
           </button>
           <button 
             className="team-recordings__social-btn team-recordings__social-btn--ai"
@@ -652,8 +1083,10 @@ const TeamRecordings = ({
           </div>
         )}
       </div>
+      )}
 
       {/* Team Member Dots */}
+      {!isLoading && !error && teamMembers.length > 0 && (
       <div className="team-recordings__team-dots">
         {teamMembers.map((member, idx) => (
           <button
@@ -668,6 +1101,7 @@ const TeamRecordings = ({
           </button>
         ))}
       </div>
+      )}
 
       {/* Back to Home Button */}
       <div className="team-recordings__actions">
@@ -687,13 +1121,13 @@ const TeamRecordings = ({
         onClose={() => setShowAskAI(false)}
         userName={activeMember.name}
       />
-      <ProfileSummaryPanel 
-        isOpen={showProfile} 
+      <ProfileSummaryPanel
+        isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         member={activeMember}
         isCurrentUser={activeMember.isCurrentUser}
         onAffirm={handleAffirm}
-        hasAffirmed={affirmed[activeMember.id]}
+        hasAffirmed={activeRecording ? affirmed[activeRecording.id] : false}
         onViewFullReport={onViewFullReport}
       />
     </div>

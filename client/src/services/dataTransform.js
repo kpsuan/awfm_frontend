@@ -79,7 +79,8 @@ export function transformMainScreenQuestion(question) {
   return {
     title: question.question_text,
     subtitle: question.id,
-    sectionLabel: question.category
+    sectionLabel: question.category,
+    image: question.image_url || question.image || null
   };
 }
 
