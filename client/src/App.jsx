@@ -17,6 +17,7 @@ import ProfilePage from './pages/ProfilePage';
 import Dashboard from './pages/Dashboard';
 import CareTeamPage from './pages/CareTeamPage';
 import MyRecordingsPage from './pages/MyRecordingsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import SplashScreen from './components/pages/SplashScreen';
@@ -111,6 +112,9 @@ function AppContent() {
 
         {/* My Recordings */}
         <Route path="/my-recordings" element={<MyRecordingsPage />} />
+
+        {/* Notifications */}
+        <Route path="/notifications" element={<NotificationsPage />} />
 
         {/* Questionnaire routes */}
         <Route path="/questionnaire/:questionId" element={<QuestionnaireFlow />} />
