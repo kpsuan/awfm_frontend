@@ -9,59 +9,99 @@ import { recordingsService } from '../../../services';
 import { FLOW_PHASES } from '../constants';
 
 /**
- * Record Video phase component
+ * Shared hook for handling recording uploads across all recording types.
+ * Handles video, audio, and text recordings with proper validation and error handling.
  */
-export const RecordVideoPhase = ({ onGoToPhase, questionId, team, setRecordingPreview }) => {
+const useRecordingUpload = ({ questionId, teamId, setRecordingPreview, onSuccess }) => {
   const [isUploading, setIsUploading] = useState(false);
+
+  const uploadTextRecording = async ({ content, description, teamId: selectedTeamId }) => {
+    setRecordingPreview({ type: 'text', content, description, uploadSuccess: true });
+
+    await recordingsService.createTextRecording(
+      content,
+      questionId,
+      selectedTeamId || teamId || null,
+      description
+    );
+
+    toast.success('Response saved successfully!');
+  };
+
+  const uploadMediaRecording = async ({ chunks, description, blobUrl, teamId: selectedTeamId }, type) => {
+    const mimeType = `${type}/webm`;
+    const blob = new Blob(chunks, { type: mimeType });
+    const file = new File([blob], 'recording.webm', { type: mimeType });
+
+    // Validate file size
+    recordingsService.validateFileSize(file, type);
+
+    const previewUrl = blobUrl || URL.createObjectURL(blob);
+    setRecordingPreview({ type, url: previewUrl, description, uploadSuccess: true });
+
+    await recordingsService.uploadRecording(
+      file,
+      type,
+      questionId,
+      selectedTeamId || teamId || null,
+      description
+    );
+
+    const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+    toast.success(`${typeLabel} uploaded successfully!`);
+  };
 
   const handleComplete = useCallback(async (recordingData) => {
     if (!recordingData || isUploading) return;
 
     setIsUploading(true);
+    const recordingType = recordingData.type || 'video';
+
     try {
-      const { chunks, description, blobUrl, teamId } = recordingData;
-
-      // Create blob from chunks
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const file = new File([blob], 'recording.webm', { type: 'video/webm' });
-
-      // Validate file size before upload
-      try {
-        recordingsService.validateFileSize(file, 'video');
-      } catch (sizeError) {
-        toast.error(sizeError.message);
-        setIsUploading(false);
-        return;
+      if (recordingType === 'text') {
+        await uploadTextRecording(recordingData);
+      } else {
+        await uploadMediaRecording(recordingData, recordingType);
       }
-
-      // Store preview data for RecordingComplete page
-      const previewUrl = blobUrl || URL.createObjectURL(blob);
-      setRecordingPreview({ type: 'video', url: previewUrl, description, uploadSuccess: true });
-
-      // Upload to backend - use selected teamId from recording form
-      await recordingsService.uploadRecording(
-        file,
-        'video',
-        questionId,
-        teamId || team?.id || null,
-        description
-      );
-
-      toast.success('Video uploaded successfully!');
-      onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE);
+      onSuccess();
     } catch (error) {
-      console.error('Failed to upload video recording:', error);
-      toast.error('Failed to upload video. Please try again.');
-      // Update preview to show upload failed
+      console.error(`Failed to upload ${recordingType} recording:`, error);
+
+      const errorMessage = error.message?.includes('File too large')
+        ? error.message
+        : `Failed to upload ${recordingType}. Please try again.`;
+
+      toast.error(errorMessage);
       setRecordingPreview(prev => prev ? { ...prev, uploadSuccess: false } : null);
     } finally {
       setIsUploading(false);
     }
-  }, [questionId, team, onGoToPhase, isUploading, setRecordingPreview]);
+  }, [questionId, teamId, isUploading, setRecordingPreview, onSuccess]);
+
+  return { handleComplete, isUploading };
+};
+
+/**
+ * Generic Recording Phase component.
+ * Handles video, audio, and text recording modes with shared upload logic.
+ */
+const RecordingPhase = ({
+  initialMode,
+  onGoToPhase,
+  questionId,
+  team,
+  setRecordingPreview
+}) => {
+  const { handleComplete } = useRecordingUpload({
+    questionId,
+    teamId: team?.id,
+    setRecordingPreview,
+    onSuccess: () => onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE),
+  });
 
   return (
     <RecordVideo
-      initialMode="video"
+      initialMode={initialMode}
       defaultTeamId={team?.id}
       onBack={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
       onComplete={handleComplete}
@@ -72,155 +112,59 @@ export const RecordVideoPhase = ({ onGoToPhase, questionId, team, setRecordingPr
 };
 
 /**
- * Record Audio phase component
+ * Record Video phase - starts in video mode
  */
-export const RecordAudioPhase = ({ onGoToPhase, questionId, team, setRecordingPreview }) => {
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleComplete = useCallback(async (recordingData) => {
-    if (!recordingData || isUploading) return;
-
-    setIsUploading(true);
-    try {
-      const { chunks, description, blobUrl, teamId } = recordingData;
-
-      // Create blob from chunks
-      const blob = new Blob(chunks, { type: 'audio/webm' });
-      const file = new File([blob], 'recording.webm', { type: 'audio/webm' });
-
-      // Validate file size before upload
-      try {
-        recordingsService.validateFileSize(file, 'audio');
-      } catch (sizeError) {
-        toast.error(sizeError.message);
-        setIsUploading(false);
-        return;
-      }
-
-      // Store preview data for RecordingComplete page
-      const previewUrl = blobUrl || URL.createObjectURL(blob);
-      setRecordingPreview({ type: 'audio', url: previewUrl, description, uploadSuccess: true });
-
-      // Upload to backend - use selected teamId from recording form
-      await recordingsService.uploadRecording(
-        file,
-        'audio',
-        questionId,
-        teamId || team?.id || null,
-        description
-      );
-
-      toast.success('Audio uploaded successfully!');
-      onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE);
-    } catch (error) {
-      console.error('Failed to upload audio recording:', error);
-      toast.error('Failed to upload audio. Please try again.');
-      setRecordingPreview(prev => prev ? { ...prev, uploadSuccess: false } : null);
-    } finally {
-      setIsUploading(false);
-    }
-  }, [questionId, team, onGoToPhase, isUploading, setRecordingPreview]);
-
-  return (
-    <RecordVideo
-      initialMode="audio"
-      defaultTeamId={team?.id}
-      onBack={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
-      onComplete={handleComplete}
-      onSwitchToText={() => onGoToPhase(FLOW_PHASES.RECORD_TEXT)}
-      onSwitchToAudio={() => {}}
-    />
-  );
-};
+export const RecordVideoPhase = (props) => (
+  <RecordingPhase {...props} initialMode="video" />
+);
 
 /**
- * Record Text phase component
+ * Record Audio phase - starts in audio mode
  */
-export const RecordTextPhase = ({ onGoToPhase, questionId, team, setRecordingPreview }) => {
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleComplete = useCallback(async (recordingData) => {
-    if (!recordingData || isUploading) return;
-
-    setIsUploading(true);
-    try {
-      const { content, description, teamId } = recordingData;
-
-      // Store preview data for RecordingComplete page
-      setRecordingPreview({ type: 'text', content, description, uploadSuccess: true });
-
-      // Create text recording - use selected teamId from recording form
-      await recordingsService.createTextRecording(
-        content,
-        questionId,
-        teamId || team?.id || null,
-        description
-      );
-
-      toast.success('Response saved successfully!');
-      onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE);
-    } catch (error) {
-      console.error('Failed to create text recording:', error);
-      toast.error('Failed to save response. Please try again.');
-      setRecordingPreview(prev => prev ? { ...prev, uploadSuccess: false } : null);
-    } finally {
-      setIsUploading(false);
-    }
-  }, [questionId, team, onGoToPhase, isUploading, setRecordingPreview]);
-
-  return (
-    <RecordVideo
-      initialMode="text"
-      defaultTeamId={team?.id}
-      onBack={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
-      onComplete={handleComplete}
-      onSwitchToText={() => {}}
-      onSwitchToAudio={() => onGoToPhase(FLOW_PHASES.RECORD_AUDIO)}
-    />
-  );
-};
+export const RecordAudioPhase = (props) => (
+  <RecordingPhase {...props} initialMode="audio" />
+);
 
 /**
- * Recording Complete phase component
- * Shown after submitting a recording
+ * Record Text phase - starts in text mode
  */
-export const RecordingCompletePhase = ({ onGoToPhase, recordingPreview, clearRecordingPreview }) => {
+export const RecordTextPhase = (props) => (
+  <RecordingPhase {...props} initialMode="text" />
+);
+
+/**
+ * Recording Complete phase - shown after submitting a recording
+ */
+export const RecordingCompletePhase = ({
+  onGoToPhase,
+  recordingPreview,
+  clearRecordingPreview
+}) => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
 
-  // Show feedback modal on mount if not already submitted
   useEffect(() => {
     if (!hasFeedbackBeenSubmitted()) {
-      // Small delay to let the page render first
-      const timer = setTimeout(() => {
-        setShowFeedbackModal(true);
-      }, 800);
+      const timer = setTimeout(() => setShowFeedbackModal(true), 800);
       return () => clearTimeout(timer);
     }
   }, []);
 
-  const handleViewTeamRecordings = () => {
+  const handleNavigation = (destination) => {
     if (!hasFeedbackBeenSubmitted()) {
-      setPendingNavigation('team');
+      setPendingNavigation(destination);
       setShowFeedbackModal(true);
     } else {
-      onGoToPhase(FLOW_PHASES.TEAM_RECORDINGS);
+      onGoToPhase(destination);
     }
-  };
-
-  const handleRecordAgain = () => {
-    // Clear the current recording preview and go back to record video
-    if (clearRecordingPreview) clearRecordingPreview();
-    onGoToPhase(FLOW_PHASES.RECORD_VIDEO);
   };
 
   const handleFeedbackClose = () => {
     setShowFeedbackModal(false);
-    // Navigate based on pending action
-    if (pendingNavigation === 'team') {
-      onGoToPhase(FLOW_PHASES.TEAM_RECORDINGS);
+    if (pendingNavigation) {
+      onGoToPhase(pendingNavigation);
+      setPendingNavigation(null);
     }
-    setPendingNavigation(null);
   };
 
   const handleFeedbackSubmit = async (feedbackData) => {
@@ -228,11 +172,16 @@ export const RecordingCompletePhase = ({ onGoToPhase, recordingPreview, clearRec
     console.log('Feedback submitted:', feedbackData);
   };
 
+  const handleRecordAgain = () => {
+    clearRecordingPreview?.();
+    onGoToPhase(FLOW_PHASES.RECORD_VIDEO);
+  };
+
   return (
     <>
       <RecordingComplete
         recordingPreview={recordingPreview}
-        onViewTeamRecordings={handleViewTeamRecordings}
+        onViewTeamRecordings={() => handleNavigation(FLOW_PHASES.TEAM_RECORDINGS)}
         onRecordAgain={handleRecordAgain}
       />
       <FeedbackModal
@@ -246,29 +195,31 @@ export const RecordingCompletePhase = ({ onGoToPhase, recordingPreview, clearRec
 };
 
 /**
- * Team Recordings phase component
- * View care team's recordings
+ * Team Recordings phase - view care team's recordings
  */
-export const TeamRecordingsPhase = ({ onGoToPhase, onViewFullReport, team, user, questionId }) => {
-  return (
-    <TeamRecordings
-      onBack={() => onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE)}
-      onBackHome={() => onGoToPhase(FLOW_PHASES.MAIN)}
-      onRecordVideo={() => onGoToPhase(FLOW_PHASES.RECORD_VIDEO)}
-      onRecordAudio={() => onGoToPhase(FLOW_PHASES.RECORD_AUDIO)}
-      onEnterText={() => onGoToPhase(FLOW_PHASES.RECORD_TEXT)}
-      onSkip={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
-      onViewFullReport={onViewFullReport}
-      team={team}
-      currentUser={user}
-      questionId={questionId}
-    />
-  );
-};
+export const TeamRecordingsPhase = ({
+  onGoToPhase,
+  onViewFullReport,
+  team,
+  user,
+  questionId
+}) => (
+  <TeamRecordings
+    onBack={() => onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE)}
+    onBackHome={() => onGoToPhase(FLOW_PHASES.MAIN)}
+    onRecordVideo={() => onGoToPhase(FLOW_PHASES.RECORD_VIDEO)}
+    onRecordAudio={() => onGoToPhase(FLOW_PHASES.RECORD_AUDIO)}
+    onEnterText={() => onGoToPhase(FLOW_PHASES.RECORD_TEXT)}
+    onSkip={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
+    onViewFullReport={onViewFullReport}
+    team={team}
+    currentUser={user}
+    questionId={questionId}
+  />
+);
 
 /**
- * Member Full Summary phase component
- * View a specific member's full summary
+ * Member Full Summary phase - view a specific member's full summary
  */
 export const MemberFullSummaryPhase = ({ selectedMember, onGoToPhase }) => {
   if (!selectedMember) return null;

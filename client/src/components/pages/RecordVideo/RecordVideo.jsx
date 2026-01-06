@@ -260,6 +260,7 @@ const RecordVideo = ({
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
+  const streamRef = useRef(null); // Ref to track current stream for cleanup
 
   // Team visibility state
   const [userTeams, setUserTeams] = useState([]);
@@ -285,29 +286,48 @@ const RecordVideo = ({
     fetchTeams();
   }, [defaultTeamId]);
 
-  useEffect(() => {
-    startCamera();
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+  // Helper to stop current camera stream
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      setStream(null);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
       }
+    }
+  }, []);
+
+  // Start camera only when in video mode and not reviewing
+  useEffect(() => {
+    if (activeMode === 'video' && recordingState !== 'reviewing') {
+      startCamera();
+    } else if (activeMode !== 'video') {
+      // Stop camera when switching away from video mode
+      stopCamera();
+    }
+  }, [activeMode, facingMode, recordingState, stopCamera]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
-  }, [facingMode]);
+  }, [stopCamera]);
 
   const startCamera = async () => {
     try {
-      // Stop existing stream
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+      // Stop existing stream first
+      stopCamera();
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode },
-        audio: true 
+        audio: true
       });
+      streamRef.current = mediaStream;
       setStream(mediaStream);
       setHasPermission(true);
       if (videoRef.current) {
@@ -542,14 +562,10 @@ const RecordVideo = ({
 
   // Stop camera when entering review mode to prevent interference
   useEffect(() => {
-    if (recordingState === 'reviewing' && stream) {
-      // Stop the camera stream when reviewing
-      stream.getTracks().forEach(track => track.stop());
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
+    if (recordingState === 'reviewing') {
+      stopCamera();
     }
-  }, [recordingState, stream]);
+  }, [recordingState, stopCamera]);
 
   // Ensure review video uses blob URL not camera stream
   useEffect(() => {

@@ -568,7 +568,11 @@ function Dashboard() {
             {displayTeams.length > 0 ? (
               <div className="teams-list">
                 {displayTeams.map((team) => (
-                  <div key={team.id} className="team-item">
+                  <div
+                    key={team.id}
+                    className="team-item"
+                    onClick={() => navigate(`/team/${team.id}`)}
+                  >
                     <div className="team-avatars">
                       {team.members.slice(0, 3).map((member, idx) => (
                         <div

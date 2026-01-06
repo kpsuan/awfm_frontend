@@ -94,6 +94,14 @@ const Sidebar = ({ isOpen, onClose, isMobileOrFocus }) => {
           </button>
 
           <button
+            className={`sidebar__nav-item ${isActive('/my-recordings') ? 'sidebar__nav-item--active' : ''}`}
+            onClick={() => handleNavigation('/my-recordings')}
+          >
+            <span className="material-icons">videocam</span>
+            <span>My Recordings</span>
+          </button>
+
+          <button
             className={`sidebar__nav-item ${isActive('/progress') ? 'sidebar__nav-item--active' : ''}`}
             onClick={() => handleNavigation('/progress')}
           >
