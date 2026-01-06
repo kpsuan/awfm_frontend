@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context';
+import { useAuth, useNotifications } from '../../../context';
 import './ContentHeader.css';
 
 // Helper to get initials from name
@@ -13,34 +13,45 @@ const getInitials = (name) => {
   return name.substring(0, 2).toUpperCase();
 };
 
+// Helper to format relative time
+const formatRelativeTime = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString();
+};
+
+// Map notification types to icon and color
+const getNotificationStyle = (notificationType) => {
+  const styles = {
+    team_invitation: { icon: 'group_add', type: 'info' },
+    invitation_accepted: { icon: 'check_circle', type: 'success' },
+    member_joined: { icon: 'person_add', type: 'success' },
+    member_left: { icon: 'person_remove', type: 'warning' },
+    role_changed: { icon: 'swap_horiz', type: 'info' },
+    affirmation: { icon: 'favorite', type: 'success' },
+    question_completed: { icon: 'task_alt', type: 'success' },
+    chat_message: { icon: 'chat', type: 'info' },
+    general: { icon: 'info', type: 'info' },
+  };
+  return styles[notificationType] || styles.general;
+};
+
 const ContentHeader = ({ onMenuClick, showMenuButton = false }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  // Mock notifications - would come from API
-  const notifications = [
-    {
-      id: 1,
-      type: 'info',
-      title: 'Care Team Update',
-      message: 'John accepted your invitation',
-      time: '2 hours ago',
-      read: false,
-    },
-    {
-      id: 2,
-      type: 'success',
-      title: 'Progress Saved',
-      message: 'Your answers have been saved',
-      time: '1 day ago',
-      read: true,
-    },
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { notifications, unreadCount, markAsRead, markAllAsRead, isLoading } = useNotifications();
   const userName = user?.display_name || user?.email?.split('@')[0] || 'User';
   const userRole = user?.is_hcw ? 'Healthcare Worker' : 'Patient';
 
@@ -103,30 +114,52 @@ const ContentHeader = ({ onMenuClick, showMenuButton = false }) => {
                 <div className="dropdown__header">
                   <h3>Notifications</h3>
                   {unreadCount > 0 && (
-                    <button className="dropdown__action">
+                    <button
+                      className="dropdown__action"
+                      onClick={() => markAllAsRead()}
+                    >
                       Mark all read
                     </button>
                   )}
                 </div>
                 <div className="dropdown__list">
-                  {notifications.length > 0 ? (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`dropdown__item ${!notification.read ? 'dropdown__item--unread' : ''}`}
-                      >
-                        <div className={`dropdown__item-icon dropdown__item-icon--${notification.type}`}>
-                          <span className="material-icons">
-                            {notification.type === 'success' ? 'check_circle' : 'info'}
-                          </span>
+                  {isLoading ? (
+                    <div className="dropdown__empty">
+                      <span className="material-icons">hourglass_empty</span>
+                      <p>Loading...</p>
+                    </div>
+                  ) : notifications.length > 0 ? (
+                    notifications.slice(0, 10).map((notification) => {
+                      const style = getNotificationStyle(notification.notification_type);
+                      return (
+                        <div
+                          key={notification.id}
+                          className={`dropdown__item ${!notification.is_read ? 'dropdown__item--unread' : ''}`}
+                          onClick={() => {
+                            if (!notification.is_read) {
+                              markAsRead(notification.id);
+                            }
+                            // Navigate based on notification type
+                            if (notification.metadata?.team_id) {
+                              navigate(`/care-team/${notification.metadata.team_id}`);
+                              setShowNotifications(false);
+                            }
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className={`dropdown__item-icon dropdown__item-icon--${style.type}`}>
+                            <span className="material-icons">{style.icon}</span>
+                          </div>
+                          <div className="dropdown__item-content">
+                            <p className="dropdown__item-title">{notification.title}</p>
+                            <p className="dropdown__item-message">{notification.body}</p>
+                            <span className="dropdown__item-time">
+                              {formatRelativeTime(notification.created_at)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="dropdown__item-content">
-                          <p className="dropdown__item-title">{notification.title}</p>
-                          <p className="dropdown__item-message">{notification.message}</p>
-                          <span className="dropdown__item-time">{notification.time}</span>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="dropdown__empty">
                       <span className="material-icons">notifications_none</span>
@@ -135,7 +168,10 @@ const ContentHeader = ({ onMenuClick, showMenuButton = false }) => {
                   )}
                 </div>
                 <div className="dropdown__footer">
-                  <button onClick={() => navigate('/notifications')}>
+                  <button onClick={() => {
+                    navigate('/notifications');
+                    setShowNotifications(false);
+                  }}>
                     View all notifications
                   </button>
                 </div>
