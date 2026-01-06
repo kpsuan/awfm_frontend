@@ -18,6 +18,7 @@ import './TeamRecordings.css';
 import { recordingsService, teamsService } from '../../../services';
 import { TeamSelector } from '../../common/TeamSelector';
 import { AudioWaveform } from '../../common/Recording';
+import FeedbackModal, { hasFeedbackBeenSubmitted } from '../../common/Modal/FeedbackModal';
 
 // Custom gradient icons (keeping gradient styling)
 const HeartIcon = ({ filled }) => (
@@ -490,6 +491,7 @@ const TeamRecordings = ({
   onSkip,
   onBack,
   onBackHome,
+  onBackToSummary,
   onRecordVideo,
   onRecordAudio,
   onEnterText,
@@ -507,6 +509,7 @@ const TeamRecordings = ({
   const [showComments, setShowComments] = useState(false);
   const [showAskAI, setShowAskAI] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [liked, setLiked] = useState({});
   const [affirmed, setAffirmed] = useState({});
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
@@ -731,6 +734,24 @@ const TeamRecordings = ({
     setShowProfile(true);
   };
 
+  // Handle back button - show feedback modal if not submitted yet
+  const handleBackClick = () => {
+    if (!hasFeedbackBeenSubmitted()) {
+      setShowFeedbackModal(true);
+    } else {
+      // Feedback already submitted, go directly to dashboard
+      if (onBackHome) onBackHome();
+      else if (onBack) onBack();
+    }
+  };
+
+  // Handle feedback modal close - navigate to dashboard
+  const handleFeedbackClose = () => {
+    setShowFeedbackModal(false);
+    if (onBackHome) onBackHome();
+    else if (onBack) onBack();
+  };
+
   // Touch handling for swipe
   const touchStartX = useRef(0);
   const handleTouchStart = (e) => {
@@ -750,7 +771,7 @@ const TeamRecordings = ({
       <div className="team-recordings__header">
         <button
           className="team-recordings__back-btn"
-          onClick={onBack || onBackHome}
+          onClick={handleBackClick}
           aria-label="Go back"
         >
           <BackArrowIcon />
@@ -966,9 +987,14 @@ const TeamRecordings = ({
       </div>
       )}
 
-      {/* Back to Home Button */}
+      {/* Action Buttons */}
       <div className="team-recordings__actions">
-        <button className="team-recordings__skip-btn" onClick={onBackHome}>
+        {onBackToSummary && (
+          <button className="team-recordings__summary-btn" onClick={onBackToSummary}>
+            Back to Summary
+          </button>
+        )}
+        <button className="team-recordings__skip-btn" onClick={handleBackClick}>
           Back to Home
         </button>
       </div>
@@ -992,6 +1018,13 @@ const TeamRecordings = ({
         onAffirm={handleAffirm}
         hasAffirmed={activeRecording ? affirmed[activeRecording.id] : false}
         onViewFullReport={onViewFullReport}
+      />
+
+      {/* Feedback Modal - shown when clicking back */}
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={handleFeedbackClose}
+        onSkip={handleFeedbackClose}
       />
     </div>
   );

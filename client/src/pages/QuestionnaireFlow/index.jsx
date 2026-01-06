@@ -178,7 +178,10 @@ const QuestionnaireFlow = () => {
     handleMainScreenContinue: modals.handleMainScreenContinue,
 
     // User
-    user: modals.user
+    user: modals.user,
+
+    // Navigation (for going outside the flow)
+    navigate
   };
 
   return (

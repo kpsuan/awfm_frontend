@@ -866,56 +866,75 @@ const RecordVideo = ({
 
     return (
       <div className="record-video__audio-mode">
-        {/* Audio Visualization */}
-        <AudioWaveform
-          isPlaying={isRecording}
-          barCount={20}
-          className="record-video__audio-visualizer"
-        />
-
-        {/* Recording Timer */}
-        {isActive && (
-          <RecordingTimer
-            time={recordedTime}
-            isRecording={isRecording}
-            className="record-video__audio-timer"
-          />
-        )}
-
-        {/* Audio Controls */}
-        <div className="record-video__audio-controls">
-          <div className="record-video__control-side record-video__control-left">
-            {isPaused && (
-              <button
-                className="record-video__action-btn record-video__delete-btn"
-                onClick={handleAudioDelete}
-                aria-label="Delete recording"
-              >
-                <Trash2 size={24} />
-              </button>
-            )}
+        {/* Central Recording Hub */}
+        <div className={`record-video__audio-hub ${isRecording ? 'is-recording' : ''} ${isPaused ? 'is-paused' : ''}`}>
+          {/* Circular Waveform Rings */}
+          <div className="record-video__audio-rings">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className={`record-video__audio-ring ${isRecording ? 'active' : ''}`}
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
           </div>
 
+          {/* Waveform Bars in Circle */}
+          <div className="record-video__audio-circle-wave">
+            {[...Array(32)].map((_, i) => (
+              <span
+                key={i}
+                className={`record-video__audio-circle-bar ${isRecording ? 'active' : ''}`}
+                style={{
+                  transform: `rotate(${i * 11.25}deg)`,
+                  animationDelay: `${i * 0.03}s`
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Record Button */}
           <button
-            className={`record-video__record-btn ${isRecording ? 'recording' : ''} ${isPaused ? 'paused' : ''}`}
+            className={`record-video__audio-record-btn ${isRecording ? 'recording' : ''} ${isPaused ? 'paused' : ''}`}
             onClick={handleAudioRecord}
             aria-label={isRecording ? 'Pause recording' : isPaused ? 'Resume recording' : 'Start recording'}
           >
-            <span className="record-video__record-btn-inner" />
+            <span className="record-video__audio-record-btn-inner" />
           </button>
-
-          <div className="record-video__control-side record-video__control-right">
-            {isPaused && (
-              <button
-                className="record-video__action-btn record-video__confirm-btn"
-                onClick={handleAudioConfirm}
-                aria-label="Confirm recording"
-              >
-                <Check size={24} />
-              </button>
-            )}
-          </div>
         </div>
+
+        {/* Timer Display */}
+        <div className={`record-video__audio-timer-display ${isActive ? 'visible' : ''}`}>
+          <span className={`record-video__audio-timer-dot ${isRecording ? 'active' : ''}`} />
+          <span className="record-video__audio-timer-text">{formatTime(recordedTime)}</span>
+        </div>
+
+        {/* Status Text */}
+        <p className="record-video__audio-status">
+          {isRecording ? 'Recording...' : isPaused ? 'Paused' : 'Tap to start recording'}
+        </p>
+
+        {/* Action Buttons */}
+        {isPaused && (
+          <div className="record-video__audio-actions">
+            <button
+              className="record-video__audio-action-btn record-video__audio-action-btn--delete"
+              onClick={handleAudioDelete}
+              aria-label="Delete recording"
+            >
+              <Trash2 size={20} />
+              <span>Delete</span>
+            </button>
+            <button
+              className="record-video__audio-action-btn record-video__audio-action-btn--confirm"
+              onClick={handleAudioConfirm}
+              aria-label="Confirm recording"
+            >
+              <Check size={20} />
+              <span>Done</span>
+            </button>
+          </div>
+        )}
       </div>
     );
   };

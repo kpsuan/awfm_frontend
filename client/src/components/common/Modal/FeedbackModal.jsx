@@ -63,9 +63,8 @@ const FeedbackModal = ({
   };
 
   const handleSkip = () => {
-    markFeedbackSubmitted();
+    // Don't mark as submitted when skipping - allow modal to show again later
     onSkip?.();
-    onClose();
   };
 
   const handleClose = () => {

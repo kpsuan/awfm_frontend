@@ -222,6 +222,7 @@ export const PHASE_CONFIG = {
     component: TeamRecordingsPhase,
     getProps: (ctx) => ({
       onGoToPhase: ctx.goToPhase,
+      onGoToDashboard: () => ctx.navigate('/dashboard'),
       onViewFullReport: ctx.handleViewFullReport,
       team: ctx.team,
       user: ctx.user,

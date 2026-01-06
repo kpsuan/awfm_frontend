@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import RecordVideo from '../../../components/pages/RecordVideo';
 import RecordingComplete from '../../../components/pages/RecordingComplete';
 import TeamRecordings from '../../../components/pages/TeamRecordings';
 import FullSummary from '../../../components/pages/FullSummary';
-import FeedbackModal, { hasFeedbackBeenSubmitted } from '../../../components/common/Modal/FeedbackModal';
 import { recordingsService } from '../../../services';
 import { FLOW_PHASES } from '../constants';
 
@@ -134,63 +133,24 @@ export const RecordTextPhase = (props) => (
 
 /**
  * Recording Complete phase - shown after submitting a recording
+ * Feedback modal is shown when leaving to dashboard from TeamRecordings, not here
  */
 export const RecordingCompletePhase = ({
   onGoToPhase,
   recordingPreview,
   clearRecordingPreview
 }) => {
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [pendingNavigation, setPendingNavigation] = useState(null);
-
-  useEffect(() => {
-    if (!hasFeedbackBeenSubmitted()) {
-      const timer = setTimeout(() => setShowFeedbackModal(true), 800);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const handleNavigation = (destination) => {
-    if (!hasFeedbackBeenSubmitted()) {
-      setPendingNavigation(destination);
-      setShowFeedbackModal(true);
-    } else {
-      onGoToPhase(destination);
-    }
-  };
-
-  const handleFeedbackClose = () => {
-    setShowFeedbackModal(false);
-    if (pendingNavigation) {
-      onGoToPhase(pendingNavigation);
-      setPendingNavigation(null);
-    }
-  };
-
-  const handleFeedbackSubmit = async (feedbackData) => {
-    // TODO: Send feedback to backend
-    console.log('Feedback submitted:', feedbackData);
-  };
-
   const handleRecordAgain = () => {
     clearRecordingPreview?.();
     onGoToPhase(FLOW_PHASES.RECORD_VIDEO);
   };
 
   return (
-    <>
-      <RecordingComplete
-        recordingPreview={recordingPreview}
-        onViewTeamRecordings={() => handleNavigation(FLOW_PHASES.TEAM_RECORDINGS)}
-        onRecordAgain={handleRecordAgain}
-      />
-      <FeedbackModal
-        isOpen={showFeedbackModal}
-        onClose={handleFeedbackClose}
-        onSubmit={handleFeedbackSubmit}
-        onSkip={handleFeedbackClose}
-      />
-    </>
+    <RecordingComplete
+      recordingPreview={recordingPreview}
+      onViewTeamRecordings={() => onGoToPhase(FLOW_PHASES.TEAM_RECORDINGS)}
+      onRecordAgain={handleRecordAgain}
+    />
   );
 };
 
@@ -199,6 +159,7 @@ export const RecordingCompletePhase = ({
  */
 export const TeamRecordingsPhase = ({
   onGoToPhase,
+  onGoToDashboard,
   onViewFullReport,
   team,
   user,
@@ -206,7 +167,8 @@ export const TeamRecordingsPhase = ({
 }) => (
   <TeamRecordings
     onBack={() => onGoToPhase(FLOW_PHASES.RECORDING_COMPLETE)}
-    onBackHome={() => onGoToPhase(FLOW_PHASES.MAIN)}
+    onBackHome={onGoToDashboard}
+    onBackToSummary={() => onGoToPhase(FLOW_PHASES.SUMMARY)}
     onRecordVideo={() => onGoToPhase(FLOW_PHASES.RECORD_VIDEO)}
     onRecordAudio={() => onGoToPhase(FLOW_PHASES.RECORD_AUDIO)}
     onEnterText={() => onGoToPhase(FLOW_PHASES.RECORD_TEXT)}

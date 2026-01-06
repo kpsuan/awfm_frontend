@@ -64,6 +64,10 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+.record-video__team-selector .team-selector__label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .record-video__team-selector-btn {
   display: flex;
   align-items: center;
@@ -294,9 +298,9 @@
 
 /* Time Badge */
 .record-video__time-badge {
-  background-color: rgba(74, 144, 217, 0.9);
+  background: linear-gradient(135deg, #b432a3 0%, #ae59cf 100%);
   padding: 6px 16px;
-  border-radius: 4px;
+  border-radius: 24px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -327,21 +331,21 @@
 }
 
 .record-video__delete-btn {
-  background-color: rgba(74, 144, 217, 0.9);
+  background: rgba(71, 2, 2, 0.808);
   color: #fff;
 }
 
 .record-video__delete-btn:hover {
-  background-color: rgba(74, 144, 217, 1);
+  background: rgba(71, 2, 2, 0.808);
 }
 
 .record-video__confirm-btn {
-  background-color: rgba(74, 144, 217, 0.9);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #d64ab0 100%);
   color: #fff;
 }
 
 .record-video__confirm-btn:hover {
-  background-color: rgba(74, 144, 217, 1);
+  background: linear-gradient(135deg, var(--color-primary) 0%, #d64ab0 100%);
 }
 
 /* Record Button */
@@ -387,6 +391,7 @@
 .record-video__upload-btn {
   position: absolute;
   bottom: 30px;
+  color: #eeeced;
   right: 30px;
   display: flex;
   flex-direction: column;
@@ -400,9 +405,8 @@
 .record-video__upload-icon {
   width: 43px;
   height: 43px;
-  border-radius: 4px;
-  border: 2px solid #fff;
-  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, #d64ab0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -420,7 +424,7 @@
   font-size: 11px;
   font-weight: 400;
   color: #fff;
-  text-shadow: 0px 0.33px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0px 0.33px 4px rgba(216, 39, 172, 0.1);
 }
 
 /* Flip Camera Button */
@@ -591,72 +595,237 @@
   width: 100%;
   flex: 1;
   padding: 40px 20px;
+  gap: 32px;
 }
 
-.record-video__audio-visualizer {
-  width: 100%;
-  max-width: 400px;
-  height: 200px;
+/* Central Hub Container */
+.record-video__audio-hub {
+  position: relative;
+  width: 240px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 40px;
 }
 
-.record-video__audio-wave {
+/* Pulsing Rings */
+.record-video__audio-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.record-video__audio-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(216, 180, 254, 0.5);
+  opacity: 0;
+}
+
+.record-video__audio-ring.active {
+  animation: audioRingPulse 1.5s ease-out infinite;
+}
+
+@keyframes audioRingPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Circular Waveform Bars */
+.record-video__audio-circle-wave {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.record-video__audio-circle-bar {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 20px;
+  margin-left: -2px;
+  margin-top: -100px;
+  background: linear-gradient(180deg, rgba(216, 180, 254, 0.9) 0%, rgba(192, 132, 252, 0.5) 100%);
+  border-radius: 2px;
+  transform-origin: center 100px;
+  opacity: 0.5;
+  transition: height 0.15s ease, opacity 0.15s ease;
+}
+
+.record-video__audio-circle-bar.active {
+  opacity: 1;
+  animation: audioBarPulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes audioBarPulse {
+  0% {
+    height: 15px;
+    opacity: 0.5;
+  }
+  100% {
+    height: 35px;
+    opacity: 1;
+  }
+}
+
+/* Record Button */
+.record-video__audio-record-btn {
+  position: relative;
+  z-index: 10;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 3px solid rgba(239, 68, 68, 0.5);
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  height: 100%;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
 }
 
-.record-video__audio-bar {
-  width: 6px;
-  height: 20%;
-  background: linear-gradient(180deg, var(--color-primary) 0%, #d64ab0 100%);
-  border-radius: 3px;
-  transition: height 0.1s ease;
+.record-video__audio-record-btn:hover {
+  border-color: rgba(239, 68, 68, 0.8);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);
 }
 
-.record-video__audio-bar.active {
-  animation: audioWave 0.5s ease-in-out infinite alternate;
+.record-video__audio-record-btn-inner {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5);
 }
 
-@keyframes audioWave {
-  from { height: 20%; }
-  to { height: 80%; }
+.record-video__audio-record-btn.recording {
+  border-color: rgba(239, 68, 68, 0.8);
+  animation: recordingGlow 1.5s ease-in-out infinite;
 }
 
-.record-video__audio-timer {
+.record-video__audio-record-btn.recording .record-video__audio-record-btn-inner {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.record-video__audio-record-btn.paused {
+  border-color: rgba(251, 191, 36, 0.6);
+}
+
+.record-video__audio-record-btn.paused .record-video__audio-record-btn-inner {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 4px 20px rgba(251, 191, 36, 0.5);
+}
+
+@keyframes recordingGlow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 50px rgba(239, 68, 68, 0.6);
+  }
+}
+
+/* Timer Display */
+.record-video__audio-timer-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 30px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.record-video__audio-timer-display.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.record-video__audio-timer-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #6b7280;
+  transition: background 0.3s ease;
+}
+
+.record-video__audio-timer-dot.active {
+  background: #ef4444;
+  animation: timerDotPulse 1s ease-in-out infinite;
+}
+
+@keyframes timerDotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.record-video__audio-timer-text {
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: white;
+  letter-spacing: 2px;
+}
+
+/* Status Text */
+.record-video__audio-status {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  margin: 0;
+}
+
+/* Action Buttons */
+.record-video__audio-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.record-video__audio-action-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 40px;
+  padding: 12px 24px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
 }
 
-.record-video__audio-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  width: 100%;
-  max-width: 400px;
+.record-video__audio-action-btn--delete {
+  background: rgb(150, 24, 24);
+  color: #f8f8f8;
 }
 
-.record-video__audio-controls .record-video__control-side {
-  flex: 1;
-  display: flex;
+.record-video__audio-action-btn--delete:hover {
+  background: rgba(71, 2, 2, 0.808);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
-.record-video__audio-controls .record-video__control-left {
-  justify-content: flex-end;
-  padding-right: 30px;
+.record-video__audio-action-btn--confirm {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #d64ab0 100%);
+  color: white;
 }
 
-.record-video__audio-controls .record-video__control-right {
-  justify-content: flex-start;
-  padding-left: 30px;
+.record-video__audio-action-btn--confirm:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(180, 50, 163, 0.4);
 }
 
 /* Audio mode specific background */
@@ -665,7 +834,7 @@
 }
 
 .record-video--audio .record-video__background {
-  opacity: 0.5;
+  opacity: 0.6;
 }
 
 /* ==================== REVIEW MODE ==================== */
@@ -994,6 +1163,40 @@
     display: none;
   }
 
+  /* Team Selector - top center on mobile */
+  .record-video__team-selector {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    margin-bottom: 0;
+  }
+
+  .record-video__team-selector .team-selector__btn {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: #fff;
+  }
+
+  .record-video__team-selector .team-selector__name {
+    color: #fff;
+  }
+
+  .record-video__team-selector .team-selector__btn svg {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .record-video__team-selector .team-selector__label {
+    display: none;
+  }
+
+  .record-video__team-selector .team-selector__dropdown {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
   .record-video__preview-container {
     position: absolute;
     top: 0;
@@ -1217,13 +1420,13 @@
   }
 
   /* ===== AUDIO MODE MOBILE ===== */
-  .record-video--audio {
-    background-color: #0a0a0a;
-  }
-
   .record-video--audio .record-video__background {
     display: block;
-    opacity: 0.6;
+    height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    background-size: cover;
+    background-position: center;
   }
 
   .record-video__audio-mode {
@@ -1232,34 +1435,52 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 80px 20px 120px;
+    padding: 80px 20px 140px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 24px;
   }
 
-  .record-video__audio-visualizer {
-    max-width: 350px;
-    height: 180px;
-    margin-bottom: 40px;
+  .record-video__audio-hub {
+    width: 200px;
+    height: 200px;
   }
 
-  .record-video__audio-wave {
-    gap: 3px;
+  .record-video__audio-circle-bar {
+    margin-top: -85px;
+    transform-origin: center 85px;
+    height: 16px;
   }
 
-  .record-video__audio-bar {
-    width: 4px;
-    background: linear-gradient(180deg, rgba(180, 50, 163, 0.8) 0%, rgba(214, 74, 176, 0.6) 100%);
+  .record-video__audio-record-btn {
+    width: 80px;
+    height: 80px;
   }
 
-  .record-video__audio-controls {
-    position: absolute;
-    bottom: 100px;
-    left: 0;
-    right: 0;
-    padding: 0 20px;
+  .record-video__audio-record-btn-inner {
+    width: 50px;
+    height: 50px;
+  }
+
+  .record-video__audio-record-btn.recording .record-video__audio-record-btn-inner {
+    width: 30px;
+    height: 30px;
+  }
+
+  .record-video__audio-timer-text {
+    font-size: 1.5rem;
+  }
+
+  .record-video__audio-actions {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .record-video__audio-action-btn {
+    padding: 10px 20px;
+    font-size: 0.85rem;
   }
 
   .record-video--audio .record-video__mode-tab {
@@ -1617,7 +1838,7 @@
   justify-content: center;
 }
 
-.record-video__confirm-btn {
+.record-video__confirm-actions .record-video__confirm-btn {
   flex: 1;
   padding: 14px 24px;
   font-size: 15px;
@@ -1628,7 +1849,7 @@
   transition: all 0.2s;
 }
 
-.record-video__confirm-btn:disabled {
+.record-video__confirm-actions .record-video__confirm-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
