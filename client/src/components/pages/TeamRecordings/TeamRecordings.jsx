@@ -1,102 +1,63 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Heart,
+  MessageSquare,
+  Share2,
+  Clock,
+  Video,
+  Mic,
+  FileText,
+  X,
+  Play,
+  Pause,
+  Send,
+  CheckCircle,
+  ArrowLeft
+} from 'lucide-react';
 import './TeamRecordings.css';
 import { recordingsService, teamsService } from '../../../services';
+import { TeamSelector } from '../../common/TeamSelector';
+import { AudioWaveform } from '../../common/Recording';
 
-// Icons
+// Custom gradient icons (keeping gradient styling)
 const HeartIcon = ({ filled }) => (
-  <svg width="20" height="18" viewBox="0 0 24 22" fill={filled ? "url(#heartGradient)" : "none"} xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#405cfb" />
-        <stop offset="100%" stopColor="#f23b8b" />
-      </linearGradient>
-    </defs>
-    <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.27 2 8.5C2 5.41 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.08C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.41 22 8.5C22 12.27 18.6 15.36 13.45 20.03L12 21.35Z" stroke="url(#heartGradient)" strokeWidth="2"/>
-  </svg>
+  <Heart size={20} fill={filled ? "currentColor" : "none"} className={filled ? "icon-gradient" : ""} />
 );
 
 const CommentIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="commentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#405cfb" />
-        <stop offset="100%" stopColor="#f23b8b" />
-      </linearGradient>
-    </defs>
-    <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="url(#commentGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <MessageSquare size={20} className="icon-gradient" />
 );
 
 const ShareIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="shareGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#405cfb" />
-        <stop offset="100%" stopColor="#f23b8b" />
-      </linearGradient>
-    </defs>
-    <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" stroke="url(#shareGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M16 6L12 2L8 6" stroke="url(#shareGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M12 2V15" stroke="url(#shareGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <Share2 size={20} className="icon-gradient" />
 );
 
 const AiIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#405cfb" />
-        <stop offset="100%" stopColor="#f23b8b" />
-      </linearGradient>
-    </defs>
-    <circle cx="12" cy="12" r="10" stroke="url(#aiGradient)" strokeWidth="2"/>
-    <path d="M12 6V12L16 14" stroke="url(#aiGradient)" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
+  <Clock size={20} className="icon-gradient" />
 );
 
 const VideoIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-    <path d="M10 8L16 12L10 16V8Z" fill="currentColor"/>
-  </svg>
+  <Video size={24} />
 );
 
 const MicIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 1C11.2044 1 10.4413 1.31607 9.87868 1.87868C9.31607 2.44129 9 3.20435 9 4V12C9 12.7956 9.31607 13.5587 9.87868 14.1213C10.4413 14.6839 11.2044 15 12 15C12.7956 15 13.5587 14.6839 14.1213 14.1213C14.6839 13.5587 15 12.7956 15 12V4C15 3.20435 14.6839 2.44129 14.1213 1.87868C13.5587 1.31607 12.7956 1 12 1Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M19 10V12C19 13.8565 18.2625 15.637 16.9497 16.9497C15.637 18.2625 13.8565 19 12 19C10.1435 19 8.36301 18.2625 7.05025 16.9497C5.7375 15.637 5 13.8565 5 12V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M12 19V23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 23H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <Mic size={24} />
 );
 
 const TextIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14 2V8H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M16 13H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M16 17H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M10 9H9H8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <FileText size={24} />
 );
 
 const CloseIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <X size={24} />
 );
 
 const PlayIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 5V19L19 12L8 5Z" fill="white"/>
-  </svg>
+  <Play size={48} fill="white" color="white" />
 );
 
 const SendIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <Send size={20} />
 );
 
 // Comments Panel Component
@@ -152,16 +113,7 @@ const CommentsPanel = ({ isOpen, onClose, userName, comments = [] }) => {
 
 // Check Icon for affirmed items
 const CheckCircleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="10" stroke="url(#checkGradient)" strokeWidth="2"/>
-    <path d="M8 12L11 15L16 9" stroke="url(#checkGradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <defs>
-      <linearGradient id="checkGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#b432a3" />
-        <stop offset="100%" stopColor="#ae59cf" />
-      </linearGradient>
-    </defs>
-  </svg>
+  <CheckCircle size={18} className="icon-gradient-purple" />
 );
 
 // Profile Summary Panel Component
@@ -402,7 +354,7 @@ const RecordingCard = ({ recording, isActive, member, onAvatarClick, onNameClick
 
       {/* Recording content */}
       {recording.type === 'video' && (
-        <div className="team-recordings__card-video">
+        <div className={`team-recordings__card-video ${isPlaying ? 'is-playing' : ''}`}>
           {recording.mediaUrl ? (
             <>
               <video
@@ -411,6 +363,7 @@ const RecordingCard = ({ recording, isActive, member, onAvatarClick, onNameClick
                 poster={recording.thumbnail}
                 onEnded={handleEnded}
                 playsInline
+                onClick={handlePlayPause}
               />
               {!isPlaying && recording.thumbnail && (
                 <img src={recording.thumbnail} alt="Recording thumbnail" className="team-recordings__card-poster" />
@@ -425,10 +378,7 @@ const RecordingCard = ({ recording, isActive, member, onAvatarClick, onNameClick
           )}
           <button className="team-recordings__card-play" onClick={handlePlayPause}>
             {isPlaying ? (
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
-                <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
-              </svg>
+              <Pause size={48} fill="white" color="white" />
             ) : (
               <PlayIcon />
             )}
@@ -444,21 +394,14 @@ const RecordingCard = ({ recording, isActive, member, onAvatarClick, onNameClick
               onEnded={handleEnded}
             />
           )}
-          <div className="team-recordings__card-audio-wave">
-            {[...Array(20)].map((_, i) => (
-              <span
-                key={i}
-                className={`team-recordings__card-audio-bar ${isPlaying ? 'playing' : ''}`}
-                style={{ height: `${Math.random() * 60 + 20}%`, animationDelay: `${i * 0.05}s` }}
-              />
-            ))}
-          </div>
+          <AudioWaveform
+            isPlaying={isPlaying}
+            barCount={20}
+            className="team-recordings__card-audio-wave"
+          />
           <button className="team-recordings__card-play" onClick={handlePlayPause}>
             {isPlaying ? (
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <rect x="6" y="5" width="4" height="14" rx="1" fill="white"/>
-                <rect x="14" y="5" width="4" height="14" rx="1" fill="white"/>
-              </svg>
+              <Pause size={48} fill="white" color="white" />
             ) : (
               <PlayIcon />
             )}
@@ -480,92 +423,10 @@ const RecordingCard = ({ recording, isActive, member, onAvatarClick, onNameClick
   );
 };
 
-// Dropdown Arrow Icon
-const ChevronDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
 // Back Arrow Icon
 const BackArrowIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <ArrowLeft size={20} />
 );
-
-// Team Selector Dropdown Component
-const TeamSelector = ({ teams, selectedTeamId, onSelectTeam, isOpen, onToggle }) => {
-  const selectedTeam = teams.find(t => t.id === selectedTeamId) || teams[0];
-  const dropdownRef = useRef(null);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        if (isOpen) onToggle();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onToggle]);
-
-  return (
-    <div className="team-recordings__team-selector" ref={dropdownRef}>
-      <button
-        className="team-recordings__team-selector-btn"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-      >
-        <div className="team-recordings__team-selector-info">
-          {selectedTeam.avatar && (
-            <img
-              src={selectedTeam.avatar}
-              alt={selectedTeam.name}
-              className="team-recordings__team-selector-avatar"
-            />
-          )}
-          <span className="team-recordings__team-selector-name">{selectedTeam.name}</span>
-        </div>
-        <ChevronDownIcon />
-      </button>
-
-      {isOpen && teams.length > 1 && (
-        <div className="team-recordings__team-dropdown">
-          {teams.map((team) => (
-            <button
-              key={team.id}
-              className={`team-recordings__team-dropdown-item ${team.id === selectedTeamId ? 'active' : ''}`}
-              onClick={() => {
-                onSelectTeam(team.id);
-                onToggle();
-              }}
-            >
-              {team.avatar && (
-                <img
-                  src={team.avatar}
-                  alt={team.name}
-                  className="team-recordings__team-dropdown-avatar"
-                />
-              )}
-              <div className="team-recordings__team-dropdown-info">
-                <span className="team-recordings__team-dropdown-name">{team.name}</span>
-                <span className="team-recordings__team-dropdown-count">
-                  {team.memberCount || team.members?.length || 0} members
-                </span>
-              </div>
-              {team.id === selectedTeamId && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 // Helper to format count numbers
 const formatCount = (count) => {
@@ -902,6 +763,8 @@ const TeamRecordings = ({
             onSelectTeam={handleTeamChange}
             isOpen={showTeamDropdown}
             onToggle={() => setShowTeamDropdown(!showTeamDropdown)}
+            label=""
+            className="team-recordings__team-selector"
           />
         )}
 

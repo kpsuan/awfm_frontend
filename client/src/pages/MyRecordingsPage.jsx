@@ -8,11 +8,15 @@ import {
   VideoIcon, MicIcon, PlayIcon, TrashIcon, GridIcon, ListIcon,
   getRecordingTypeIcon
 } from '../components/common/Icons';
-import { formatDate, formatDuration, truncateText } from '../utils/formatters';
+import { formatDate, formatDuration, truncateText, getInitials, getColorFromString } from '../utils/formatters';
 import './MyRecordingsPage.css';
 
 // Recording Card Component (Grid View)
 const RecordingCard = ({ recording, onDelete, onPlay }) => {
+  // Get user info from the recording (populated by backend serializer)
+  const userName = recording.user_name || recording.user_email || 'You';
+  const userAvatar = recording.user_avatar;
+
   const renderThumbnail = () => {
     if (recording.recording_type === 'video') {
       return (
@@ -58,6 +62,20 @@ const RecordingCard = ({ recording, onDelete, onPlay }) => {
     <article className="recording-card">
       {renderThumbnail()}
       <div className="recording-card__content">
+        {/* User Info */}
+        <div className="recording-card__user">
+          <div
+            className="recording-card__avatar"
+            style={{ backgroundColor: getColorFromString(userName) }}
+          >
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} />
+            ) : (
+              getInitials(userName)
+            )}
+          </div>
+          <span className="recording-card__user-name">{userName}</span>
+        </div>
         <div className="recording-card__meta">
           <span className="recording-card__type">{getRecordingTypeIcon(recording.recording_type)}</span>
           <span className="recording-card__question">Q: {recording.question?.title || recording.question_id}</span>
@@ -87,8 +105,26 @@ const RecordingCard = ({ recording, onDelete, onPlay }) => {
 
 // Recording Row Component (List View)
 const RecordingRow = ({ recording, onDelete, onPlay }) => {
+  const userName = recording.user_name || recording.user_email || 'You';
+  const userAvatar = recording.user_avatar;
+
   return (
     <tr className="recording-row">
+      <td className="recording-row__user">
+        <div className="recording-row__user-info">
+          <div
+            className="recording-row__avatar"
+            style={{ backgroundColor: getColorFromString(userName) }}
+          >
+            {userAvatar ? (
+              <img src={userAvatar} alt={userName} />
+            ) : (
+              getInitials(userName)
+            )}
+          </div>
+          <span className="recording-row__user-name">{userName}</span>
+        </div>
+      </td>
       <td className="recording-row__type">
         {getRecordingTypeIcon(recording.recording_type)}
       </td>
@@ -169,7 +205,7 @@ function MyRecordingsPage() {
       setLoading(true);
       const [recordingsData, teamsData] = await Promise.all([
         recordingsService.getMyRecordings(),
-        teamsService.getMyTeams().catch(() => ({ data: [] })),
+        teamsService.getTeams().catch(() => ({ data: [] })),
       ]);
 
       setRecordings(recordingsData.data || recordingsData.results || recordingsData || []);
@@ -348,6 +384,7 @@ function MyRecordingsPage() {
             <table className="my-recordings-page__table">
               <thead>
                 <tr>
+                  <th>User</th>
                   <th>Type</th>
                   <th>Question</th>
                   <th>Description</th>

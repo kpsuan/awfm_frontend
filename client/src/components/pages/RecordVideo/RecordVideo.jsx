@@ -1,142 +1,25 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+  Trash2,
+  Check,
+  SwitchCamera,
+  X,
+  Play,
+  Pause,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  List,
+  Image
+} from 'lucide-react';
 import { Button } from '../../common/Button';
+import { ConfirmationModal } from '../../common/Modal';
+import { TeamSelector } from '../../common/TeamSelector';
+import { DescriptionInput, ReviewControls, AudioWaveform, RecordingTimer } from '../../common/Recording';
 import { teamsService } from '../../../services';
 import './RecordVideo.css';
 
-// Team Icon
-const TeamIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 
-// Chevron Down Icon
-const ChevronDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-// Team Visibility Selector Component
-const TeamVisibilitySelector = ({ teams, selectedTeamId, onSelectTeam, isOpen, onToggle }) => {
-  const dropdownRef = useRef(null);
-  const selectedTeam = teams.find(t => t.id === selectedTeamId) || teams[0];
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        if (isOpen) onToggle();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onToggle]);
-
-  if (!teams || teams.length === 0) return null;
-
-  return (
-    <div className="record-video__team-selector" ref={dropdownRef}>
-      <label className="record-video__team-label">Visible to:</label>
-      <button
-        className="record-video__team-selector-btn"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        type="button"
-      >
-        <TeamIcon />
-        <span className="record-video__team-name">{selectedTeam?.name || 'Select Team'}</span>
-        <ChevronDownIcon />
-      </button>
-
-      {isOpen && teams.length > 1 && (
-        <div className="record-video__team-dropdown">
-          {teams.map((team) => (
-            <button
-              key={team.id}
-              className={`record-video__team-dropdown-item ${team.id === selectedTeamId ? 'active' : ''}`}
-              onClick={() => {
-                onSelectTeam(team.id);
-                onToggle();
-              }}
-              type="button"
-            >
-              {team.avatar_url ? (
-                <img
-                  src={team.avatar_url}
-                  alt={team.name}
-                  className="record-video__team-dropdown-avatar"
-                />
-              ) : (
-                <div className="record-video__team-dropdown-avatar-placeholder">
-                  <TeamIcon />
-                </div>
-              )}
-              <span className="record-video__team-dropdown-name">{team.name}</span>
-              {team.id === selectedTeamId && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Delete/Trash Icon
-const DeleteIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M10 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-// Checkmark Icon
-const CheckIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-// Flip Camera Icon
-const FlipCameraIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M21 16V8C21 6.89543 20.1046 6 19 6H16.5L15 4H9L7.5 6H5C3.89543 6 3 6.89543 3 8V16C3 17.1046 3.89543 18 5 18H19C20.1046 18 21 17.1046 21 16Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M12 14C13.6569 14 15 12.6569 15 11C15 9.34315 13.6569 8 12 8C10.3431 8 9 9.34315 9 11C9 12.6569 10.3431 14 12 14Z" stroke="currentColor" strokeWidth="2"/>
-    <path d="M9 11L7 9M15 11L17 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-  </svg>
-);
-
-// Close Icon
-const CloseIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-// Play Icon
-const PlayIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
-  </svg>
-);
-
-// Re-record Icon
-const ReRecordIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M1 4V10H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M3.51 15C4.15 16.82 5.32 18.42 6.87 19.57C8.42 20.72 10.26 21.38 12.18 21.47C14.09 21.56 15.99 21.08 17.63 20.09C19.27 19.1 20.58 17.64 21.38 15.9C22.19 14.16 22.46 12.22 22.15 10.33C21.84 8.44 21 6.69 19.71 5.28C18.43 3.87 16.76 2.87 14.91 2.41C13.06 1.95 11.12 2.05 9.33 2.7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    <path d="M1 10L5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
 
 // Instructions Modal Component
 const InstructionsModal = ({ isOpen, onClose }) => {
@@ -146,7 +29,7 @@ const InstructionsModal = ({ isOpen, onClose }) => {
     <div className="record-video__modal-overlay" onClick={onClose}>
       <div className="record-video__modal" onClick={(e) => e.stopPropagation()}>
         <button className="record-video__modal-close" onClick={onClose} aria-label="Close">
-          <CloseIcon />
+          <X size={24} />
         </button>
 
         <div className="record-video__modal-content">
@@ -189,52 +72,6 @@ const InstructionsModal = ({ isOpen, onClose }) => {
   );
 };
 
-// Submit Confirmation Modal Component
-const SubmitConfirmModal = ({ isOpen, onConfirm, onCancel, type = 'video', isSubmitting = false }) => {
-  if (!isOpen) return null;
-
-  const typeLabels = {
-    video: 'video',
-    audio: 'audio recording',
-    text: 'written response'
-  };
-
-  return (
-    <div className="record-video__modal-overlay" onClick={onCancel}>
-      <div className="record-video__confirm-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="record-video__confirm-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2"/>
-            <path d="M12 16V12M12 8H12.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </div>
-
-        <h2 className="record-video__confirm-title">Submit Recording?</h2>
-
-        <p className="record-video__confirm-message">
-          Are you sure you want to submit this {typeLabels[type]}? It will be shared with your care team.
-        </p>
-
-        <div className="record-video__confirm-actions">
-          <button
-            className="record-video__confirm-btn record-video__confirm-btn--cancel"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Go Back
-          </button>
-          <button
-            className="record-video__confirm-btn record-video__confirm-btn--submit"
-            onClick={onConfirm}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Yes, Submit'}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const RecordVideo = ({
   onBack,
@@ -300,6 +137,11 @@ const RecordVideo = ({
 
   // Start camera only when in video mode and not reviewing
   useEffect(() => {
+    // Don't restart camera during active recording (would break MediaRecorder)
+    if (recordingState === 'recording' || recordingState === 'paused') {
+      return;
+    }
+
     if (activeMode === 'video' && recordingState !== 'reviewing') {
       startCamera();
     } else if (activeMode !== 'video') {
@@ -592,12 +434,12 @@ const RecordVideo = ({
         
         {/* Play/Pause Overlay */}
         {!isPlaying && (
-          <button 
+          <button
             className="record-video__play-btn"
             onClick={handlePlayPause}
             aria-label="Play recording"
           >
-            <PlayIcon />
+            <Play size={48} fill="currentColor" />
           </button>
         )}
 
@@ -608,38 +450,19 @@ const RecordVideo = ({
       </div>
 
       {/* Description Input */}
-      <div className="record-video__description-section">
-        <label className="record-video__description-label">Add a short description</label>
-        <div className="record-video__description-input-wrapper">
-          <input
-            type="text"
-            className="record-video__description-input"
-            placeholder="E.g., My thoughts on quality of life..."
-            value={recordingDescription}
-            onChange={(e) => setRecordingDescription(e.target.value.slice(0, 150))}
-            maxLength={150}
-          />
-          <span className="record-video__description-count">{recordingDescription.length}/150</span>
-        </div>
-      </div>
+      <DescriptionInput
+        value={recordingDescription}
+        onChange={setRecordingDescription}
+        className="record-video__description-section"
+      />
 
       {/* Review Controls */}
-      <div className="record-video__review-controls">
-        <button
-          className="record-video__review-btn record-video__review-btn--rerecord"
-          onClick={handleReRecord}
-        >
-          <ReRecordIcon />
-          <span>Re-record</span>
-        </button>
-        <button
-          className="record-video__review-btn record-video__review-btn--submit"
-          onClick={handleSubmitClick}
-        >
-          <CheckIcon />
-          <span>Use this video</span>
-        </button>
-      </div>
+      <ReviewControls
+        type="video"
+        onReRecord={handleReRecord}
+        onSubmit={handleSubmitClick}
+        className="record-video__review-controls"
+      />
     </div>
   );
 
@@ -672,10 +495,11 @@ const RecordVideo = ({
 
           {/* Recording Timer */}
           {isActive && (
-            <div className="record-video__timer">
-              <span className={`record-video__timer-dot ${isRecording ? 'recording' : ''}`} />
-              <span className="record-video__timer-text">{formatTime(recordedTime)}</span>
-            </div>
+            <RecordingTimer
+              time={recordedTime}
+              isRecording={isRecording}
+              className="record-video__timer"
+            />
           )}
 
           {/* Controls Container */}
@@ -683,12 +507,12 @@ const RecordVideo = ({
             {/* Delete Button (left side) - shown when paused */}
             <div className="record-video__control-side record-video__control-left">
               {isPaused && (
-                <button 
+                <button
                   className="record-video__action-btn record-video__delete-btn"
                   onClick={handleDelete}
                   aria-label="Delete recording"
                 >
-                  <DeleteIcon />
+                  <Trash2 size={24} />
                 </button>
               )}
               {!isActive && (
@@ -710,12 +534,12 @@ const RecordVideo = ({
             {/* Confirm Button (right side) - shown when paused */}
             <div className="record-video__control-side record-video__control-right">
               {isPaused && (
-                <button 
+                <button
                   className="record-video__action-btn record-video__confirm-btn"
                   onClick={handleConfirm}
                   aria-label="Confirm recording"
                 >
-                  <CheckIcon />
+                  <Check size={24} />
                 </button>
               )}
               {!isActive && (
@@ -728,17 +552,13 @@ const RecordVideo = ({
 
           {/* Upload Button */}
           {!isActive && (
-            <button 
+            <button
               className="record-video__upload-btn"
               onClick={handleUpload}
               aria-label="Upload video"
             >
               <div className="record-video__upload-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="2" width="20" height="20" rx="2" fill="#4A90D9"/>
-                  <circle cx="8" cy="16" r="2" fill="#F5A623"/>
-                  <path d="M4 18L8 14L12 16L20 8" stroke="#fff" strokeWidth="1.5" fill="none"/>
-                </svg>
+                <Image size={24} />
               </div>
               <span className="record-video__upload-label">Upload</span>
             </button>
@@ -746,12 +566,12 @@ const RecordVideo = ({
 
           {/* Flip Camera Button */}
           {!isActive && hasPermission && (
-            <button 
+            <button
               className="record-video__flip-btn"
               onClick={handleFlipCamera}
               aria-label="Flip camera"
             >
-              <FlipCameraIcon />
+              <SwitchCamera size={20} />
             </button>
           )}
         </div>
@@ -799,38 +619,19 @@ const RecordVideo = ({
         </div>
 
         {/* Description Input */}
-        <div className="record-video__description-section record-video__description-section--text">
-          <label className="record-video__description-label">Add a short description</label>
-          <div className="record-video__description-input-wrapper">
-            <input
-              type="text"
-              className="record-video__description-input"
-              placeholder="E.g., My thoughts on quality of life..."
-              value={textDescription}
-              onChange={(e) => setTextDescription(e.target.value.slice(0, 150))}
-              maxLength={150}
-            />
-            <span className="record-video__description-count">{textDescription.length}/150</span>
-          </div>
-        </div>
+        <DescriptionInput
+          value={textDescription}
+          onChange={setTextDescription}
+          className="record-video__description-section record-video__description-section--text"
+        />
 
         {/* Review Controls */}
-        <div className="record-video__review-controls record-video__review-controls--text">
-          <button
-            className="record-video__review-btn record-video__review-btn--rerecord"
-            onClick={handleTextEdit}
-          >
-            <ReRecordIcon />
-            <span>Edit</span>
-          </button>
-          <button
-            className="record-video__review-btn record-video__review-btn--submit"
-            onClick={handleTextSubmitClick}
-          >
-            <CheckIcon />
-            <span>Use this text</span>
-          </button>
-        </div>
+        <ReviewControls
+          type="text"
+          onReRecord={handleTextEdit}
+          onSubmit={handleTextSubmitClick}
+          className="record-video__review-controls record-video__review-controls--text"
+        />
       </div>
     </div>
   );
@@ -855,19 +656,13 @@ const RecordVideo = ({
           <div className="record-video__text-toolbar">
             <div className="record-video__text-toolbar-group">
               <button className="record-video__text-btn" title="Align left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 3h18v2H3V3zm0 4h12v2H3V7zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h18v2H3v-2z"/>
-                </svg>
+                <AlignLeft size={16} />
               </button>
               <button className="record-video__text-btn" title="Align center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 3h18v2H3V3zm3 4h12v2H6V7zm-3 4h18v2H3v-2zm3 4h12v2H6v-2zm-3 4h18v2H3v-2z"/>
-                </svg>
+                <AlignCenter size={16} />
               </button>
               <button className="record-video__text-btn" title="Align right">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 3h18v2H3V3zm6 4h12v2H9V7zm-6 4h18v2H3v-2zm6 4h12v2H9v-2zm-6 4h18v2H3v-2z"/>
-                </svg>
+                <AlignRight size={16} />
               </button>
             </div>
             <div className="record-video__text-toolbar-group">
@@ -875,9 +670,7 @@ const RecordVideo = ({
               <button className="record-video__text-btn" title="Bold"><strong>B</strong></button>
               <button className="record-video__text-btn" title="Italic"><em>I</em></button>
               <button className="record-video__text-btn" title="List">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 4h2v2H3V4zm4 0h14v2H7V4zM3 10h2v2H3v-2zm4 0h14v2H7v-2zm-4 6h2v2H3v-2zm4 0h14v2H7v-2z"/>
-                </svg>
+                <List size={16} />
               </button>
             </div>
             <button
@@ -885,7 +678,7 @@ const RecordVideo = ({
               onClick={handleTextConfirm}
               disabled={!textContent.trim()}
             >
-              <CheckIcon />
+              <Check size={24} />
             </button>
           </div>
         </div>
@@ -1037,11 +830,9 @@ const RecordVideo = ({
           aria-label={isAudioPlaying ? 'Pause' : 'Play'}
         >
           {isAudioPlaying ? (
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-            </svg>
+            <Pause size={32} fill="currentColor" />
           ) : (
-            <PlayIcon />
+            <Play size={48} fill="currentColor" />
           )}
         </button>
         <div className="record-video__audio-duration">
@@ -1050,38 +841,19 @@ const RecordVideo = ({
       </div>
 
       {/* Description Input */}
-      <div className="record-video__description-section record-video__description-section--audio">
-        <label className="record-video__description-label">Add a short description</label>
-        <div className="record-video__description-input-wrapper">
-          <input
-            type="text"
-            className="record-video__description-input"
-            placeholder="E.g., My thoughts on quality of life..."
-            value={audioDescription}
-            onChange={(e) => setAudioDescription(e.target.value.slice(0, 150))}
-            maxLength={150}
-          />
-          <span className="record-video__description-count">{audioDescription.length}/150</span>
-        </div>
-      </div>
+      <DescriptionInput
+        value={audioDescription}
+        onChange={setAudioDescription}
+        className="record-video__description-section record-video__description-section--audio"
+      />
 
       {/* Review Controls */}
-      <div className="record-video__review-controls">
-        <button
-          className="record-video__review-btn record-video__review-btn--rerecord"
-          onClick={handleAudioReRecord}
-        >
-          <ReRecordIcon />
-          <span>Re-record</span>
-        </button>
-        <button
-          className="record-video__review-btn record-video__review-btn--submit"
-          onClick={handleAudioSubmitClick}
-        >
-          <CheckIcon />
-          <span>Use this audio</span>
-        </button>
-      </div>
+      <ReviewControls
+        type="audio"
+        onReRecord={handleAudioReRecord}
+        onSubmit={handleAudioSubmitClick}
+        className="record-video__review-controls"
+      />
     </div>
   );
 
@@ -1095,27 +867,19 @@ const RecordVideo = ({
     return (
       <div className="record-video__audio-mode">
         {/* Audio Visualization */}
-        <div className="record-video__audio-visualizer">
-          <div className="record-video__audio-wave">
-            {[...Array(20)].map((_, i) => (
-              <span
-                key={i}
-                className={`record-video__audio-bar ${isRecording ? 'active' : ''}`}
-                style={{
-                  animationDelay: `${i * 0.05}s`,
-                  height: isRecording ? `${Math.random() * 60 + 20}%` : '20%'
-                }}
-              />
-            ))}
-          </div>
-        </div>
+        <AudioWaveform
+          isPlaying={isRecording}
+          barCount={20}
+          className="record-video__audio-visualizer"
+        />
 
         {/* Recording Timer */}
         {isActive && (
-          <div className="record-video__audio-timer">
-            <span className={`record-video__timer-dot ${isRecording ? 'recording' : ''}`} />
-            <span className="record-video__timer-text">{formatTime(recordedTime)}</span>
-          </div>
+          <RecordingTimer
+            time={recordedTime}
+            isRecording={isRecording}
+            className="record-video__audio-timer"
+          />
         )}
 
         {/* Audio Controls */}
@@ -1127,7 +891,7 @@ const RecordVideo = ({
                 onClick={handleAudioDelete}
                 aria-label="Delete recording"
               >
-                <DeleteIcon />
+                <Trash2 size={24} />
               </button>
             )}
           </div>
@@ -1147,7 +911,7 @@ const RecordVideo = ({
                 onClick={handleAudioConfirm}
                 aria-label="Confirm recording"
               >
-                <CheckIcon />
+                <Check size={24} />
               </button>
             )}
           </div>
@@ -1162,12 +926,12 @@ const RecordVideo = ({
       <div className="record-video__background" />
 
       {/* Close Button (mobile) */}
-      <button 
+      <button
         className="record-video__close-btn"
         onClick={onBack}
         aria-label="Close"
       >
-        <CloseIcon />
+        <X size={24} />
       </button>
 
       {/* Content */}
@@ -1177,12 +941,13 @@ const RecordVideo = ({
 
         {/* Team Visibility Selector */}
         {userTeams.length > 0 && (
-          <TeamVisibilitySelector
+          <TeamSelector
             teams={userTeams}
             selectedTeamId={selectedTeamId}
             onSelectTeam={setSelectedTeamId}
             isOpen={showTeamDropdown}
             onToggle={() => setShowTeamDropdown(!showTeamDropdown)}
+            className="record-video__team-selector"
           />
         )}
 
@@ -1224,11 +989,14 @@ const RecordVideo = ({
       />
 
       {/* Submit Confirmation Modal */}
-      <SubmitConfirmModal
+      <ConfirmationModal
         isOpen={showConfirmModal}
         onConfirm={handleConfirmSubmit}
         onCancel={handleCancelSubmit}
-        type={activeMode}
+        title="Submit Recording?"
+        message={`Are you sure you want to submit this ${activeMode === 'text' ? 'written response' : activeMode === 'audio' ? 'audio recording' : 'video'}? It will be shared with your care team.`}
+        confirmLabel="Yes, Submit"
+        cancelLabel="Go Back"
         isSubmitting={isSubmitting}
       />
     </div>

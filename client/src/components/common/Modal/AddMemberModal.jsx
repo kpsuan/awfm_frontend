@@ -1,26 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
+import { Users, Pencil, Check } from 'lucide-react';
 import Modal from './Modal';
 import { teamsService } from '../../../services/teams';
 import './AddMemberModal.css';
 
 // Team icon for header
 const TeamIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="16" cy="10" r="4" fill="#B432A3"/>
-    <circle cx="8" cy="12" r="3" fill="#5C40FB"/>
-    <circle cx="24" cy="12" r="3" fill="#5C40FB"/>
-    <path d="M16 16C12 16 9 19 9 22V24H23V22C23 19 20 16 16 16Z" fill="#B432A3"/>
-    <path d="M8 17C5.5 17 4 19 4 21V23H9V21C9 19.5 9.5 18 10.5 17H8Z" fill="#5C40FB"/>
-    <path d="M24 17H21.5C22.5 18 23 19.5 23 21V23H28V21C28 19 26.5 17 24 17Z" fill="#5C40FB"/>
-  </svg>
+  <Users size={32} className="icon-gradient" />
 );
 
 // Edit icon
 const EditIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M11.5 2.5L13.5 4.5L5 13H3V11L11.5 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
+  <Pencil size={16} />
 );
 
 // Default invite message
@@ -37,10 +29,11 @@ const AddMemberModal = ({
   teamId = null,
   existingTeam = null,
   userName = "Norman",
-  userAvatar = "https://i.pravatar.cc/82?img=12"
+  userAvatar = "https://i.pravatar.cc/82?img=12",
+  inviteOnly = false // Hide team info/edit tab, only show invite and sent tabs
 }) => {
-  // If existing team, skip to invite tab
-  const initialTab = existingTeam ? 'invite' : 'team';
+  // If existing team or inviteOnly mode, skip to invite tab
+  const initialTab = (existingTeam || inviteOnly) ? 'invite' : 'team';
   const [activeTab, setActiveTab] = useState(initialTab);
   const [emails, setEmails] = useState('');
   const [role, setRole] = useState('member');
@@ -110,15 +103,16 @@ const AddMemberModal = ({
   // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
-      setActiveTab(existingTeam ? 'invite' : 'team');
-      setTeamCreated(!!existingTeam);
+      // In inviteOnly mode, always start at invite tab
+      setActiveTab((existingTeam || inviteOnly) ? 'invite' : 'team');
+      setTeamCreated(!!existingTeam || inviteOnly);
       if (existingTeam) {
         setTeamName(existingTeam.name || '');
         setTeamDescription(existingTeam.description || '');
         setTeamLevel(existingTeam.team_level || '');
       }
     }
-  }, [isOpen, existingTeam]);
+  }, [isOpen, existingTeam, inviteOnly]);
 
   // Fetch invites when switching to sent tab or when team changes
   useEffect(() => {
@@ -301,27 +295,32 @@ const AddMemberModal = ({
         <div className="add-member-modal__header">
           <TeamIcon />
           <h2 className="add-member-modal__title">
-            {existingTeam
-              ? existingTeam.name
-              : (teamCreated ? 'Invite to Care Team' : 'Create your Care Team')
+            {inviteOnly
+              ? 'Invite Members'
+              : existingTeam
+                ? existingTeam.name
+                : (teamCreated ? 'Invite to Care Team' : 'Create your Care Team')
             }
           </h2>
         </div>
 
         {/* Tabs */}
         <div className="add-member-modal__tabs">
-          <button
-            type="button"
-            className={`add-member-modal__tab ${activeTab === 'team' ? 'add-member-modal__tab--active' : ''}`}
-            onClick={() => setActiveTab('team')}
-          >
-            {existingTeam ? 'Edit Team' : 'Team Info'}
-          </button>
+          {/* Hide Team Info/Edit tab in inviteOnly mode */}
+          {!inviteOnly && (
+            <button
+              type="button"
+              className={`add-member-modal__tab ${activeTab === 'team' ? 'add-member-modal__tab--active' : ''}`}
+              onClick={() => setActiveTab('team')}
+            >
+              {existingTeam ? 'Edit Team' : 'Team Info'}
+            </button>
+          )}
           <button
             type="button"
             className={`add-member-modal__tab ${activeTab === 'invite' ? 'add-member-modal__tab--active' : ''}`}
             onClick={() => setActiveTab('invite')}
-            disabled={!teamCreated && !existingTeam}
+            disabled={!teamCreated && !existingTeam && !inviteOnly}
           >
             Invite Members
           </button>
@@ -565,9 +564,7 @@ const AddMemberModal = ({
                       <div className="add-member-modal__invite-checkbox">
                         <div className={`add-member-modal__checkbox ${selectedInvites.includes(invite.id) ? 'add-member-modal__checkbox--checked' : ''}`}>
                           {selectedInvites.includes(invite.id) && (
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                              <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                            <Check size={12} color="white" />
                           )}
                         </div>
                       </div>

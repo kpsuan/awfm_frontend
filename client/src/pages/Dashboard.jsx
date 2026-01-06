@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Clock, ClipboardList, Plus, Play, Mic, FileText } from 'lucide-react';
 import { useAuth } from '../context';
 import Button from '../components/common/Button/Button';
 import { ContentHeader } from '../components/common/Navigation';
 import { AddMemberModal } from '../components/common/Modal';
 import { questionsService, responsesService } from '../services/questionnaire';
 import { teamsService } from '../services/teams';
+import { recordingsService } from '../services/recordings';
 import { getAllProgress } from './QuestionnaireFlow/utils/progressStorage';
 import './Dashboard.css';
 
@@ -29,30 +31,6 @@ const CAROUSEL_IMAGES = [
   },
 ];
 
-// Mock recordings - would come from API
-const RECORDINGS = [
-  {
-    id: 1,
-    questionId: 'Q10A',
-    questionTitle: 'Physical Limitations',
-    duration: '2:34',
-    createdAt: 'Dec 28, 2024',
-  },
-  {
-    id: 2,
-    questionId: 'Q11',
-    questionTitle: 'Pain Management',
-    duration: '1:45',
-    createdAt: 'Dec 25, 2024',
-  },
-  {
-    id: 3,
-    questionId: 'Q10B',
-    questionTitle: 'Cognitive Limitations',
-    duration: '3:12',
-    createdAt: 'Dec 20, 2024',
-  },
-];
 
 // Helper to get initials from name
 const getInitials = (name) => {
@@ -89,6 +67,14 @@ const formatRelativeDate = (dateStr) => {
   return `${Math.floor(diffDays / 30)} months ago`;
 };
 
+// Format duration from seconds to MM:SS
+const formatDuration = (seconds) => {
+  if (!seconds) return '-';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
 function Dashboard() {
   const navigate = useNavigate();
   const { user: authUser, loading: authLoading } = useAuth();
@@ -97,6 +83,7 @@ function Dashboard() {
   const [questions, setQuestions] = useState([]);
   const [progressData, setProgressData] = useState([]);
   const [careTeams, setCareTeams] = useState([]);
+  const [recordings, setRecordings] = useState([]);
   const [localProgress, setLocalProgress] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -139,7 +126,7 @@ function Dashboard() {
         setError(null);
 
         // Fetch all data in parallel for faster loading
-        const [questionsResponse, progressResponse, teamsResponse] = await Promise.all([
+        const [questionsResponse, progressResponse, teamsResponse, recordingsResponse] = await Promise.all([
           questionsService.getAll().catch(err => {
             console.log('Could not fetch questions:', err.message);
             return { data: [] };
@@ -150,6 +137,10 @@ function Dashboard() {
           }),
           teamsService.getTeams().catch(err => {
             console.log('Could not fetch teams:', err.message);
+            return [];
+          }),
+          recordingsService.getMyRecordings().catch(err => {
+            console.error('Could not fetch recordings:', err);
             return [];
           })
         ]);
@@ -171,7 +162,14 @@ function Dashboard() {
         if (teamsResponse?.data) teamsData = teamsResponse.data;
         if (teamsResponse?.results) teamsData = teamsResponse.results;
         setCareTeams(Array.isArray(teamsData) ? teamsData : []);
-        console.log('Teams fetched:', teamsData); // Debug log
+
+        // Handle recordings response
+        console.log('Raw recordings response:', recordingsResponse);
+        let recordingsData = recordingsResponse;
+        if (recordingsResponse?.data) recordingsData = recordingsResponse.data;
+        if (recordingsResponse?.results) recordingsData = recordingsResponse.results;
+        console.log('Final recordings data:', recordingsData);
+        setRecordings(Array.isArray(recordingsData) ? recordingsData.slice(0, 3) : []);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError(err.message);
@@ -429,10 +427,7 @@ function Dashboard() {
               <div className="welcome-stats">
                 <div className="welcome-stat welcome-stat--progress">
                   <div className="stat-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="M12 6v6l4 2"/>
-                    </svg>
+                    <Clock size={24} />
                   </div>
                   <div className="stat-content">
                     <span className="stat-value">{user.overallProgress}%</span>
@@ -441,11 +436,7 @@ function Dashboard() {
                 </div>
                 <div className="welcome-stat welcome-stat--questions">
                   <div className="stat-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-                      <rect x="9" y="3" width="6" height="4" rx="1"/>
-                      <path d="M9 12h6M9 16h6"/>
-                    </svg>
+                    <ClipboardList size={24} />
                   </div>
                   <div className="stat-content">
                     <span className="stat-value">{user.questionsCompleted}/{user.totalQuestions}</span>
@@ -615,11 +606,7 @@ function Dashboard() {
                   size="sm"
                   fullWidth
                   onClick={handleOpenAddTeamModal}
-                  leftIcon={
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                  }
+                  leftIcon={<Plus size={16} />}
                 >
                   Add Care Team
                 </Button>
@@ -632,11 +619,7 @@ function Dashboard() {
                   size="sm"
                   fullWidth
                   onClick={handleOpenAddTeamModal}
-                  leftIcon={
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                  }
+                  leftIcon={<Plus size={16} />}
                 >
                   Create Your First Team
                 </Button>
@@ -648,23 +631,36 @@ function Dashboard() {
           <div className="sidebar-card">
             <div className="sidebar-card-header">
               <h3 className="sidebar-card-title">Your Recordings</h3>
-              <Button variant="ghost" size="sm">View All</Button>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/my-recordings')}>View All</Button>
             </div>
-            {RECORDINGS.length > 0 ? (
+            {recordings.length > 0 ? (
               <div className="recordings-list">
-                {RECORDINGS.map((recording) => (
-                  <div key={recording.id} className="recording-item">
-                    <div className="recording-thumb">
-                      <div className="recording-play">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </div>
-                      <span className="recording-duration">{recording.duration}</span>
+                {recordings.map((recording) => (
+                  <div key={recording.id} className="recording-item" onClick={() => navigate('/my-recordings')}>
+                    <div className={`recording-thumb ${recording.recording_type === 'audio' ? 'recording-thumb--audio' : ''} ${recording.recording_type === 'text' ? 'recording-thumb--text' : ''}`}>
+                      {recording.recording_type === 'video' && recording.thumbnail_url ? (
+                        <>
+                          <img src={recording.thumbnail_url} alt="Video thumbnail" className="recording-thumb-img" />
+                          <div className="recording-play recording-play--overlay">
+                            <Play size={14} fill="currentColor" />
+                          </div>
+                        </>
+                      ) : recording.recording_type === 'audio' ? (
+                        <Mic size={20} />
+                      ) : recording.recording_type === 'text' ? (
+                        <FileText size={20} />
+                      ) : (
+                        <div className="recording-play">
+                          <Play size={14} fill="currentColor" />
+                        </div>
+                      )}
+                      {recording.duration && (
+                        <span className="recording-duration">{formatDuration(recording.duration)}</span>
+                      )}
                     </div>
                     <div className="recording-details">
-                      <span className="recording-title">{recording.questionTitle}</span>
-                      <span className="recording-meta">{recording.questionId} · {recording.createdAt}</span>
+                      <span className="recording-title">{recording.question_title || recording.question?.title || 'Recording'}</span>
+                      <span className="recording-meta">{recording.question_id || recording.question?.id} · {formatRelativeDate(recording.created_at)}</span>
                     </div>
                   </div>
                 ))}

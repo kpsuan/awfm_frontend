@@ -9,11 +9,29 @@ const DefaultUserIcon = () => (
   </svg>
 );
 
+// Generate consistent color from string (same as formatters.js)
+const getColorFromString = (str) => {
+  if (!str) return '#6B7280';
+  const colors = [
+    '#EF4444', '#F97316', '#F59E0B', '#84CC16', '#22C55E',
+    '#14B8A6', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6',
+    '#A855F7', '#D946EF', '#EC4899', '#F43F5E'
+  ];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
 const UserAvatar = ({
   name,
   imageUrl,
   size = 'md',
-  color
+  color,
+  autoColor = true,
+  className = "",
+  onClick
 }) => {
   const initials = name
     ?.split(' ')
@@ -23,18 +41,28 @@ const UserAvatar = ({
     .slice(0, 2);
 
   const sizeClasses = {
+    xs: 'avatar--xs',
     sm: 'avatar--sm',
     md: 'avatar--md',
-    lg: 'avatar--lg'
+    lg: 'avatar--lg',
+    xl: 'avatar--xl'
   };
 
   const showDefault = !name && !imageUrl;
 
+  // Determine background color
+  const bgColor = showDefault
+    ? 'var(--color-gray-200)'
+    : color || (autoColor ? getColorFromString(name) : 'var(--color-primary)');
+
   return (
     <div
-      className={`avatar ${sizeClasses[size]} ${showDefault ? 'avatar--default' : ''}`}
-      style={{ backgroundColor: showDefault ? 'var(--color-gray-200)' : (color || 'var(--color-primary)') }}
+      className={`avatar ${sizeClasses[size] || 'avatar--md'} ${showDefault ? 'avatar--default' : ''} ${className}`}
+      style={{ backgroundColor: bgColor }}
       title={name || 'User'}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
     >
       {imageUrl ? (
         <img src={imageUrl} alt={name} className="avatar__image" />

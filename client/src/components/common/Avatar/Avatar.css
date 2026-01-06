@@ -8,6 +8,13 @@
   border: 2px solid var(--color-white);
 }
 
+.avatar--xs {
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+  border-width: 1px;
+}
+
 .avatar--sm {
   width: 32px;
   height: 32px;
@@ -24,6 +31,12 @@
   width: 56px;
   height: 56px;
   font-size: var(--text-md);
+}
+
+.avatar--xl {
+  width: 80px;
+  height: 80px;
+  font-size: var(--text-xl);
 }
 
 .avatar__image {

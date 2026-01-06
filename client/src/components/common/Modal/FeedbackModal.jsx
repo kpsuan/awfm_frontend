@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Star } from 'lucide-react';
 import Modal from './Modal';
 import './FeedbackModal.css';
 
@@ -84,9 +85,7 @@ const FeedbackModal = ({
       <div className="feedback-modal">
         <div className="feedback-modal__header">
           <div className="feedback-modal__icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FFD700" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            <Star size={32} fill="#FFD700" color="#FFD700" />
           </div>
           <h3 className="feedback-modal__title">How likely are you to recommend us?</h3>
           <p className="feedback-modal__subtitle">Your feedback helps us improve the experience for everyone.</p>

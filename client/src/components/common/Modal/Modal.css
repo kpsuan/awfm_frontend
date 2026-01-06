@@ -94,6 +94,111 @@
   padding: 24px;
 }
 
+/* ConfirmationModal */
+.confirmation-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.confirmation-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+.confirmation-modal__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.confirmation-modal__icon--info {
+  background: #EBF5FF;
+  color: #3B82F6;
+}
+
+.confirmation-modal__icon--warning {
+  background: #FEF3C7;
+  color: #F59E0B;
+}
+
+.confirmation-modal__icon--success {
+  background: #D1FAE5;
+  color: #10B981;
+}
+
+.confirmation-modal__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e1e1e;
+  margin: 0 0 0.75rem;
+}
+
+.confirmation-modal__message {
+  font-size: 0.9375rem;
+  color: #6B7280;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.confirmation-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.confirmation-modal__btn {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirmation-modal__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirmation-modal__btn--cancel {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.confirmation-modal__btn--cancel:hover:not(:disabled) {
+  background: #E5E7EB;
+}
+
+.confirmation-modal__btn--confirm {
+  background: var(--color-primary, #b432a3);
+  color: white;
+}
+
+.confirmation-modal__btn--confirm:hover:not(:disabled) {
+  background: var(--color-primary-dark, #9a2b8b);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .modal__backdrop {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 import './Button.css';
 
 /**
@@ -47,10 +48,7 @@ const Button = ({
     >
       {loading && (
         <span className="btn-spinner" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
-            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
-          </svg>
+          <Loader2 size={20} className="btn-spinner-icon" />
         </span>
       )}
       {!loading && leftIcon && <span className="btn-icon btn-icon--left">{leftIcon}</span>}
