@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useAuth, useNotifications } from '../../context';
 import { teamsService, recordingsService } from '../../services';
 import { ContentHeader } from '../../components/common/Navigation';
-import { AddMemberModal, ShareModal } from '../../components/common/Modal';
+import { AddMemberModal, ShareModal, DeleteTeamModal } from '../../components/common/Modal';
 import { Button } from '../../components/common/Button';
 import {
   UserPlusIcon, ShareIcon, ChevronDownIcon,
@@ -30,6 +30,7 @@ function CareTeamPage() {
   const [error, setError] = useState(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showJoinedDropdown, setShowJoinedDropdown] = useState(false);
   const [activeTab, setActiveTab] = useState('posts');
 
@@ -111,9 +112,17 @@ function CareTeamPage() {
     }
   };
 
+  const handleDeleteTeam = async (password) => {
+    await teamsService.deleteTeam(teamId, password);
+    toast.success('Care team deleted successfully');
+    setShowDeleteModal(false);
+    navigate('/');
+  };
+
   const currentMembership = members.find(m => m.user_id === user?.id || m.user?.id === user?.id);
   const isLeader = currentMembership?.role === 'leader';
 
+  const activeMembers = members.filter(m => m.status === 'active');
   const displayMembers = members.slice(0, 10);
   const remainingCount = members.length - displayMembers.length;
 
@@ -178,21 +187,22 @@ function CareTeamPage() {
                 <LockIcon size={14} /> Private group
               </span>
               <span className="team-header__dot">·</span>
-              <span className="team-header__count">{members.length} members</span>
+              <span className="team-header__count">{activeMembers.length} {activeMembers.length === 1 ? 'member' : 'members'}</span>
             </div>
 
             <div className="team-header__avatars">
               {displayMembers.map((member, idx) => {
                 const memberUser = member.user || member;
+                const isPending = member.status === 'pending';
                 return (
                   <div
                     key={member.id || memberUser.id}
-                    className="team-header__avatar"
+                    className={`team-header__avatar ${isPending ? 'team-header__avatar--pending' : ''}`}
                     style={{
                       backgroundColor: getColorFromString(memberUser.display_name || memberUser.email),
                       zIndex: displayMembers.length - idx
                     }}
-                    title={memberUser.display_name || memberUser.email}
+                    title={isPending ? `${memberUser.display_name || memberUser.email} (Pending)` : (memberUser.display_name || memberUser.email)}
                   >
                     {(memberUser.profile_photo_url || memberUser.photo_url || memberUser.avatar) ? (
                       <img src={memberUser.profile_photo_url || memberUser.photo_url || memberUser.avatar} alt={memberUser.display_name} />
@@ -309,7 +319,11 @@ function CareTeamPage() {
         )}
 
         {activeTab === 'about' && (
-          <AboutTab team={team} />
+          <AboutTab
+            team={team}
+            isLeader={isLeader}
+            onDeleteTeam={() => setShowDeleteModal(true)}
+          />
         )}
 
         {activeTab === 'media' && (
@@ -341,6 +355,13 @@ function CareTeamPage() {
           teamId={teamId}
         />
       )}
+
+      <DeleteTeamModal
+        isOpen={showDeleteModal}
+        teamName={team?.name}
+        onConfirm={handleDeleteTeam}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }

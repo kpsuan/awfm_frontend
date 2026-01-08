@@ -29,9 +29,11 @@ export const teamsService = {
     return response;
   },
 
-  // Delete team (soft delete)
-  deleteTeam: async (teamId) => {
-    const response = await api.delete(`/v1/teams/${teamId}/`);
+  // Delete team (soft delete, requires password confirmation)
+  deleteTeam: async (teamId, password) => {
+    const response = await api.delete(`/v1/teams/${teamId}/`, {
+      data: { password }
+    });
     return response;
   },
 

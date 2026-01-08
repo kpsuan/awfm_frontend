@@ -5,3 +5,4 @@ export { default as ExitConfirmModal } from './ExitConfirmModal';
 export { default as ChoiceCardModal } from './ChoiceCardModal';
 export { default as ShareModal } from './ShareModal';
 export { default as ConfirmationModal } from './ConfirmationModal';
+export { default as DeleteTeamModal } from './DeleteTeamModal';

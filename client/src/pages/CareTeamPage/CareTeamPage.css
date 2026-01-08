@@ -165,6 +165,11 @@
   font-size: 0.625rem;
 }
 
+.team-header__avatar--pending {
+  opacity: 0.5;
+  filter: grayscale(100%);
+}
+
 /* Header Action Buttons */
 .team-header__actions {
   display: flex;
@@ -752,12 +757,50 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+  gap: 16px;
 }
 
 .members-tab__header h2 {
   margin: 0;
   font-size: 1.25rem;
   color: var(--color-gray-700, #374151);
+}
+
+.members-tab__subtabs {
+  display: flex;
+  gap: 4px;
+  background: var(--color-gray-100, #f3f4f6);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.members-tab__subtab {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-gray-500, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.members-tab__subtab:hover {
+  color: var(--color-gray-700, #374151);
+}
+
+.members-tab__subtab--active {
+  background: white;
+  color: #b432a3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.members-tab__empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--color-gray-500, #6b7280);
+  font-size: 0.9375rem;
 }
 
 /* Members tab uses standard Button component */
@@ -896,6 +939,20 @@
   font-size: 0.875rem;
   color: var(--color-gray-500, #6b7280);
   line-height: 1.4;
+}
+
+.about-tab__danger-zone {
+  margin-top: 24px;
+  border: 1px solid var(--color-error, #ef4444);
+  background: #fef2f2;
+}
+
+.about-tab__danger-zone h2 {
+  color: var(--color-error, #ef4444);
+}
+
+.about-tab__danger-zone .about-tab__description {
+  margin-bottom: 16px;
 }
 
 /* ==================== */

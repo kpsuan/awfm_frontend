@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useNotifications } from '../context';
+import { teamsService } from '../services/teams';
 import ContentHeader from '../components/common/Navigation/ContentHeader';
 import './NotificationsPage.css';
 
@@ -53,11 +55,32 @@ const NotificationsPage = () => {
     return true;
   });
 
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
-    // Navigate based on notification type
+
+    // Handle team invitation - need to accept before navigating
+    if (notification.notification_type === 'team_invitation') {
+      const token = notification.metadata?.invitation_token;
+      if (token) {
+        const teamName = notification.metadata?.team_name || 'the team';
+        if (window.confirm(`Accept invitation to join ${teamName}?`)) {
+          try {
+            await teamsService.acceptInvitation(token);
+            toast.success(`You've joined ${teamName}!`);
+            navigate(`/team/${notification.metadata.team_id}`);
+          } catch (error) {
+            toast.error(error.message || 'Failed to accept invitation');
+          }
+        }
+      } else {
+        toast.error('Invitation token not found');
+      }
+      return;
+    }
+
+    // Navigate based on notification type for other notifications
     if (notification.metadata?.team_id) {
       navigate(`/team/${notification.metadata.team_id}`);
     }

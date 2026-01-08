@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import RecordVideo from '../../../components/pages/RecordVideo';
 import RecordingComplete from '../../../components/pages/RecordingComplete';

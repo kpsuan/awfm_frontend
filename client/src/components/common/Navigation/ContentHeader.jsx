@@ -139,9 +139,15 @@ const ContentHeader = ({ onMenuClick, showMenuButton = false }) => {
                             if (!notification.is_read) {
                               markAsRead(notification.id);
                             }
+                            // Team invitations need to be accepted first - go to notifications page
+                            if (notification.notification_type === 'team_invitation') {
+                              navigate('/notifications');
+                              setShowNotifications(false);
+                              return;
+                            }
                             // Navigate based on notification type
                             if (notification.metadata?.team_id) {
-                              navigate(`/care-team/${notification.metadata.team_id}`);
+                              navigate(`/team/${notification.metadata.team_id}`);
                               setShowNotifications(false);
                             }
                           }}

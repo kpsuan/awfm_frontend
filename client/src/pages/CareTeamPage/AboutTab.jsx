@@ -1,7 +1,8 @@
 import React from 'react';
-import { LockIcon, EyeIcon, MapPinIcon } from '../../components/common/Icons';
+import { LockIcon, EyeIcon, MapPinIcon, TrashIcon } from '../../components/common/Icons';
+import { Button } from '../../components/common/Button';
 
-const AboutTab = ({ team }) => {
+const AboutTab = ({ team, isLeader, onDeleteTeam }) => {
   return (
     <div className="about-tab">
       <div className="about-tab__card">
@@ -38,6 +39,23 @@ const AboutTab = ({ team }) => {
           </div>
         </div>
       </div>
+
+      {isLeader && (
+        <div className="about-tab__card about-tab__danger-zone">
+          <h2>Danger Zone</h2>
+          <p className="about-tab__description">
+            Deleting the care team will permanently remove all data, recordings, and member connections.
+          </p>
+          <Button
+            variant="danger"
+            size="sm"
+            leftIcon={<TrashIcon size={16} />}
+            onClick={onDeleteTeam}
+          >
+            Delete Care Team
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
