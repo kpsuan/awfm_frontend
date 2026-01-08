@@ -1,6 +1,5 @@
-# AWFM Questionnaire
+# AWFM 
 
-Advance Care Planning questionnaire application built with MERN stack.
 
 ## Quick Start
 
